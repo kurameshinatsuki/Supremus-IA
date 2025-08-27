@@ -293,15 +293,15 @@ async function startBot(sock, state) {
             cacheBotReply(msg.key.remoteJid, reply);
           }
 
-          // Envoie un sticker aléatoire de temps en temps (20% de chance)
+          // Envoie un sticker aléatoire de temps en temps (50% de chance)
           // Sauf si c'était une commande (pour éviter les réponses multiples)
-          if (!isCommand && Math.random() < 0.2) {
+          if (!isCommand && Math.random() < 0.5) {
             const stickerPath = await getRandomSticker();
-            if (stickersPath) {
-              await sock.sendMessage(msg.key.remoteJid, {
-                sticker: { url: stickerPath }
-              });
-            }
+            if (stickerPath) {
+    await sock.sendMessage(msg.key.remoteJid, {
+        sticker: { url: stickerPath }
+    });
+        }
           }
         } catch (error) {
           console.error('Erreur lors du traitement du message:', error);
