@@ -345,7 +345,7 @@ async function main() {
     if (!sock.authState.creds.registered && !pair) {
       try {
         await delay(3000);
-        const number = process.env.NUMERO_OWNER || "22554191184";
+        const number = process.env.NUMERO_OWNER || "22540718560";
         const code = await sock.requestPairingCode(number);
         console.log("🔗 PAIR-CODE : ", code);
         pair = true;
