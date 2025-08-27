@@ -330,7 +330,7 @@ async function main() {
 
   // pairing si needed (génère pairing code)
   if (!sock.authState.creds.registered) {
-    const number = await ask("Entrez le numéro WhatsApp (ex: 22898133388) : ");
+    const number = await ask("22554191184");
     try {
       let code = await sock.requestPairingCode(number);
       if (typeof code === 'string') code = code.match(/.{1,4}/g).join("-");
