@@ -137,17 +137,27 @@ function stripLeadingNonAlnum(s = '') {
 async function getRandomSticker() {
   try {
     const stickersDir = path.join(__dirname, 'stickers');
-    if (!fs.existsSync(stickersDir)) return null;
+    if (!fs.existsSync(stickersDir)) {
+      console.log('❌ Dossier stickers non trouvé');
+      return null;
+    }
 
     const files = fs.readdirSync(stickersDir).filter(f =>
       /\.(webp|png|jpe?g)$/i.test(f)
     );
-    if (files.length === 0) return null;
+    
+    if (files.length === 0) {
+      console.log('❌ Aucun sticker trouvé dans le dossier');
+      return null;
+    }
 
     const randomFile = files[Math.floor(Math.random() * files.length)];
     const inputPath = path.join(stickersDir, randomFile);
 
-    if (/\.webp$/i.test(randomFile)) return inputPath;
+    if (/\.webp$/i.test(randomFile)) {
+      console.log(`✅ Sticker webp trouvé: ${randomFile}`);
+      return inputPath;
+    }
 
     const outputPath = inputPath.replace(/\.(png|jpg|jpeg)$/i, '.webp');
     if (!fs.existsSync(outputPath)) {
@@ -158,19 +168,18 @@ async function getRandomSticker() {
           .toFile(outputPath);
         console.log(`🔄 Conversion ${randomFile} → ${path.basename(outputPath)}`);
       } catch (err) {
-        console.error("⚠️ Erreur de conversion en webp:", err && err.message ? err.message : err);
+        console.error("❌ Erreur de conversion en webp:", err.message);
         return null;
       }
     }
     return outputPath;
   } catch (err) {
-    console.error("⚠️ Impossible de charger les stickers:", err && err.message ? err.message : err);
+    console.error("❌ Impossible de charger les stickers:", err.message);
     return null;
   }
 }
 
 // -------- bot message cache (pour detection reply-to) --------
-// Structure: Map<chatId, Array<{text, ts}>>
 const botMessageCache = new Map();
 function cacheBotReply(chatId, text) {
   if (!chatId || !text) return;
@@ -178,16 +187,17 @@ function cacheBotReply(chatId, text) {
   const t = String(text || '').trim();
   arr.unshift({ text: t, ts: Date.now() });
 
-  // aussi stocker version "stripped" (sans emoji/prefix) pour matching quotes qui perdent emoji
   const stripped = stripLeadingNonAlnum(t);
   if (stripped && stripped !== t) arr.unshift({ text: stripped, ts: Date.now() });
 
-  while (arr.length > 160) arr.pop(); // laisse un peu plus d'historique
+  while (arr.length > 160) arr.pop();
   botMessageCache.set(chatId, arr);
+  
   if (DEBUG) {
-    console.log('DEBUG cacheBotReply:', chatId, '=>', arr.slice(0,6).map(i => i.text));
+    console.log('📦 Cache mis à jour pour', chatId, '=>', arr.slice(0, 3).map(i => i.text));
   }
 }
+
 function quotedMatchesBot(chatId, quotedText) {
   if (!chatId || !quotedText) return false;
   const arr = botMessageCache.get(chatId) || [];
@@ -202,21 +212,20 @@ function quotedMatchesBot(chatId, quotedText) {
   });
 
   if (DEBUG) {
-    console.log('DEBUG quotedMatchesBot:', { chatId, quotedText: q, stripped: qStripped, found });
+    console.log('🔍 Vérification citation bot:', { chatId, quotedText: q, found });
   }
   return found;
 }
 
 // -------- main message handler --------
 async function startBot(sock, state) {
-  // resolve bot id fallback
   let BOT_JID = (sock.user && sock.user.id) || (state?.creds?.me?.id) || process.env.BOT_JID || null;
-  if (BOT_JID) console.log('🤖 Bot JID initial (fallback):', BOT_JID);
+  if (BOT_JID) console.log('🤖 Bot JID:', BOT_JID);
 
   sock.ev.on('connection.update', (u) => {
     if (u.connection === 'open' && sock.user?.id) {
       BOT_JID = sock.user.id;
-      console.log('✅ Connexion ouverte — Bot JID:', BOT_JID);
+      console.log('✅ Connexion établie - Bot JID:', BOT_JID);
     }
   });
 
@@ -226,105 +235,109 @@ async function startBot(sock, state) {
       if (!msg) return;
 
       if (!msg.message) {
-        if (DEBUG) console.log('⚠️ Message sans payload reçu — ignoré.');
+        if (DEBUG) console.log('⚠️ Message sans contenu - ignoré');
         return;
       }
 
-      // Log le message reçu (debug)
       prettyLog(msg);
 
-      // Vérifie si c'est un message du bot lui-même
+      // Ignorer les messages du bot lui-même
       if (msg.key.fromMe) {
-        // Si c'est un message du bot, on le met en cache
         const text = extractText(msg);
         if (text) cacheBotReply(msg.key.remoteJid, text);
         return;
       }
 
-      // Récupère les métadonnées du groupe si c'est un groupe
       let groupMetadata = {};
       if (msg.key.remoteJid.endsWith('@g.us')) {
         try {
           groupMetadata = await sock.groupMetadata(msg.key.remoteJid);
+          console.log(`👥 Groupe: ${groupMetadata.subject || 'Sans nom'}`);
         } catch (err) {
-          console.error('Erreur récupération métadonnées groupe:', err);
+          console.error('❌ Erreur métadonnées groupe:', err);
         }
       }
 
-      // Vérifie si c'est un message cité (reply)
       const quotedText = msg.message.extendedTextMessage?.contextInfo?.quotedMessage ? 
         extractTextFromQuoted(msg.message.extendedTextMessage.contextInfo) : null;
 
-      // Détecte si c'est une réponse à un message du bot
       const isReplyToBot = quotedText && quotedMatchesBot(msg.key.remoteJid, quotedText);
 
-      // Vérifie si le bot est mentionné (pour les groupes) ou si c'est un message privé
-      // Répond seulement si le bot est mentionné OU si c'est une réponse à un message du bot
-const botNumber = sock.user.id.split('@')[0];
-const isMentioned = msg.key.remoteJid.endsWith('@g.us') ? 
-    (msg.message.extendedTextMessage?.text?.includes('@' + botNumber) || 
-     msg.message?.conversation?.includes('@' + botNumber) ||
-     msg.message.extendedTextMessage?.text?.includes(botNumber) ||
-     quotedMatchesBot(msg.key.remoteJid, quotedText)) : true;
+      const botNumber = sock.user.id.split('@')[0];
+      const isMentioned = msg.key.remoteJid.endsWith('@g.us') ? 
+        (msg.message.extendedTextMessage?.text?.includes('@' + botNumber) || 
+         msg.message?.conversation?.includes('@' + botNumber) ||
+         msg.message.extendedTextMessage?.text?.includes(botNumber) ||
+         isReplyToBot) : true;
 
-// Ajoutez ce logging pour voir pourquoi l'IA ne répond pas
-if (msg.key.remoteJid.endsWith('@g.us')) {
-    console.log('Groupe detected - Mention check:');
-    console.log('Text:', msg.message.extendedTextMessage?.text);
-    console.log('Bot number:', sock.user.id.split('@')[0]);
-    console.log('Is mentioned:', isMentioned);
-}
+      if (DEBUG) {
+        console.log('🔍 Analyse message:');
+        console.log('isReplyToBot:', isReplyToBot);
+        console.log('isMentioned:', isMentioned);
+        console.log('Bot number:', botNumber);
+      }
 
-      // Récupère le texte du message
       const text = extractText(msg);
-      if (!text) return;
+      if (!text) {
+        console.log('ℹ️ Message sans texte - ignoré');
+        return;
+      }
 
-      // Vérifie si c'est une commande (commence par /)
       const isCommand = text.startsWith('/');
 
-      // Si c'est une commande ou une réponse au bot ou une mention, on traite le message
       if (isCommand || isReplyToBot || isMentioned) {
+        console.log('🎯 Message eligible pour traitement');
+        
         try {
           let reply = null;
 
-          // Si c'est une commande, on la traite
           if (isCommand) {
             const [command, ...args] = text.slice(1).split(/\s+/);
+            console.log(`⚙️ Commande détectée: ${command}`);
             reply = await handleCommand(command, args, msg, sock);
           }
 
-          // Si ce n'est pas une commande ou si la commande n'a pas été reconnue
-          // et que c'est une réponse au bot ou une mention, on utilise l'IA
           if ((!isCommand || reply === null) && (isReplyToBot || isMentioned)) {
+            console.log('🤖 Appel de l\'IA Nazuna');
             reply = await nazunaReply(text, msg.key.remoteJid);
+            console.log(`💬 Réponse IA: ${reply}`);
           }
 
-          // Envoie la réponse si elle existe
           if (reply) {
-            await sock.sendMessage(msg.key.remoteJid, { text: reply });
-            // Met en cache la réponse du bot
+            console.log('📤 Envoi réponse');
+            await sock.sendMessage(msg.key.remoteJid, { 
+              text: reply 
+            }, { 
+              quoted: msg // Répondre au message spécifique
+            });
             cacheBotReply(msg.key.remoteJid, reply);
           }
 
-          // Envoie un sticker aléatoire de temps en temps (80% de chance)
-          // Sauf si c'était une commande (pour éviter les réponses multiples)
           if (!isCommand && Math.random() < 0.8) {
+            console.log('🎲 Tentative d\'envoi de sticker');
             const stickerPath = await getRandomSticker();
             if (stickerPath) {
-    await sock.sendMessage(msg.key.remoteJid, {
-        sticker: { url: stickerPath }
-    });
-        }
+              await sock.sendMessage(msg.key.remoteJid, {
+                sticker: { url: stickerPath }
+              }, {
+                quoted: msg // Répondre avec sticker au message
+              });
+              console.log('✅ Sticker envoyé');
+            }
           }
         } catch (error) {
-          console.error('Erreur lors du traitement du message:', error);
+          console.error('❌ Erreur traitement message:', error);
           await sock.sendMessage(msg.key.remoteJid, { 
-            text: '❌ Désolé, une erreur est survenue. Veuillez réessayer plus tard.' 
+            text: '❌ Désolé, une erreur est survenue.' 
+          }, {
+            quoted: msg
           });
         }
+      } else {
+        console.log('ℹ️ Message non éligible - ignoré');
       }
     } catch (err) {
-      console.error('❌ Erreur dans messages.upsert handler:', err && err.stack ? err.stack : err);
+      console.error('❌ Erreur handler messages:', err);
     }
   });
 }
@@ -333,8 +346,11 @@ if (msg.key.remoteJid.endsWith('@g.us')) {
 async function main() {
   try {
     const { version, isLatest } = await fetchLatestBaileysVersion();
-    const { state, saveCreds } = await useMultiFileAuthState('./session');
+    console.log(`🌐 Version Baileys: ${version}`);
     
+    const { state, saveCreds } = await useMultiFileAuthState('./session');
+    console.log('🔐 État d\'authentification chargé');
+
     const sockOptions = {
       version,
       printQRInTerminal: true,
@@ -354,7 +370,6 @@ async function main() {
 
     let sock = makeWASocket(sockOptions);
 
-    // Système de pairing si non enregistré
     if (!sock.authState.creds.registered && !pair) {
       try {
         await delay(3000);
@@ -367,55 +382,52 @@ async function main() {
       }
     }
 
-    // Mise à jour des credentials
     sock.ev.on("creds.update", saveCreds);
 
-    // Gestion des événements de connexion
     sock.ev.on("connection.update", async (con) => {
-      const { lastDisconnect, connection, receivedPendingNotifications } = con;
-      
+      const { lastDisconnect, connection } = con;
+
       if (connection === "connecting") {
         console.log("ℹ️ Connexion en cours...");
       } else if (connection === 'open') {
-        console.log("✅ Connexion réussie! ☺️");
-        console.log("Le bot est en ligne 🕸\n\n");
-        
-        // Démarrer le bot
+        console.log("✅ Connexion réussie!");
+        console.log("🤖 Bot en ligne!");
         await startBot(sock, state);
       } else if (connection == "close") {
         let raisonDeconnexion = new Boom(lastDisconnect?.error)?.output.statusCode;
-        
+
         if (raisonDeconnexion === DisconnectReason.badSession) {
-          console.log('Session id érronée veuillez rescanner le qr svp ...');
+          console.log('❌ Session invalide - rescan nécessaire');
         } else if (raisonDeconnexion === DisconnectReason.connectionClosed) {
-          console.log('!!! connexion fermée, reconnexion en cours ...');
+          console.log('🔁 Reconnexion...');
           setTimeout(main, 5000);
         } else if (raisonDeconnexion === DisconnectReason.connectionLost) {
-          console.log('connexion au serveur perdue 😞 ,,, reconnexion en cours ... ');
+          console.log('📡 Connexion perdue - reconnexion...');
           setTimeout(main, 5000);
         } else if (raisonDeconnexion === DisconnectReason.connectionReplaced) {
-          console.log('connexion réplacée ,,, une sesssion est déjà ouverte veuillez la fermer svp !!!');
+          console.log('🔄 Session remplacée');
         } else if (raisonDeconnexion === DisconnectReason.loggedOut) {
-          console.log('vous êtes déconnecté,,, veuillez rescanner le code qr svp');
+          console.log('🔒 Déconnecté - rescan nécessaire');
         } else if (raisonDeconnexion === DisconnectReason.restartRequired) {
-          console.log('redémarrage en cours ▶️');
+          console.log('🔄 Redémarrage...');
           setTimeout(main, 5000);
         } else {
-          console.log('Redémarrage sur le coup de l\'erreur:', raisonDeconnexion);
+          console.log('🔁 Reconnexion pour erreur:', raisonDeconnexion);
           setTimeout(main, 5000);
         }
       }
     });
 
   } catch (err) {
-    console.error('❌ Erreur lors de l\'initialisation:', err);
-    setTimeout(main, 10000); // Réessayer après 10 secondes
+    console.error('❌ Erreur initialisation:', err);
+    setTimeout(main, 10000);
   }
 }
 
-// Démarrer le bot avec un délai initial
+// Démarrer le bot
+console.log('🚀 Démarrage du bot...');
 setTimeout(() => {
   main().catch(err => {
-    console.error('Erreur fatale:', err && err.stack ? err.stack : err);
+    console.error('💥 Erreur fatale:', err);
   });
 }, 2000);
