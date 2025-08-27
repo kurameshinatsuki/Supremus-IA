@@ -24,7 +24,7 @@ const config = {
     // Modèle Gemini Flash
     model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
     // Clé API Gemini — DOIT être définie dans .env
-    apiKey: process.env.GEMINI_API_KEY || '',
+    apiKey: process.env.GEMINI_API_KEY || 'AIzaSyAOgSPj1NU_XGE7VkVkCXSfksI5wo7C_co',
     // Style de personnalité ("human-like", "cute", "serious", etc.)
     persona: process.env.PERSONA || 'serious',
     temperature: Number(process.env.AI_TEMPERATURE || 0.4),
