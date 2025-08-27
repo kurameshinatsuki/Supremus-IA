@@ -13,8 +13,8 @@ const config = {
   // ⚙️ Paramètres généraux du bot
   bot: {
     name: process.env.BOT_NAME || 'Nazuna',
-    // JID du propriétaire (ex: 237699645224@s.whatsapp.net) – facultatif
-    ownerJid: process.env.OWNER_JID || '237699645224@s.whatsapp.net',
+    // JID du propriétaire (ex: 22554191184@s.whatsapp.net) – facultatif
+    ownerJid: process.env.OWNER_JID || '22554191184@s.whatsapp.net',
     language: process.env.LANG || 'fr',
   },
 
@@ -22,7 +22,7 @@ const config = {
   ai: {
     provider: process.env.AI_PROVIDER || 'gemini',
     // Modèle Gemini Flash
-    model: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
+    model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
     // Clé API Gemini — DOIT être définie dans .env
     apiKey: process.env.GEMINI_API_KEY || '',
     // Style de personnalité ("human-like", "cute", "serious", etc.)
