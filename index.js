@@ -259,8 +259,21 @@ async function startBot(sock, state) {
       const isReplyToBot = quotedText && quotedMatchesBot(msg.key.remoteJid, quotedText);
 
       // Vérifie si le bot est mentionné (pour les groupes) ou si c'est un message privé
-      const isMentioned = msg.key.remoteJid.endsWith('@g.us') ? 
-        msg.message.extendedTextMessage?.text?.includes('@' + sock.user.id.split('@')[0]) : true;
+      // Répond seulement si le bot est mentionné OU si c'est une réponse à un message du bot
+const botNumber = sock.user.id.split('@')[0];
+const isMentioned = msg.key.remoteJid.endsWith('@g.us') ? 
+    (msg.message.extendedTextMessage?.text?.includes('@' + botNumber) || 
+     msg.message?.conversation?.includes('@' + botNumber) ||
+     msg.message.extendedTextMessage?.text?.includes(botNumber) ||
+     quotedMatchesBot(msg.key.remoteJid, quotedText)) : true;
+
+// Ajoutez ce logging pour voir pourquoi l'IA ne répond pas
+if (msg.key.remoteJid.endsWith('@g.us')) {
+    console.log('Groupe detected - Mention check:');
+    console.log('Text:', msg.message.extendedTextMessage?.text);
+    console.log('Bot number:', sock.user.id.split('@')[0]);
+    console.log('Is mentioned:', isMentioned);
+}
 
       // Récupère le texte du message
       const text = extractText(msg);
@@ -293,9 +306,9 @@ async function startBot(sock, state) {
             cacheBotReply(msg.key.remoteJid, reply);
           }
 
-          // Envoie un sticker aléatoire de temps en temps (50% de chance)
+          // Envoie un sticker aléatoire de temps en temps (80% de chance)
           // Sauf si c'était une commande (pour éviter les réponses multiples)
-          if (!isCommand && Math.random() < 0.5) {
+          if (!isCommand && Math.random() < 0.8) {
             const stickerPath = await getRandomSticker();
             if (stickerPath) {
     await sock.sendMessage(msg.key.remoteJid, {
