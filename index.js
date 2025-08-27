@@ -4,10 +4,13 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const sharp = require('sharp');
-const { default: makeWASocket, useMultiFileAuthState } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion, delay, makeCacheableSignalKeyStore, Browsers } = require('@whiskeysockets/baileys');
+const { Boom } = require('@hapi/boom');
+const { DisconnectReason } = require('@whiskeysockets/baileys');
 const { nazunaReply } = require('./nazunaAI');
 
 const DEBUG = (process.env.DEBUG === 'true') || false;
+let pair = false;
 
 function ask(questionText) {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
@@ -20,7 +23,7 @@ function ask(questionText) {
 // -------- command handlers --------
 async function handleCommand(command, args, msg, sock) {
   const commandName = command.toLowerCase();
-  
+
   switch(commandName) {
     case 'tagall':
       return handleTagAll(msg, sock);
@@ -41,11 +44,11 @@ async function handleTagAll(msg, sock) {
   try {
     const groupMetadata = await sock.groupMetadata(msg.key.remoteJid);
     const participants = groupMetadata.participants;
-    
+
     // Crée une liste des mentions
     const mentions = [];
     let mentionText = '';
-    
+
     participants.forEach(participant => {
       // Ne pas mentionner le bot lui-même
       if (participant.id !== sock.user.id) {
@@ -53,13 +56,13 @@ async function handleTagAll(msg, sock) {
         mentionText += `@${participant.id.split('@')[0]} `;
       }
     });
-    
+
     // Envoie le message avec les mentions
     await sock.sendMessage(msg.key.remoteJid, {
       text: `📢 Mention de tous les membres :\n${mentionText}`,
       mentions: mentions
     });
-    
+
     return null; // On a déjà envoyé le message, pas besoin de réponse
   } catch (error) {
     console.error('Erreur lors du tagall:', error);
@@ -262,27 +265,27 @@ async function startBot(sock, state) {
       // Récupère le texte du message
       const text = extractText(msg);
       if (!text) return;
-      
+
       // Vérifie si c'est une commande (commence par /)
       const isCommand = text.startsWith('/');
-      
+
       // Si c'est une commande ou une réponse au bot ou une mention, on traite le message
       if (isCommand || isReplyToBot || isMentioned) {
         try {
           let reply = null;
-          
+
           // Si c'est une commande, on la traite
           if (isCommand) {
             const [command, ...args] = text.slice(1).split(/\s+/);
             reply = await handleCommand(command, args, msg, sock);
           }
-          
+
           // Si ce n'est pas une commande ou si la commande n'a pas été reconnue
           // et que c'est une réponse au bot ou une mention, on utilise l'IA
           if ((!isCommand || reply === null) && (isReplyToBot || isMentioned)) {
             reply = await nazunaReply(text, msg.key.remoteJid);
           }
-          
+
           // Envoie la réponse si elle existe
           if (reply) {
             await sock.sendMessage(msg.key.remoteJid, { text: reply });
@@ -294,7 +297,7 @@ async function startBot(sock, state) {
           // Sauf si c'était une commande (pour éviter les réponses multiples)
           if (!isCommand && Math.random() < 0.2) {
             const stickerPath = await getRandomSticker();
-            if (stickerPath) {
+            if (stickersPath) {
               await sock.sendMessage(msg.key.remoteJid, {
                 sticker: { url: stickerPath }
               });
@@ -313,38 +316,93 @@ async function startBot(sock, state) {
   });
 }
 
-// -------- main --------
+// -------- main avec meilleure gestion de connexion --------
 async function main() {
-  const { state, saveCreds } = await useMultiFileAuthState('./session');
-  const sock = makeWASocket({
-    auth: state,
-    printQRInTerminal: false,
-    browser: ["Ubuntu", "Chrome", "20.0.04"],
-    getMessage: async key => {
-      console.log("⚠️ Message non déchiffré, retry demandé:", key);
-      return { conversation: "🔄 Réessaye d’envoyer ton message" };
-    }
-  });
+  try {
+    const { version, isLatest } = await fetchLatestBaileysVersion();
+    const { state, saveCreds } = await useMultiFileAuthState('./session');
+    
+    const sockOptions = {
+      version,
+      printQRInTerminal: true,
+      browser: Browsers.ubuntu("Chrome"),
+      syncFullHistory: false,
+      generateHighQualityLinkPreview: true,
+      markOnlineOnConnect: true,
+      auth: {
+        creds: state.creds,
+        keys: makeCacheableSignalKeyStore(state.keys, console),
+      },
+      getMessage: async key => {
+        console.log("⚠️ Message non déchiffré, retry demandé:", key);
+        return { conversation: "🔄 Réessaye d'envoyer ton message" };
+      }
+    };
 
-  sock.ev.on("creds.update", saveCreds);
+    let sock = makeWASocket(sockOptions);
 
-  // pairing si needed (génère pairing code)
-  if (!sock.authState.creds.registered) {
-    const number = await ask("22554191184");
-    try {
-      let code = await sock.requestPairingCode(number);
-      if (typeof code === 'string') code = code.match(/.{1,4}/g).join("-");
-      console.log("\n🔗 Pairing Code :", code);
-      console.log("📱 Va dans WhatsApp > Paramètres > Appareils liés > Lier avec le code");
-    } catch (err) {
-      console.error("❌ Erreur lors de la génération du pairing code :", err && err.message ? err.message : err);
-      return;
+    // Système de pairing si non enregistré
+    if (!sock.authState.creds.registered && !pair) {
+      try {
+        await delay(3000);
+        const number = process.env.NUMERO_OWNER || "22554191184";
+        const code = await sock.requestPairingCode(number);
+        console.log("🔗 PAIR-CODE : ", code);
+        pair = true;
+      } catch (err) {
+        console.error("❌ Erreur pairing code :", err.message);
+      }
     }
+
+    // Mise à jour des credentials
+    sock.ev.on("creds.update", saveCreds);
+
+    // Gestion des événements de connexion
+    sock.ev.on("connection.update", async (con) => {
+      const { lastDisconnect, connection, receivedPendingNotifications } = con;
+      
+      if (connection === "connecting") {
+        console.log("ℹ️ Connexion en cours...");
+      } else if (connection === 'open') {
+        console.log("✅ Connexion réussie! ☺️");
+        console.log("Le bot est en ligne 🕸\n\n");
+        
+        // Démarrer le bot
+        await startBot(sock, state);
+      } else if (connection == "close") {
+        let raisonDeconnexion = new Boom(lastDisconnect?.error)?.output.statusCode;
+        
+        if (raisonDeconnexion === DisconnectReason.badSession) {
+          console.log('Session id érronée veuillez rescanner le qr svp ...');
+        } else if (raisonDeconnexion === DisconnectReason.connectionClosed) {
+          console.log('!!! connexion fermée, reconnexion en cours ...');
+          setTimeout(main, 5000);
+        } else if (raisonDeconnexion === DisconnectReason.connectionLost) {
+          console.log('connexion au serveur perdue 😞 ,,, reconnexion en cours ... ');
+          setTimeout(main, 5000);
+        } else if (raisonDeconnexion === DisconnectReason.connectionReplaced) {
+          console.log('connexion réplacée ,,, une sesssion est déjà ouverte veuillez la fermer svp !!!');
+        } else if (raisonDeconnexion === DisconnectReason.loggedOut) {
+          console.log('vous êtes déconnecté,,, veuillez rescanner le code qr svp');
+        } else if (raisonDeconnexion === DisconnectReason.restartRequired) {
+          console.log('redémarrage en cours ▶️');
+          setTimeout(main, 5000);
+        } else {
+          console.log('Redémarrage sur le coup de l\'erreur:', raisonDeconnexion);
+          setTimeout(main, 5000);
+        }
+      }
+    });
+
+  } catch (err) {
+    console.error('❌ Erreur lors de l\'initialisation:', err);
+    setTimeout(main, 10000); // Réessayer après 10 secondes
   }
-
-  await startBot(sock, state);
 }
 
-main().catch(err => {
-  console.error('Erreur fatale:', err && err.stack ? err.stack : err);
-});
+// Démarrer le bot avec un délai initial
+setTimeout(() => {
+  main().catch(err => {
+    console.error('Erreur fatale:', err && err.stack ? err.stack : err);
+  });
+}, 2000);
