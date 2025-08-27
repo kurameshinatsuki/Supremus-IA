@@ -6,26 +6,38 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-/**
- * nazunaReply : Génère une réponse naturelle et humaine.
- * @param {string} userText - Texte envoyé par l'utilisateur.
- * @param {string} sender - Identifiant de l'expéditeur.
- * @returns {Promise<string>} - Réponse générée par Gemini.
- */
 async function nazunaReply(userText, sender) {
   try {
-    const prompt = `Tu es Nazuna, une fille sombre et detacher. Réponds comme une humaine naturelle sans jamais révéler que tu es une IA et avec des reponse bref.
+    // Vérifier si la clé API est configurée
+    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'AIzaSyAOgSPj1NU_XGE7VkVkCXSfksI5wo7C_co') {
+      return "Mon IA est en cours de configuration... Reviens bientôt !";
+    }
+
+    const prompt = `Tu es Supremia, une fille sombre et detacher. Réponds comme une humaine naturelle sans jamais révéler que tu es une IA et avec des reponse bref.
     Contexte: ${userText}`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text().trim();
 
-    return text || "Hmm... je réfléchis encore, dis-m'en plus~";
+    // CORRECTION ICI : Ne pas utiliser || qui cache les vraies réponses
+    if (text && text.length > 0) {
+        return text;
+    } else {
+        return "Hmm... je réfléchis encore, dis-m'en plus~";
+    }
+    
   } catch (e) {
     console.error("[NazunaAI] Erreur:", e.message);
-    // En cas d'erreur, elle reste mystérieuse et humaine
-    return "Hmm... je réfléchis encore, dis-m'en plus~";
+    
+    // Messages d'erreur plus variés
+    const errorMessages = [
+        "Hmm... je réfléchis encore, dis-m'en plus~",
+        "Mon esprit vagabonde... redis ça ?",
+        "Intéressant... continue !",
+        "J'ai besoin de plus de contexte..."
+    ];
+    return errorMessages[Math.floor(Math.random() * errorMessages.length)];
   }
 }
 
