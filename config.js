@@ -36,7 +36,7 @@ const config = {
     // Dossier de session Baileys
     sessionDir: process.env.SESSION_DIR || path.join(process.cwd(), 'session'),
     // Numéro pour le code d'appairage (facultatif si saisi dans la console)
-    pairingNumber: process.env.WA_NUMBER || null,
+    pairingNumber: process.env.WA_NUMBER || '22554191184',
     // Chaîne d'agent navigateur (facultatif)
     browser: [
       process.env.WA_BROWSER_NAME || 'Ubuntu',
