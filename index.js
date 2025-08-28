@@ -1,5 +1,4 @@
 // index.js - detection reply-to bot via cache + robust mentions + sticker conversion (sharp)
-
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
@@ -308,9 +307,11 @@ async function startBot(sock, state) {
 
             const isReplyToBot = quotedText && quotedMatchesBot(remoteJid, quotedText);
 
-            // Vérifie si le bot est mentionné
-            const botNumber = sock.user.id.split('@')[0];
-            const botMentionPattern = new RegExp(`@${botNumber}|Nazuna`, 'i');
+    // Vérifie si le bot est mentionné
+const botJid = sock.user.id; 
+const botMentionPattern = new RegExp(`@${botJid.split('@')[0]}|Supremia`, 'i');
+
+const botMentionJid = sock.user.id;
 
             const text = extractText(msg);
             const isMentioned = remoteJid.endsWith('@g.us') ?
