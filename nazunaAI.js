@@ -1,10 +1,36 @@
 // === nazunaAI.js ===
 require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Initialisation Gemini Flash
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+// Chemin absolu vers Training IA.json
+const trainingPath = path.join(__dirname, 'Training IA.json');
+
+// Variables pour cache
+let trainingData = null;
+let lastModified = null;
+
+// Fonction pour charger le fichier si besoin
+function loadTrainingData() {
+  try {
+    const stats = fs.statSync(trainingPath); // Infos du fichier
+    if (!lastModified || stats.mtime > lastModified) {
+      // Le fichier a changé → recharger
+      trainingData = fs.readFileSync(trainingPath, 'utf-8');
+      lastModified = stats.mtime;
+      console.log("[NazunaAI] Training IA.json rechargé.");
+    }
+  } catch (err) {
+    console.error("[NazunaAI] Erreur de lecture Training IA.json:", err.message);
+    trainingData = "Contexte par défaut indisponible.";
+  }
+  return trainingData;
+}
 
 /**
  * nazunaReply : Génère une réponse naturelle et humaine.
@@ -14,8 +40,11 @@ const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
  */
 async function nazunaReply(userText, sender) {
   try {
-    const prompt = `Tu es Supremia, une fille sombre et detacher. Réponds comme une humaine naturelle sans jamais révéler que tu es une IA et avec des reponse bref.
-    Contexte: ${userText}`;
+    // Charger/mettre à jour le training data si besoin
+    const training = loadTrainingData();
+
+    // Construire le prompt final
+    const prompt = `${training}\n\nContexte utilisateur (${sender}): ${userText}`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -24,7 +53,6 @@ async function nazunaReply(userText, sender) {
     return text || "Mon IA est en cours de configuration... Reviens bientôt !";
   } catch (e) {
     console.error("[NazunaAI] Erreur:", e.message);
-    // En cas d'erreur, elle reste mystérieuse et humaine
     return "Mon IA est en cours de configuration... Reviens bientôt !";
   }
 }
