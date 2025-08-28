@@ -308,10 +308,10 @@ async function startBot(sock, state) {
             const isReplyToBot = quotedText && quotedMatchesBot(remoteJid, quotedText);
 
     // Vérifie si le bot est mentionné
-const botJid = sock.user.id; 
-const botMentionPattern = new RegExp(`@${botJid.split('@')[0]}|Supremia`, 'i');
+const botJid = '@111536592965872'; 
+const botMentionPattern = new RegExp(`${botJid}|Supremia`, 'i');
 
-const botMentionJid = sock.user.id;
+const botMentionJid = '@111536592965872';
 
             const text = extractText(msg);
             const isMentioned = remoteJid.endsWith('@g.us') ?
