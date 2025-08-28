@@ -1,43 +1,26 @@
 'use strict';
-
-// Charge les variables d'environnement depuis .env
 require('dotenv').config();
 const path = require('path');
 
-/**
- * Configuration centrale du bot Nazuna
- * - Toutes les valeurs peuvent être surchargées via .env
- * - Fournit des valeurs par défaut sûres si la clé est absente
- */
 const config = {
-  // ⚙️ Paramètres généraux du bot
   bot: {
-    name: process.env.BOT_NAME || 'Supremia',
-    // JID du propriétaire (ex: 22554191184@s.whatsapp.net) – facultatif
+    name: process.env.BOT_NAME || 'Nazuna', // Correction du nom
     ownerJid: process.env.OWNER_JID || '22554191184@s.whatsapp.net',
     language: process.env.LANG || 'fr',
   },
 
-  // 🤖 Moteur IA (Gemini par défaut)
   ai: {
     provider: process.env.AI_PROVIDER || 'gemini',
-    // Modèle Gemini Flash
     model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
-    // Clé API Gemini — DOIT être définie dans .env
-    apiKey: process.env.GEMINI_API_KEY || 'AIzaSyAOgSPj1NU_XGE7VkVkCXSfksI5wo7C_co',
-    // Style de personnalité ("human-like", "cute", "serious", etc.)
+    apiKey: process.env.GEMINI_API_KEY || 'AIzaSyAOgSPj1NU_XGE7VkVkCXSfksI5wo7C_co', // LAISSEZ VIDE ici !
     persona: process.env.PERSONA || 'serious',
     temperature: Number(process.env.AI_TEMPERATURE || 0.4),
-maxOutputTokens: Number(process.env.AI_MAX_TOKENS || 512),
+    maxOutputTokens: Number(process.env.AI_MAX_TOKENS || 512),
   },
 
-  // 📲 WhatsApp / Baileys
   whatsapp: {
-    // Dossier de session Baileys
     sessionDir: process.env.SESSION_DIR || path.join(process.cwd(), 'session'),
-    // Numéro pour le code d'appairage (facultatif si saisi dans la console)
     pairingNumber: process.env.WA_NUMBER || '22554191184',
-    // Chaîne d'agent navigateur (facultatif)
     browser: [
       process.env.WA_BROWSER_NAME || 'Ubuntu',
       process.env.WA_BROWSER_BUILD || 'Chrome',
@@ -45,18 +28,22 @@ maxOutputTokens: Number(process.env.AI_MAX_TOKENS || 512),
     ],
   },
 
-  // 🖼️ Stickers
   stickers: {
     dir: process.env.STICKERS_DIR || path.join(process.cwd(), 'stickers'),
-    // Envoyer un sticker aléatoire avec chaque réponse
     sendWithReplies: (process.env.SEND_STICKER || 'true').toLowerCase() === 'true',
   },
 
-  // 🧾 Logs
   logging: {
-    level: process.env.LOG_LEVEL || 'debug', // debug | info | warn | error
+    level: process.env.LOG_LEVEL || 'debug',
     pretty: (process.env.LOG_PRETTY || 'true').toLowerCase() === 'true',
   },
 };
+
+// Validation de la clé API
+if (!config.ai.apiKey || config.ai.apiKey.trim() === '') {
+  console.warn('⚠️  GEMINI_API_KEY non définie dans .env');
+} else if (config.ai.apiKey.includes('AIzaSy')) {
+  console.warn('⚠️  Utilisation d\'une clé API par défaut - configurez une vraie clé');
+}
 
 module.exports = config;
