@@ -279,7 +279,7 @@ async function startBot(sock, state) {
             const isReplyToBot = quotedText && quotedMatchesBot(remoteJid, quotedText);
 
             // Vérifie si le bot est mentionné
-            const botNumber = '111536592965872@lid';
+            const botNumber = '@111536592965872';
             const botMentionPattern = new RegExp(`@${botNumber}|Supremia`, 'i');
 
             const text = extractText(msg);
