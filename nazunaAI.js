@@ -1,41 +1,54 @@
 // === nazunaAI.js ===
 require('dotenv').config();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const config = require('./config'); // Import de la configuration
 
-// Initialisation Gemini Flash
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+// Initialisation Gemini avec la config
+const genAI = new GoogleGenerativeAI(config.ai.apiKey);
+const model = genAI.getGenerativeModel({ 
+  model: config.ai.model,
+  generationConfig: {
+    temperature: config.ai.temperature,
+    maxOutputTokens: config.ai.maxOutputTokens,
+  }
+});
 
 async function nazunaReply(userText, sender) {
   try {
+    console.log(`🤖 Requête reçue: "${userText.substring(0, 50)}..."`);
+
     // Vérifier si la clé API est configurée
-    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'AIzaSyAOgSPj1NU_XGE7VkVkCXSfksI5wo7C_co') {
+    if (!config.ai.apiKey || config.ai.apiKey.includes('AIzaSy')) {
+      console.log('❌ Clé API non configurée ou par défaut');
       return "Mon IA est en cours de configuration... Reviens bientôt !";
     }
 
-    const prompt = `Tu es Supremia, une fille sombre et detacher. Réponds comme une humaine naturelle sans jamais révéler que tu es une IA et avec des reponse bref.
-    Contexte: ${userText}`;
+    const prompt = `Tu es ${config.bot.name}, une fille sombre et détachée. Réponds comme une humaine naturelle sans jamais révéler que tu es une IA et avec des réponses brèves.
+    
+Message: ${userText}
+
+Réponds de façon concise et naturelle.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text().trim();
 
-    // CORRECTION ICI : Ne pas utiliser || qui cache les vraies réponses
     if (text && text.length > 0) {
-        return text;
+      console.log(`✅ Réponse générée: "${text.substring(0, 70)}..."`);
+      return text;
     } else {
-        return "Hmm... je réfléchis encore, dis-m'en plus~";
+      console.log('⚠️ Réponse vide de Gemini');
+      return "Hmm... je réfléchis encore, dis-m'en plus~";
     }
-    
+
   } catch (e) {
     console.error("[NazunaAI] Erreur:", e.message);
-    
-    // Messages d'erreur plus variés
+
     const errorMessages = [
-        "Hmm... je réfléchis encore, dis-m'en plus~",
-        "Mon esprit vagabonde... redis ça ?",
-        "Intéressant... continue !",
-        "J'ai besoin de plus de contexte..."
+      "Hmm... je réfléchis encore, dis-m'en plus~",
+      "Mon esprit vagabonde... redis ça ?",
+      "Intéressant... continue !",
+      "J'ai besoin de plus de contexte..."
     ];
     return errorMessages[Math.floor(Math.random() * errorMessages.length)];
   }
