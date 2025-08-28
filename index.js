@@ -265,7 +265,7 @@ async function startBot(sock, state) {
 
 // Vérifie si le bot est mentionné (dans les groupes) ou si c'est un message privé
 const botNumber = sock.user.id.split('@')[0];
-const botMentionPattern = new RegExp(`@${botNumber}|Supremia`, 'i'); // Cherche @numéro ou "Supremia"
+const botMentionPattern = new RegExp(`@111536592965872|Supremia`, 'i'); // Cherche @numéro ou "Supremia"
 
 const isMentioned = msg.key.remoteJid.endsWith('@g.us') ? 
   (msg.message?.conversation?.includes('Supremia') ||
