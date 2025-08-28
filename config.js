@@ -4,7 +4,7 @@ const path = require('path');
 
 const config = {
   bot: {
-    name: process.env.BOT_NAME || 'Nazuna', // Correction du nom
+    name: process.env.BOT_NAME || 'Nazuna',
     ownerJid: process.env.OWNER_JID || '22554191184@s.whatsapp.net',
     language: process.env.LANG || 'fr',
   },
@@ -12,7 +12,7 @@ const config = {
   ai: {
     provider: process.env.AI_PROVIDER || 'gemini',
     model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
-    apiKey: process.env.GEMINI_API_KEY || 'AIzaSyAOgSPj1NU_XGE7VkVkCXSfksI5wo7C_co', // LAISSEZ VIDE ici !
+    apiKey: process.env.GEMINI_API_KEY || 'AIzaSyAOgSPj1NU_XGE7VkVkCXSfksI5wo7C_co',
     persona: process.env.PERSONA || 'serious',
     temperature: Number(process.env.AI_TEMPERATURE || 0.4),
     maxOutputTokens: Number(process.env.AI_MAX_TOKENS || 512),
