@@ -1,4 +1,4 @@
-// index.js - detection reply-to bot via cache + robust mentions + sticker conversion (sharp)
+// index.js - detection reply-to bot via cache + robust mentions + sticker conversion
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
@@ -379,7 +379,7 @@ const botMentionJid = sock.user.id;
                             await sock.sendMessage(remoteJid, {
                                 sticker: { url: stickerPath }
                             }, {
-                                quoted: msg
+                               // quoted: msg
                             });
                             console.log('✅ Sticker envoyé');
                         }
