@@ -90,7 +90,7 @@ async function nazunaReply(userText, sender, remoteJid) {
         }
 
         // Construire le prompt final
-        const prompt = `${training}\n\n${conversationContext}\n${userName}: ${userText}\nNazuna:`;
+        const prompt = `${training}\n\n${conversationContext}\n${userName}: ${userText}\n:`;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
