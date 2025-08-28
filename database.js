@@ -1,135 +1,211 @@
-// database.js
-const { Sequelize, DataTypes } = require('sequelize');
+// database.js - Version robuste avec ton code éprouvé
+require("dotenv").config();
+const { Pool } = require("pg");
 
-// Configuration de la connexion Neon
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
-  dialect: 'postgres',
-  dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: false
+// Configuration de la connexion
+const dbUrl = process.env.DATABASE_URL || "postgresql://default:password@localhost/nazuna";
+const proConfig = {
+    connectionString: dbUrl,
+    ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+    max: 20, // Nombre max de connexions
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+};
+
+const pool = new Pool(proConfig);
+
+// Flag pour ne vérifier les tables qu'une seule fois
+let tablesVerified = false;
+
+// Fonction pour créer les tables si elles n'existent pas
+async function ensureTablesExist() {
+    if (tablesVerified) return;
+    
+    const client = await pool.connect();
+    try {
+        // Table users
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                jid VARCHAR(255) PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                conversations JSONB DEFAULT '[]',
+                last_interaction TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        // Table groups (pour le contexte collectif)
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS groups (
+                jid VARCHAR(255) PRIMARY KEY,
+                name VARCHAR(255),
+                participants JSONB DEFAULT '[]',
+                last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        // Index pour optimiser les recherches
+        await client.query(`
+            CREATE INDEX IF NOT EXISTS idx_users_last_interaction 
+            ON users(last_interaction);
+        `);
+
+        tablesVerified = true;
+        console.log("✅ Tables vérifiées/créées.");
+    } catch (error) {
+        console.error("❌ Erreur création tables:", error);
+        throw error;
+    } finally {
+        client.release();
     }
-  },
-  logging: false // Désactive les logs SQL en production
-});
-
-// Modèle User
-const User = sequelize.define('User', {
-  jid: {
-    type: DataTypes.STRING,
-    primaryKey: true,
-    allowNull: false
-  },
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false
-  },
-  conversations: {
-    type: DataTypes.JSONB, // Stockage JSON optimisé pour PostgreSQL
-    defaultValue: []
-  },
-  lastInteraction: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
-  }
-}, {
-  timestamps: true // Ajoute createdAt et updatedAt automatiquement
-});
-
-// Modèle Group pour le contexte collectif
-const Group = sequelize.define('Group', {
-  jid: {
-    type: DataTypes.STRING,
-    primaryKey: true
-  },
-  name: DataTypes.STRING,
-  participants: {
-    type: DataTypes.JSONB,
-    defaultValue: []
-  },
-  lastActivity: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
-  }
-});
-
-// Initialisation de la base
-async function initDatabase() {
-  try {
-    await sequelize.authenticate();
-    console.log('✅ Connecté à PostgreSQL (Neon)');
-    
-    await sequelize.sync({ alter: true }); // Sync les modèles avec la BD
-    console.log('✅ Modèles synchronisés');
-    
-    return true;
-  } catch (error) {
-    console.error('❌ Erreur connexion PostgreSQL:', error);
-    return false;
-  }
 }
 
-// Fonctions pour gérer les utilisateurs
+// Récupérer un utilisateur
 async function getUser(jid) {
-  try {
-    const user = await User.findByPk(jid);
-    return user ? user.toJSON() : null;
-  } catch (error) {
-    console.error('Erreur getUser:', error);
-    return null;
-  }
+    const client = await pool.connect();
+    try {
+        await ensureTablesExist();
+
+        const result = await client.query(
+            `SELECT jid, name, conversations, last_interaction 
+             FROM users WHERE jid = $1`,
+            [jid]
+        );
+
+        return result.rows.length > 0 ? result.rows[0] : null;
+    } catch (error) {
+        console.error(`❌ Erreur récupération utilisateur ${jid}:`, error);
+        return null;
+    } finally {
+        client.release();
+    }
 }
 
+// Sauvegarder un utilisateur (upsert)
 async function saveUser(jid, userData) {
-  try {
-    const [user, created] = await User.upsert({
-      jid,
-      name: userData.name,
-      conversations: userData.conversations || [],
-      lastInteraction: new Date()
-    });
-    
-    return user.toJSON();
-  } catch (error) {
-    console.error('Erreur saveUser:', error);
-    throw error;
-  }
+    if (!jid || !userData) {
+        console.warn("❌ Paramètres invalides pour saveUser");
+        return null;
+    }
+
+    const client = await pool.connect();
+    try {
+        await ensureTablesExist();
+
+        const query = `
+            INSERT INTO users (jid, name, conversations, last_interaction)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (jid)
+            DO UPDATE SET 
+                name = EXCLUDED.name,
+                conversations = EXCLUDED.conversations,
+                last_interaction = EXCLUDED.last_interaction,
+                updated_at = CURRENT_TIMESTAMP
+            RETURNING *;
+        `;
+
+        const values = [
+            jid,
+            userData.name || jid.split('@')[0],
+            JSON.stringify(userData.conversations || []),
+            new Date()
+        ];
+
+        const result = await client.query(query, values);
+        return result.rows[0];
+    } catch (error) {
+        console.error(`❌ Erreur sauvegarde utilisateur ${jid}:`, error);
+        throw error;
+    } finally {
+        client.release();
+    }
 }
 
+// Ajouter un message à la conversation
 async function addConversation(jid, message, isBot = false) {
-  try {
-    const user = await User.findByPk(jid);
-    if (!user) return null;
+    const client = await pool.connect();
+    try {
+        await ensureTablesExist();
 
-    const newConversation = {
-      text: message,
-      timestamp: new Date(),
-      fromBot: isBot
-    };
+        // Récupérer l'utilisateur existant
+        const user = await getUser(jid);
+        const currentConversations = user?.conversations || [];
 
-    // Limite à 50 messages par utilisateur
-    const updatedConversations = [
-      ...user.conversations.slice(-49),
-      newConversation
-    ];
+        // Nouveau message
+        const newMessage = {
+            text: message,
+            timestamp: new Date(),
+            fromBot: isBot
+        };
 
-    user.conversations = updatedConversations;
-    user.lastInteraction = new Date();
-    await user.save();
+        // Garder seulement les 50 derniers messages
+        const updatedConversations = [
+            ...currentConversations.slice(-49),
+            newMessage
+        ];
 
-    return user.toJSON();
-  } catch (error) {
-    console.error('Erreur addConversation:', error);
-    throw error;
-  }
+        // Mettre à jour l'utilisateur
+        const updateQuery = `
+            UPDATE users 
+            SET conversations = $1, last_interaction = $2
+            WHERE jid = $3
+            RETURNING *;
+        `;
+
+        const result = await client.query(updateQuery, [
+            JSON.stringify(updatedConversations),
+            new Date(),
+            jid
+        ]);
+
+        return result.rows[0];
+    } catch (error) {
+        console.error(`❌ Erreur ajout conversation ${jid}:`, error);
+        throw error;
+    } finally {
+        client.release();
+    }
 }
 
+// Nettoyer les anciennes conversations (maintenance)
+async function cleanupOldConversations(daysToKeep = 30) {
+    const client = await pool.connect();
+    try {
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
+
+        await client.query(
+            `DELETE FROM users WHERE last_interaction < $1`,
+            [cutoffDate]
+        );
+
+        console.log(`🧹 Nettoyage des données vieilles de ${daysToKeep} jours`);
+    } catch (error) {
+        console.error("❌ Erreur nettoyage:", error);
+    } finally {
+        client.release();
+    }
+}
+
+// Fermer proprement le pool
+async function closePool() {
+    try {
+        await pool.end();
+        console.log("✅ Pool PostgreSQL fermé");
+    } catch (error) {
+        console.error("❌ Erreur fermeture pool:", error);
+    }
+}
+
+// Exportations
 module.exports = {
-  sequelize,
-  User,
-  Group,
-  initDatabase,
-  getUser,
-  saveUser,
-  addConversation
+    pool,
+    ensureTablesExist,
+    getUser,
+    saveUser,
+    addConversation,
+    cleanupOldConversations,
+    closePool
 };
