@@ -263,12 +263,16 @@ async function startBot(sock, state) {
 
       const isReplyToBot = quotedText && quotedMatchesBot(msg.key.remoteJid, quotedText);
 
-      const botNumber = sock.user.id.split('@')[0];
-      const isMentioned = msg.key.remoteJid.endsWith('@g.us') ? 
-        (msg.message.extendedTextMessage?.text?.includes('@' + botNumber) || 
-         msg.message?.conversation?.includes('@' + botNumber) ||
-         msg.message.extendedTextMessage?.text?.includes(botNumber) ||
-         isReplyToBot) : true;
+// Vérifie si le bot est mentionné (dans les groupes) ou si c'est un message privé
+const botNumber = sock.user.id.split('@')[0];
+const botMentionPattern = new RegExp(`@${botNumber}|Supremia`, 'i'); // Cherche @numéro ou "Supremia"
+
+const isMentioned = msg.key.remoteJid.endsWith('@g.us') ? 
+  (msg.message?.conversation?.includes('Supremia') ||
+   msg.message?.extendedTextMessage?.text?.includes('Supremia') ||
+   msg.message?.conversation?.includes('@' + botNumber) ||
+   msg.message?.extendedTextMessage?.text?.includes('@' + botNumber)) : 
+  true; // Toujours vrai en privé
 
       if (DEBUG) {
         console.log('🔍 Analyse message:');
