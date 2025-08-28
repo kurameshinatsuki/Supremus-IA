@@ -27,8 +27,8 @@ const config = {
     apiKey: process.env.GEMINI_API_KEY || 'AIzaSyAOgSPj1NU_XGE7VkVkCXSfksI5wo7C_co',
     // Style de personnalité ("human-like", "cute", "serious", etc.)
     persona: process.env.PERSONA || 'serious',
-    temperature: Number(process.env.AI_TEMPERATURE || 1.0),
-maxOutputTokens: Number(process.env.AI_MAX_TOKENS || 8192),
+    temperature: Number(process.env.AI_TEMPERATURE || 0.4),
+maxOutputTokens: Number(process.env.AI_MAX_TOKENS || 512),
   },
 
   // 📲 WhatsApp / Baileys
