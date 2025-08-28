@@ -280,7 +280,7 @@ async function startBot(sock, state) {
 
             // Vérifie si le bot est mentionné
             const botNumber = '@111536592965872';
-            const botMentionPattern = new RegExp(`@${botNumber}|Supremia`, 'i');
+            const botMentionPattern = new RegExp(`${botNumber}|Supremia`, 'i');
 
             const text = extractText(msg);
             const isMentioned = remoteJid.endsWith('@g.us') ?
