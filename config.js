@@ -5,7 +5,7 @@ const path = require('path');
 const config = {
   bot: {
     name: process.env.BOT_NAME || 'Supremia',
-    ownerJid: process.env.OWNER_JID || '177958127927437@lid',
+    ownerJid: process.env.OWNER_JID || '22554191184@s.whatsapp.net',
     language: process.env.LANG || 'fr',
   },
 
