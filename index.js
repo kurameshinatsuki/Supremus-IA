@@ -8,43 +8,19 @@ const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion,
 const { Boom } = require('@hapi/boom');
 const { DisconnectReason } = require('@whiskeysockets/baileys');
 const { nazunaReply } = require('./nazunaAI');
+const { initMemory, getMemory, saveMemory, addMessageToMemory } = require('./memoryManager');
 
 const DEBUG = (process.env.DEBUG === 'true') || false;
 let pair = false;
 
-// Fonctions de gestion de la mémoire utilisateur
-const memoryPath = path.join(__dirname, 'nazuna_memory.json');
+// Initialisation de la mémoire
+let memoryInitialized = false;
 
-function loadUserMemory() {
-    try {
-        if (fs.existsSync(memoryPath)) {
-            return JSON.parse(fs.readFileSync(memoryPath, 'utf8'));
-        }
-    } catch (error) {
-        console.error('Erreur lecture mémoire:', error);
+async function initializeMemory() {
+    if (!memoryInitialized) {
+        memoryInitialized = await initMemory();
     }
-    return {};
-}
-
-function saveUserMemory(memory) {
-    try {
-        fs.writeFileSync(memoryPath, JSON.stringify(memory, null, 2));
-    } catch (error) {
-        console.error('Erreur sauvegarde mémoire:', error);
-    }
-}
-
-function getUserName(senderJid, memory) {
-    return memory[senderJid]?.name || senderJid.split('@')[0];
-}
-
-function updateUserMemory(senderJid, pushName, memory) {
-    if (!memory[senderJid]) {
-        memory[senderJid] = { name: pushName, conversations: [] };
-    } else if (pushName && memory[senderJid].name !== pushName) {
-        memory[senderJid].name = pushName;
-    }
-    return memory;
+    return memoryInitialized;
 }
 
 function ask(questionText) {
@@ -255,6 +231,9 @@ async function startBot(sock, state) {
     let BOT_JID = (sock.user && sock.user.id) || (state?.creds?.me?.id) || process.env.BOT_JID || null;
     if (BOT_JID) console.log('🤖 Bot JID:', BOT_JID);
 
+    // Initialiser la mémoire
+    await initializeMemory();
+
     sock.ev.on('connection.update', (u) => {
         if (u.connection === 'open' && sock.user?.id) {
             BOT_JID = sock.user.id;
@@ -274,16 +253,8 @@ async function startBot(sock, state) {
 
             prettyLog(msg);
 
-            // Charger la mémoire
-            const memory = loadUserMemory();
             const senderJid = msg.key.participant || msg.key.remoteJid;
             const remoteJid = msg.key.remoteJid;
-
-            // Mettre à jour les infos utilisateur
-            if (msg.pushName) {
-                updateUserMemory(senderJid, msg.pushName, memory);
-                saveUserMemory(memory);
-            }
 
             // Ignorer les messages du bot lui-même
             if (msg.key.fromMe) {
@@ -307,11 +278,9 @@ async function startBot(sock, state) {
 
             const isReplyToBot = quotedText && quotedMatchesBot(remoteJid, quotedText);
 
-    // Vérifie si le bot est mentionné
-const botJid = '@111536592965872'; 
-const botMentionPattern = new RegExp(`${botJid}|Supremia`, 'i');
-
-const botMentionJid = '@111536592965872';
+            // Vérifie si le bot est mentionné
+            const botNumber = '@111536592965872';
+            const botMentionPattern = new RegExp(`@${botNumber}|Supremia`, 'i');
 
             const text = extractText(msg);
             const isMentioned = remoteJid.endsWith('@g.us') ?
@@ -329,6 +298,16 @@ const botMentionJid = '@111536592965872';
                 console.log('ℹ️ Message sans texte - ignoré');
                 return;
             }
+
+            // Mettre à jour la mémoire avec le message utilisateur
+            const userData = await getMemory(senderJid) || {};
+            const updatedUser = {
+                name: msg.pushName || userData.name || senderJid.split('@')[0],
+                conversations: userData.conversations || []
+            };
+            
+            await saveMemory(senderJid, updatedUser);
+            await addMessageToMemory(senderJid, text, false);
 
             const isCommand = text.startsWith('/');
 
@@ -356,7 +335,7 @@ const botMentionJid = '@111536592965872';
                         // Ajouter la mention en groupe
                         if (remoteJid.endsWith('@g.us')) {
                             await sock.sendMessage(remoteJid, {
-                                text: `@${senderJid.split('@')[0]} ${reply}`,
+                                text: `${reply}`,
                                 mentions: [senderJid]
                             }, {
                                 quoted: msg
@@ -369,6 +348,8 @@ const botMentionJid = '@111536592965872';
                             });
                         }
 
+                        // Mettre à jour la mémoire avec la réponse du bot
+                        await addMessageToMemory(senderJid, reply, true);
                         cacheBotReply(remoteJid, reply);
                     }
 
@@ -378,9 +359,7 @@ const botMentionJid = '@111536592965872';
                         if (stickerPath) {
                             await sock.sendMessage(remoteJid, {
                                 sticker: { url: stickerPath }
-                            }, {
-                               // quoted: msg
-                            });
+                            }); // Sticker sans réponse
                             console.log('✅ Sticker envoyé');
                         }
                     }
