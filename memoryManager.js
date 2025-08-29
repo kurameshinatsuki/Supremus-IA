@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const { 
-    pool,                // ⚡ Correction : on importe bien pool
+    pool,
     ensureTablesExist, 
     getUser, 
     saveUser, 
@@ -69,7 +69,8 @@ async function addMessageToMemory(jid, message, isBot = false) {
     if (useDatabase) {
         return await addConversation(jid, message, isBot);
     } else {
-        const user = await getMemory(jid) || { conversations: [] };
+        const user = await getMemory(jid);
+        const currentConversations = user?.conversations || [];
 
         const newMessage = {
             text: message,
@@ -77,14 +78,13 @@ async function addMessageToMemory(jid, message, isBot = false) {
             fromBot: isBot
         };
 
-        // ⚡ Harmonisé : 500 derniers messages max (comme tu veux)
         const updatedConversations = [
-            ...(user.conversations || []).slice(-499),
+            ...currentConversations.slice(-499),
             newMessage
         ];
 
         const updatedUser = {
-            name: user.name || jid.split('@')[0], // fallback si pas de nom
+            name: user?.name || jid.split('@')[0],
             conversations: updatedConversations
         };
 
