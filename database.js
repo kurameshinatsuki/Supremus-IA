@@ -131,43 +131,14 @@ async function addConversation(jid, message, isBot = false) {
 
         // Récupérer l'utilisateur existant
         const user = await getUser(jid);
-        const currentConversations = user?.conversations || [];
+        
+        // CONVERTIR les conversations de string JSON → array
+        const currentConversations = user?.conversations 
+            ? (typeof user.conversations === 'string' 
+                ? JSON.parse(user.conversations) 
+                : user.conversations)
+            : [];
 
-        // Nouveau message
-        const newMessage = {
-            text: message,
-            timestamp: new Date(),
-            fromBot: isBot
-        };
-
-        // Garder seulement les 50 derniers messages
-        const updatedConversations = [
-            ...currentConversations.slice(-49),
-            newMessage
-        ];
-
-        // Mettre à jour l'utilisateur
-        const updateQuery = `
-            UPDATE users 
-            SET conversations = $1, last_interaction = $2
-            WHERE jid = $3
-            RETURNING *;
-        `;
-
-        const result = await client.query(updateQuery, [
-            JSON.stringify(updatedConversations),
-            new Date(),
-            jid
-        ]);
-
-        return result.rows[0];
-    } catch (error) {
-        console.error(`❌ Erreur ajout conversation ${jid}:`, error);
-        throw error;
-    } finally {
-        client.release();
-    }
-}
 
 // Nettoyer les anciennes conversations (maintenance)
 async function cleanupOldConversations(daysToKeep = 30) {
