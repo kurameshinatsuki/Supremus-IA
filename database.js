@@ -6,7 +6,7 @@ const { Pool } = require("pg");
 const dbUrl = process.env.DATABASE_URL || "postgresql://rc_db_pblv_user:kxZvnDTYaPYTScD70HBov7Wgr0nboPL7@dpg-d2o2cnfdiees73evq170-a.oregon-postgres.render.com/rc_db_pblv";
 const proConfig = {
     connectionString: dbUrl,
-    ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+    ssl: { rejectUnauthorized: false }, // Toujours activé pour Neon
     max: 20, // Nombre max de connexions
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
@@ -20,7 +20,7 @@ let tablesVerified = false;
 // Fonction pour créer les tables si elles n'existent pas
 async function ensureTablesExist() {
     if (tablesVerified) return;
-    
+
     const client = await pool.connect();
     try {
         // Table users
@@ -131,7 +131,7 @@ async function addConversation(jid, message, isBot = false) {
 
         // Récupérer l'utilisateur existant
         const user = await getUser(jid);
-        
+
         // CONVERTIR les conversations de string JSON → array
         const currentConversations = user?.conversations 
             ? (typeof user.conversations === 'string' 
@@ -139,6 +139,41 @@ async function addConversation(jid, message, isBot = false) {
                 : user.conversations)
             : [];
 
+        // Nouveau message
+        const newMessage = {
+            text: message,
+            timestamp: new Date(),
+            fromBot: isBot
+        };
+
+        // Garder seulement les 50 derniers messages
+        const updatedConversations = [
+            ...currentConversations.slice(-49),
+            newMessage
+        ];
+
+        // Mettre à jour l'utilisateur
+        const updateQuery = `
+            UPDATE users 
+            SET conversations = $1, last_interaction = $2
+            WHERE jid = $3
+            RETURNING *;
+        `;
+
+        const result = await client.query(updateQuery, [
+            JSON.stringify(updatedConversations),
+            new Date(),
+            jid
+        ]);
+
+        return result.rows[0];
+    } catch (error) {
+        console.error(`❌ Erreur ajout conversation ${jid}:`, error);
+        throw error;
+    } finally {
+        client.release();
+    }
+}
 
 // Nettoyer les anciennes conversations (maintenance)
 async function cleanupOldConversations(daysToKeep = 30) {
