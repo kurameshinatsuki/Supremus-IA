@@ -17,21 +17,30 @@ async function initMemory() {
     try {
         // Essayer PostgreSQL d'abord
         if (process.env.DATABASE_URL) {
-            await ensureTablesExist();
-            useDatabase = true;
-            console.log('✅ Mode PostgreSQL (Neon)');
-        } else {
-            // Fallback JSON
-            useDatabase = false;
-            if (fs.existsSync(memoryPath)) {
-                fallbackMemory = JSON.parse(fs.readFileSync(memoryPath, 'utf8'));
+            // TESTER la connexion d'abord
+            const client = await pool.connect();
+            try {
+                await client.query('SELECT 1');
+                await ensureTablesExist();
+                useDatabase = true;
+                console.log('✅ Mode PostgreSQL (Neon)');
+            } catch (dbError) {
+                console.error('❌ PostgreSQL inaccessible - Fallback JSON:', dbError);
+                useDatabase = false;
+            } finally {
+                client.release();
             }
+        }
+        
+        // Charger le JSON en fallback
+        if (!useDatabase && fs.existsSync(memoryPath)) {
+            fallbackMemory = JSON.parse(fs.readFileSync(memoryPath, 'utf8'));
             console.log('🔄 Mode JSON fallback');
         }
         
         return true;
     } catch (error) {
-        console.error('❌ Erreur init memory - Fallback JSON:', error);
+        console.error('❌ Erreur init memory:', error);
         useDatabase = false;
         return false;
     }
