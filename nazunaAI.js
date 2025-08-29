@@ -87,10 +87,10 @@ Supremia (réponds uniquement à ${userName}):`;
         let text = response.text().trim();
 
         // Nettoyer la réponse si elle contient d'autres noms
-        if (text.includes('Utilisateur:') || text.includes('@')) {
-            text = text.replace(/Utilisateur:/g, userName + ":")
-                      .replace(/@\d+/g, userName);
-        }
+       // if (text.includes('Utilisateur:') || text.includes('@')) {
+        //    text = text.replace(/Utilisateur:/g, userName + ":")
+                 //     .replace(/@\d+/g, userName);
+    //    }
 
         // Validation de la réponse
         if (!text || text.length < 2) {
