@@ -1,8 +1,9 @@
 // === nazunaAI.js ===
 require('dotenv').config();
 const path = require('path');
+const fs = require('fs');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { getMemory, saveMemory, addMessageToMemory } = require('./memoryManager');
+const { getMemory, addMessageToMemory } = require('./memoryManager');
 
 // Initialisation Gemini Flash
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -14,7 +15,6 @@ let lastModified = null;
 
 function loadTrainingData() {
   try {
-    const fs = require('fs');
     const stats = fs.statSync(trainingPath);
     if (!lastModified || stats.mtime > lastModified) {
       trainingData = fs.readFileSync(trainingPath, 'utf-8');
@@ -32,37 +32,37 @@ async function nazunaReply(userText, sender, remoteJid) {
   try {
     const training = loadTrainingData();
 
-    // 🔑 Charger mémoire perso
+    // Charger la mémoire perso
     const userData = await getMemory(sender) || { conversations: [] };
-
-    // 🔑 Construire l'historique (limité aux 10-15 derniers messages pour éviter surconsommation)
     const history = (userData.conversations || []).slice(-10);
 
+    // Construire les messages au format Gemini
     const messages = [
-      { role: "system", content: training },
+      { role: "system", parts: [{ text: training }] },
       ...history.map(m => ({
-        role: m.fromBot ? "assistant" : "user",
-        content: m.text
+        role: m.fromBot ? "model" : "user",
+        parts: [{ text: m.text }]
       })),
-      { role: "user", content: userText }
+      { role: "user", parts: [{ text: userText }] }
     ];
 
-    // 🔑 Appel au modèle
-    const result = await model.generateContent({
-      contents: messages
-    });
+    // Appel Gemini
+    const result = await model.generateContent({ contents: messages });
 
-    const reply = result.response.text();
+    // Récupération réponse
+    const reply =
+      result?.response?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "⚠️ Je n'ai pas pu générer de réponse.";
 
-    // 🔑 Mise à jour mémoire
-    await addMessageToMemory(sender, userText, false); // message user
-    await addMessageToMemory(sender, reply, true);    // réponse bot
+    // Sauvegarder mémoire
+    await addMessageToMemory(sender, userText, false);
+    await addMessageToMemory(sender, reply, true);
 
     return reply;
 
   } catch (err) {
     console.error("[NazunaAI] Erreur:", err);
-    return "⚠️ Une erreur est survenue, réessayez plus tard.";
+    return "⚠️ Une erreur technique est survenue.";
   }
 }
 
