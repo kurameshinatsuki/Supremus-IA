@@ -8,7 +8,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ 
     model: "gemini-2.5-flash",
     generationConfig: {
-        temperature: 0.4, // Plus bas = plus cohérent
+        temperature: 0.4,
         topP: 0.8,
         maxOutputTokens: 512,
     }
@@ -64,8 +64,8 @@ async function nazunaReply(userText, sender, remoteJid) {
         // CONTEXTE COURT et CIBLÉ (max 4 messages)
         let recentContext = "";
         if (conversations.length > 0) {
-            const recentMessages = conversations.slice(-500); // Seulement 500 derniers
-            recentContext = "Conversation avec " + userName + ":\n" +
+            const recentMessages = conversations.slice(-4);
+            recentContext = "Conversation récente:\n" +
                 recentMessages.map(c => 
                     `${c.fromBot ? 'Supremia' : userName}: ${c.text}`
                 ).join('\n') + '\n';
@@ -92,7 +92,19 @@ Supremia (réponds uniquement à ${userName}):`;
                       .replace(/@\d+/g, userName);
         }
 
-        return text || `Je vous écoute, ${userName}. Comment puis-vous aider ?`;
+        // Validation de la réponse
+        if (!text || text.length < 2) {
+            console.log("[NazunaAI] Réponse vide ou trop courte, utilisation du fallback");
+            return `Je vous écoute, ${userName}. Comment puis-vous aider ?`;
+        }
+
+        // Nettoyer la réponse
+        text = text.trim();
+        if (text.includes('Supremia:') || text.includes('Utilisateur:')) {
+            text = text.replace(/Supremia:/g, '').replace(/Utilisateur:/g, '');
+        }
+
+        return text;
 
     } catch (e) {
         console.error("[NazunaAI] Erreur:", e.message);
