@@ -2,7 +2,7 @@
 require('dotenv').config();
 const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { getMemory } = require('./memoryManager');
+const { getMemory, saveMemory, addMessageToMemory } = require('./memoryManager');
 
 // Initialisation Gemini Flash
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -13,51 +13,57 @@ let trainingData = null;
 let lastModified = null;
 
 function loadTrainingData() {
-    try {
-        const fs = require('fs');
-        const stats = fs.statSync(trainingPath);
-        if (!lastModified || stats.mtime > lastModified) {
-            trainingData = fs.readFileSync(trainingPath, 'utf-8');
-            lastModified = stats.mtime;
-            console.log("[NazunaAI] Training IA.json rechargé.");
-        }
-    } catch (err) {
-        console.error("[NazunaAI] Erreur de lecture Training IA.json:", err.message);
-        trainingData = "Contexte par défaut indisponible.";
+  try {
+    const fs = require('fs');
+    const stats = fs.statSync(trainingPath);
+    if (!lastModified || stats.mtime > lastModified) {
+      trainingData = fs.readFileSync(trainingPath, 'utf-8');
+      lastModified = stats.mtime;
+      console.log("[NazunaAI] Training IA.json rechargé.");
     }
-    return trainingData;
+  } catch (err) {
+    console.error("[NazunaAI] Erreur de lecture Training IA.json:", err.message);
+    trainingData = "Contexte par défaut indisponible.";
+  }
+  return trainingData;
 }
 
 async function nazunaReply(userText, sender, remoteJid) {
-    try {
-        const training = loadTrainingData();
-        const userData = await getMemory(sender) || {};
-        
-        // CONVERTIR les conversations si nécessaire
-        const conversations = typeof userData.conversations === 'string' 
-            ? JSON.parse(userData.conversations) 
-            : userData.conversations || [];
-        
-        const userName = userData.name || sender.split('@')[0];
+  try {
+    const training = loadTrainingData();
 
-        let conversationContext = "";
-        if (conversations.length > 0) {
-            conversationContext = "Historique récent:\n" +
-                conversations.slice(-8)
-                    .map(c => `${c.fromBot ? 'Supremia' : userName}: ${c.text}`)
-                    .join('\n') + '\n';
-        }
+    // 🔑 Charger mémoire perso
+    const userData = await getMemory(sender) || { conversations: [] };
 
-        const prompt = `${training}\n\n${conversationContext}\n${userName}: ${userText}\n:`;
+    // 🔑 Construire l'historique (limité aux 10-15 derniers messages pour éviter surconsommation)
+    const history = (userData.conversations || []).slice(-10);
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        return response.text().trim() || "Désolé, je n'ai pas compris...";
+    const messages = [
+      { role: "system", content: training },
+      ...history.map(m => ({
+        role: m.fromBot ? "assistant" : "user",
+        content: m.text
+      })),
+      { role: "user", content: userText }
+    ];
 
-    } catch (e) {
-        console.error("[NazunaAI] Erreur:", e.message);
-        return "Mon IA est en configuration. Réessaie plus tard !";
-    }
+    // 🔑 Appel au modèle
+    const result = await model.generateContent({
+      contents: messages
+    });
+
+    const reply = result.response.text();
+
+    // 🔑 Mise à jour mémoire
+    await addMessageToMemory(sender, userText, false); // message user
+    await addMessageToMemory(sender, reply, true);    // réponse bot
+
+    return reply;
+
+  } catch (err) {
+    console.error("[NazunaAI] Erreur:", err);
+    return "⚠️ Une erreur est survenue, réessayez plus tard.";
+  }
 }
 
 module.exports = { nazunaReply };
