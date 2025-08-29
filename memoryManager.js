@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const { 
+    pool,                // ⚡ Correction : on importe bien pool
     ensureTablesExist, 
     getUser, 
     saveUser, 
@@ -15,9 +16,7 @@ let fallbackMemory = {};
 // Initialisation intelligente
 async function initMemory() {
     try {
-        // Essayer PostgreSQL d'abord
         if (process.env.DATABASE_URL) {
-            // TESTER la connexion d'abord
             const client = await pool.connect();
             try {
                 await client.query('SELECT 1');
@@ -31,13 +30,12 @@ async function initMemory() {
                 client.release();
             }
         }
-        
-        // Charger le JSON en fallback
+
         if (!useDatabase && fs.existsSync(memoryPath)) {
             fallbackMemory = JSON.parse(fs.readFileSync(memoryPath, 'utf8'));
             console.log('🔄 Mode JSON fallback');
         }
-        
+
         return true;
     } catch (error) {
         console.error('❌ Erreur init memory:', error);
@@ -60,7 +58,6 @@ async function saveMemory(jid, userData) {
         return await saveUser(jid, userData);
     } else {
         fallbackMemory[jid] = userData;
-        // Sauvegarde asynchrone
         setTimeout(() => {
             fs.writeFileSync(memoryPath, JSON.stringify(fallbackMemory, null, 2));
         }, 100);
@@ -73,23 +70,24 @@ async function addMessageToMemory(jid, message, isBot = false) {
         return await addConversation(jid, message, isBot);
     } else {
         const user = await getMemory(jid) || { conversations: [] };
-        
+
         const newMessage = {
             text: message,
             timestamp: Date.now(),
             fromBot: isBot
         };
-        
+
+        // ⚡ Harmonisé : 500 derniers messages max (comme tu veux)
         const updatedConversations = [
-            ...(user.conversations || []).slice(-19),
+            ...(user.conversations || []).slice(-499),
             newMessage
         ];
-        
+
         const updatedUser = {
-            name: user.name,
+            name: user.name || jid.split('@')[0], // fallback si pas de nom
             conversations: updatedConversations
         };
-        
+
         return await saveMemory(jid, updatedUser);
     }
 }
@@ -97,19 +95,18 @@ async function addMessageToMemory(jid, message, isBot = false) {
 // Migration automatique JSON → PostgreSQL
 async function migrateToDatabase() {
     if (!useDatabase || !fs.existsSync(memoryPath)) return;
-    
+
     try {
         const jsonData = JSON.parse(fs.readFileSync(memoryPath, 'utf8'));
         const users = Object.entries(jsonData);
-        
+
         console.log(`🔄 Migration de ${users.length} utilisateurs vers PostgreSQL...`);
-        
+
         for (const [jid, userData] of users) {
             await saveUser(jid, userData);
         }
-        
+
         console.log('✅ Migration terminée !');
-        
     } catch (error) {
         console.error('❌ Erreur migration:', error);
     }
