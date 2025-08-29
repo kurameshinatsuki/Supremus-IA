@@ -6,7 +6,7 @@ const { Pool } = require("pg");
 const dbUrl = process.env.DATABASE_URL || "postgresql://rc_db_pblv_user:kxZvnDTYaPYTScD70HBov7Wgr0nboPL7@dpg-d2o2cnfdiees73evq170-a.oregon-postgres.render.com/rc_db_pblv";
 const proConfig = {
     connectionString: dbUrl,
-    ssl: { rejectUnauthorized: false }, // Toujours activé pour Neon
+    ssl: { rejectUnauthorized: false }, // Toujours activé pour Neon/Render
     max: 20, // Nombre max de connexions
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
@@ -14,7 +14,7 @@ const proConfig = {
 
 const pool = new Pool(proConfig);
 
-// Flag pour ne vérifier les tables qu'une seule fois
+// Flag pour éviter des vérifications multiples
 let tablesVerified = false;
 
 // Fonction pour créer les tables si elles n'existent pas
@@ -23,7 +23,6 @@ async function ensureTablesExist() {
 
     const client = await pool.connect();
     try {
-        // Table users
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 jid VARCHAR(255) PRIMARY KEY,
@@ -35,7 +34,6 @@ async function ensureTablesExist() {
             );
         `);
 
-        // Table groups (pour le contexte collectif)
         await client.query(`
             CREATE TABLE IF NOT EXISTS groups (
                 jid VARCHAR(255) PRIMARY KEY,
@@ -46,7 +44,6 @@ async function ensureTablesExist() {
             );
         `);
 
-        // Index pour optimiser les recherches
         await client.query(`
             CREATE INDEX IF NOT EXISTS idx_users_last_interaction 
             ON users(last_interaction);
@@ -123,36 +120,32 @@ async function saveUser(jid, userData) {
     }
 }
 
-// Ajouter un message à la conversation
+// Ajouter un message à la conversation (max 500)
 async function addConversation(jid, message, isBot = false) {
     const client = await pool.connect();
     try {
         await ensureTablesExist();
 
-        // Récupérer l'utilisateur existant
         const user = await getUser(jid);
 
-        // CONVERTIR les conversations de string JSON → array
         const currentConversations = user?.conversations 
             ? (typeof user.conversations === 'string' 
                 ? JSON.parse(user.conversations) 
                 : user.conversations)
             : [];
 
-        // Nouveau message
         const newMessage = {
             text: message,
             timestamp: new Date(),
             fromBot: isBot
         };
 
-        // Garder seulement les 50 derniers messages
+        // ⚡ Harmonisé : 500 derniers messages
         const updatedConversations = [
-            ...currentConversations.slice(-49),
+            ...currentConversations.slice(-499),
             newMessage
         ];
 
-        // Mettre à jour l'utilisateur
         const updateQuery = `
             UPDATE users 
             SET conversations = $1, last_interaction = $2
@@ -205,7 +198,6 @@ async function closePool() {
     }
 }
 
-// Exportations
 module.exports = {
     pool,
     ensureTablesExist,
