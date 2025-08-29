@@ -8,13 +8,7 @@ const dbUrl = process.env.DATABASE_URL || "postgresql://supremia_db_user:YdWoiO3
 // Configuration pour Render.com et autres services cloud
 const proConfig = {
     connectionString: dbUrl,
-    // Force SSL en production
-    ssl: process.env.NODE_ENV === "production" ? { 
-        rejectUnauthorized: false 
-    } : false,
-    max: 20,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 5000, // Augmenté à 5s pour les connexions SSL
+    ssl: { rejectUnauthorized: false },
 };
 
 const pool = new Pool(proConfig);
