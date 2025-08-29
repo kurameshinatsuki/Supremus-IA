@@ -74,7 +74,7 @@ if (remoteJid.endsWith('@g.us')) {
 
     memory[remoteJid].recentMessages.push({
         sender: userName,
-        text: body, 
+        text: userText, 
         timestamp: Date.now()
     });
 
@@ -102,7 +102,7 @@ if (remoteJid.endsWith('@g.us')) {
 
     // Ajoute le message actuel à l'historique de l'utilisateur
     memory[sender].conversations.push({
-        text: messageText,
+        text: userText,
         timestamp: Date.now()
     });
 
