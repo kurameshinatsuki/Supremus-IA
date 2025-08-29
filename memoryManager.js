@@ -1,7 +1,8 @@
-// memoryManager.js - Bridge optimisé avec ton code PostgreSQL
+// memoryManager.js - Bridge optimisé 
 const fs = require('fs');
 const path = require('path');
 const { 
+    pool,
     ensureTablesExist, 
     getUser, 
     saveUser, 
@@ -15,23 +16,29 @@ let fallbackMemory = {};
 // Initialisation intelligente
 async function initMemory() {
     try {
-        // Essayer PostgreSQL d'abord
         if (process.env.DATABASE_URL) {
-            await ensureTablesExist();
-            useDatabase = true;
-            console.log('✅ Mode PostgreSQL (Neon)');
-        } else {
-            // Fallback JSON
-            useDatabase = false;
-            if (fs.existsSync(memoryPath)) {
-                fallbackMemory = JSON.parse(fs.readFileSync(memoryPath, 'utf8'));
+            const client = await pool.connect();
+            try {
+                await client.query('SELECT 1');
+                await ensureTablesExist();
+                useDatabase = true;
+                console.log('✅ Mode PostgreSQL (Neon)');
+            } catch (dbError) {
+                console.error('❌ PostgreSQL inaccessible - Fallback JSON:', dbError);
+                useDatabase = false;
+            } finally {
+                client.release();
             }
+        }
+
+        if (!useDatabase && fs.existsSync(memoryPath)) {
+            fallbackMemory = JSON.parse(fs.readFileSync(memoryPath, 'utf8'));
             console.log('🔄 Mode JSON fallback');
         }
-        
+
         return true;
     } catch (error) {
-        console.error('❌ Erreur init memory - Fallback JSON:', error);
+        console.error('❌ Erreur init memory:', error);
         useDatabase = false;
         return false;
     }
@@ -51,7 +58,6 @@ async function saveMemory(jid, userData) {
         return await saveUser(jid, userData);
     } else {
         fallbackMemory[jid] = userData;
-        // Sauvegarde asynchrone
         setTimeout(() => {
             fs.writeFileSync(memoryPath, JSON.stringify(fallbackMemory, null, 2));
         }, 100);
@@ -63,24 +69,25 @@ async function addMessageToMemory(jid, message, isBot = false) {
     if (useDatabase) {
         return await addConversation(jid, message, isBot);
     } else {
-        const user = await getMemory(jid) || { conversations: [] };
-        
+        const user = await getMemory(jid);
+        const currentConversations = user?.conversations || [];
+
         const newMessage = {
             text: message,
             timestamp: Date.now(),
             fromBot: isBot
         };
-        
+
         const updatedConversations = [
-            ...(user.conversations || []).slice(-19),
+            ...currentConversations.slice(-499),
             newMessage
         ];
-        
+
         const updatedUser = {
-            name: user.name,
+            name: user?.name || jid.split('@')[0],
             conversations: updatedConversations
         };
-        
+
         return await saveMemory(jid, updatedUser);
     }
 }
@@ -88,19 +95,18 @@ async function addMessageToMemory(jid, message, isBot = false) {
 // Migration automatique JSON → PostgreSQL
 async function migrateToDatabase() {
     if (!useDatabase || !fs.existsSync(memoryPath)) return;
-    
+
     try {
         const jsonData = JSON.parse(fs.readFileSync(memoryPath, 'utf8'));
         const users = Object.entries(jsonData);
-        
+
         console.log(`🔄 Migration de ${users.length} utilisateurs vers PostgreSQL...`);
-        
+
         for (const [jid, userData] of users) {
             await saveUser(jid, userData);
         }
-        
+
         console.log('✅ Migration terminée !');
-        
     } catch (error) {
         console.error('❌ Erreur migration:', error);
     }
