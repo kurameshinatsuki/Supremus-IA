@@ -1,69 +1,103 @@
-// === nazunaAI.js ===
+// === nazunaAI.js === 
 require('dotenv').config();
 const path = require('path');
-const fs = require('fs');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { getMemory, addMessageToMemory } = require('./memoryManager');
+const { getMemory } = require('./memoryManager');
 
-// Initialisation Gemini Flash
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+const model = genAI.getGenerativeModel({ 
+    model: "gemini-2.5-flash",
+    generationConfig: {
+        temperature: 0.4, // Plus bas = plus cohérent
+        topP: 0.8,
+        maxOutputTokens: 512,
+    }
+});
 
 const trainingPath = path.join(__dirname, 'Training IA.json');
 let trainingData = null;
 let lastModified = null;
 
 function loadTrainingData() {
-  try {
-    const stats = fs.statSync(trainingPath);
-    if (!lastModified || stats.mtime > lastModified) {
-      trainingData = fs.readFileSync(trainingPath, 'utf-8');
-      lastModified = stats.mtime;
-      console.log("[NazunaAI] Training IA.json rechargé.");
+    try {
+        const fs = require('fs');
+        if (fs.existsSync(trainingPath)) {
+            const stats = fs.statSync(trainingPath);
+            if (!lastModified || stats.mtime > lastModified) {
+                trainingData = fs.readFileSync(trainingPath, 'utf-8');
+                lastModified = stats.mtime;
+                console.log("[NazunaAI] Training IA.json rechargé.");
+            }
+        } else {
+            trainingData = `Tu es Supremia, assistante personnelle de SUPREMUS PROD. 
+Tu es professionnelle, précise et toujours concentrée sur la conversation actuelle.
+Tu t'adresses toujours personnellement à l'utilisateur.`;
+        }
+    } catch (err) {
+        console.error("[NazunaAI] Erreur Training IA:", err.message);
+        trainingData = "Tu es Supremia, assistante personnelle de SUPREMUS PROD.";
     }
-  } catch (err) {
-    console.error("[NazunaAI] Erreur de lecture Training IA.json:", err.message);
-    trainingData = "Contexte par défaut indisponible.";
-  }
-  return trainingData;
+    return trainingData;
+}
+
+function safeParseConversations(conversations) {
+    try {
+        if (!conversations) return [];
+        if (Array.isArray(conversations)) return conversations;
+        if (typeof conversations === 'string') return JSON.parse(conversations);
+        return [];
+    } catch (error) {
+        console.error("Erreur parsing conversations:", error);
+        return [];
+    }
 }
 
 async function nazunaReply(userText, sender, remoteJid) {
-  try {
-    const training = loadTrainingData();
+    try {
+        const training = loadTrainingData();
+        const userData = await getMemory(sender) || {};
+        
+        // SEULEMENT les conversations de CET utilisateur
+        const conversations = safeParseConversations(userData.conversations);
+        const userName = userData.name || sender.split('@')[0] || "Utilisateur";
 
-    // Charger la mémoire perso
-    const userData = await getMemory(sender) || { conversations: [] };
-    const history = (userData.conversations || []).slice(-10);
+        // CONTEXTE COURT et CIBLÉ (max 4 messages)
+        let recentContext = "";
+        if (conversations.length > 0) {
+            const recentMessages = conversations.slice(-4); // Seulement 4 derniers
+            recentContext = "Conversation récente avec " + userName + ":\n" +
+                recentMessages.map(c => 
+                    `${c.fromBot ? 'Supremia' : userName}: ${c.text}`
+                ).join('\n') + '\n';
+        }
 
-    // Construire les messages au format Gemini
-    const messages = [
-      { role: "system", parts: [{ text: training }] },
-      ...history.map(m => ({
-        role: m.fromBot ? "model" : "user",
-        parts: [{ text: m.text }]
-      })),
-      { role: "user", parts: [{ text: userText }] }
-    ];
+        // PROMPT EXPLICITE avec CONTEXTE ISOLÉ
+        const prompt = `${training}
 
-    // Appel Gemini
-    const result = await model.generateContent({ contents: messages });
+CONCENTRE-TOI UNIQUEMENT SUR CETTE CONVERSATION AVEC ${userName}.
 
-    // Récupération réponse
-    const reply =
-      result?.response?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "⚠️ Je n'ai pas pu générer de réponse.";
+${recentContext}
 
-    // Sauvegarder mémoire
-    await addMessageToMemory(sender, userText, false);
-    await addMessageToMemory(sender, reply, true);
+${userName}: ${userText}
 
-    return reply;
+Supremia (réponds uniquement à ${userName}):`;
 
-  } catch (err) {
-    console.error("[NazunaAI] Erreur:", err);
-    return "⚠️ Une erreur technique est survenue.";
-  }
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        let text = response.text().trim();
+
+        // Nettoyer la réponse si elle contient d'autres noms
+        if (text.includes('Utilisateur:') || text.includes('@')) {
+            text = text.replace(/Utilisateur:/g, userName + ":")
+                      .replace(/@\d+/g, userName);
+        }
+
+        return text || `Je vous écoute, ${userName}. Comment puis-vous aider ?`;
+
+    } catch (e) {
+        console.error("[NazunaAI] Erreur:", e.message);
+        return "Un instant, je rencontre une difficulté technique.";
+    }
 }
 
 module.exports = { nazunaReply };
