@@ -29,13 +29,13 @@ function loadTrainingData() {
                 console.log("[NazunaAI] Training IA.json rechargé.");
             }
         } else {
-            trainingData = `Tu es Supremia, assistante personnelle de SUPREMUS PROD. 
+            trainingData = `Tu es Supremia, assistante personnelle de *SUPREMUS PROD*. 
 Tu es professionnelle, précise et toujours concentrée sur la conversation actuelle.
 Tu t'adresses toujours personnellement à l'utilisateur.`;
         }
     } catch (err) {
         console.error("[NazunaAI] Erreur Training IA:", err.message);
-        trainingData = "Tu es Supremia, assistante personnelle de SUPREMUS PROD.";
+        trainingData = "Tu es Supremia, assistante personnelle de *SUPREMUS PROD*.";
     }
     return trainingData;
 }
@@ -56,7 +56,7 @@ async function nazunaReply(userText, sender, remoteJid) {
     try {
         const training = loadTrainingData();
         const userData = await getMemory(sender) || {};
-        
+
         // SEULEMENT les conversations de CET utilisateur
         const conversations = safeParseConversations(userData.conversations);
         const userName = userData.name || sender.split('@')[0] || "Utilisateur";
@@ -64,8 +64,8 @@ async function nazunaReply(userText, sender, remoteJid) {
         // CONTEXTE COURT et CIBLÉ (max 4 messages)
         let recentContext = "";
         if (conversations.length > 0) {
-            const recentMessages = conversations.slice(-4); // Seulement 4 derniers
-            recentContext = "Conversation récente avec " + userName + ":\n" +
+            const recentMessages = conversations.slice(-500); // Seulement 500 derniers
+            recentContext = "Conversation avec " + userName + ":\n" +
                 recentMessages.map(c => 
                     `${c.fromBot ? 'Supremia' : userName}: ${c.text}`
                 ).join('\n') + '\n';
