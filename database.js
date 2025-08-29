@@ -3,7 +3,7 @@ require("dotenv").config();
 const { Pool } = require("pg");
 
 // Configuration de la connexion
-const dbUrl = process.env.DATABASE_URL || "postgresql://default:password@localhost/nazuna";
+const dbUrl = process.env.DATABASE_URL || "postgresql://rc_db_pblv_user:kxZvnDTYaPYTScD70HBov7Wgr0nboPL7@dpg-d2o2cnfdiees73evq170-a.oregon-postgres.render.com/rc_db_pblv";
 const proConfig = {
     connectionString: dbUrl,
     ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
