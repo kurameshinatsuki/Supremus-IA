@@ -1,28 +1,44 @@
-// database.js - Version robuste avec ton code éprouvé
+// database.js - Version corrigée avec gestion SSL
 require("dotenv").config();
 const { Pool } = require("pg");
 
-// Configuration de la connexion
+// Configuration de la connexion avec SSL
 const dbUrl = process.env.DATABASE_URL || "postgresql://supremia_db_user:YdWoiO3atGkPgfqyfea0YqS7pU2s0sDT@dpg-d2oor1mr433s73b7ls6g-a.oregon-postgres.render.com/supremia_db";
+
+// Configuration pour Render.com et autres services cloud
 const proConfig = {
     connectionString: dbUrl,
-    ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
-    max: 20, // Nombre max de connexions
+    // Force SSL en production
+    ssl: process.env.NODE_ENV === "production" ? { 
+        rejectUnauthorized: false 
+    } : false,
+    max: 20,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 5000, // Augmenté à 5s pour les connexions SSL
 };
 
 const pool = new Pool(proConfig);
 
-// Flag pour ne vérifier les tables qu'une seule fois
+// Test de connexion au démarrage
+pool.on('connect', client => {
+    console.log('🔌 Nouvelle connexion DB établie');
+});
+
+pool.on('error', err => {
+    console.error('❌ Erreur inattendue sur le pool PostgreSQL:', err);
+    // Vous pourriez redémarrer l'application ici si nécessaire
+});
+
 let tablesVerified = false;
 
 // Fonction pour créer les tables si elles n'existent pas
 async function ensureTablesExist() {
     if (tablesVerified) return;
-    
+
     const client = await pool.connect();
     try {
+        console.log('🔍 Vérification des tables...');
+        
         // Table users
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
@@ -53,9 +69,9 @@ async function ensureTablesExist() {
         `);
 
         tablesVerified = true;
-        console.log("✅ Tables vérifiées/créées.");
+        console.log("✅ Tables vérifiées/créées avec succès.");
     } catch (error) {
-        console.error("❌ Erreur création tables:", error);
+        console.error("❌ Erreur création tables:", error.message);
         throw error;
     } finally {
         client.release();
@@ -76,7 +92,7 @@ async function getUser(jid) {
 
         return result.rows.length > 0 ? result.rows[0] : null;
     } catch (error) {
-        console.error(`❌ Erreur récupération utilisateur ${jid}:`, error);
+        console.error(`❌ Erreur récupération utilisateur ${jid}:`, error.message);
         return null;
     } finally {
         client.release();
@@ -116,7 +132,7 @@ async function saveUser(jid, userData) {
         const result = await client.query(query, values);
         return result.rows[0];
     } catch (error) {
-        console.error(`❌ Erreur sauvegarde utilisateur ${jid}:`, error);
+        console.error(`❌ Erreur sauvegarde utilisateur ${jid}:`, error.message);
         throw error;
     } finally {
         client.release();
@@ -162,7 +178,7 @@ async function addConversation(jid, message, isBot = false) {
 
         return result.rows[0];
     } catch (error) {
-        console.error(`❌ Erreur ajout conversation ${jid}:`, error);
+        console.error(`❌ Erreur ajout conversation ${jid}:`, error.message);
         throw error;
     } finally {
         client.release();
@@ -176,16 +192,30 @@ async function cleanupOldConversations(daysToKeep = 30) {
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
-        await client.query(
-            `DELETE FROM users WHERE last_interaction < $1`,
+        const result = await client.query(
+            `DELETE FROM users WHERE last_interaction < $1 RETURNING jid`,
             [cutoffDate]
         );
 
-        console.log(`🧹 Nettoyage des données vieilles de ${daysToKeep} jours`);
+        console.log(`🧹 Nettoyage de ${result.rowCount} entrées vieilles de ${daysToKeep} jours`);
     } catch (error) {
-        console.error("❌ Erreur nettoyage:", error);
+        console.error("❌ Erreur nettoyage:", error.message);
     } finally {
         client.release();
+    }
+}
+
+// Test de connexion à la base de données
+async function testConnection() {
+    try {
+        const client = await pool.connect();
+        const result = await client.query('SELECT NOW() as current_time');
+        console.log('✅ Connexion DB réussie:', result.rows[0].current_time);
+        client.release();
+        return true;
+    } catch (error) {
+        console.error('❌ Échec connexion DB:', error.message);
+        return false;
     }
 }
 
@@ -195,7 +225,7 @@ async function closePool() {
         await pool.end();
         console.log("✅ Pool PostgreSQL fermé");
     } catch (error) {
-        console.error("❌ Erreur fermeture pool:", error);
+        console.error("❌ Erreur fermeture pool:", error.message);
     }
 }
 
@@ -207,5 +237,6 @@ module.exports = {
     saveUser,
     addConversation,
     cleanupOldConversations,
-    closePool
+    closePool,
+    testConnection
 };
