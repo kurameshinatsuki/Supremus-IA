@@ -15,7 +15,6 @@ let pair = false;
 
 // Initialisation de la mémoire
 let memoryInitialized = false;
-let BOT_JID = null;
 
 async function initializeMemory() {
     if (!memoryInitialized) {
@@ -229,7 +228,7 @@ function quotedMatchesBot(chatId, quotedText) {
 
 // -------- main message handler --------
 async function startBot(sock, state) {
-    BOT_JID = (sock.user && sock.user.id) || (state?.creds?.me?.id) || process.env.BOT_JID || null;
+    let BOT_JID = (sock.user && sock.user.id) || (state?.creds?.me?.id) || process.env.BOT_JID || null;
     if (BOT_JID) console.log('🤖 Bot JID:', BOT_JID);
 
     // Initialiser la mémoire
@@ -250,15 +249,6 @@ async function startBot(sock, state) {
             if (!msg.message) {
                 if (DEBUG) console.log('⚠️ Message sans contenu - ignoré');
                 return;
-            }
-
-            // Vérifier que la mémoire est initialisée
-            if (!memoryInitialized) {
-                console.log("⏳ Mémoire non initialisée, attente...");
-                await delay(1000);
-                if (!memoryInitialized) {
-                    await initializeMemory();
-                }
             }
 
             prettyLog(msg);
@@ -288,22 +278,21 @@ async function startBot(sock, state) {
 
             const isReplyToBot = quotedText && quotedMatchesBot(remoteJid, quotedText);
 
-            // Vérifie si le bot est mentionné - CORRIGÉ
-            const botNumber = normalizeLocal(BOT_JID);
-            const botMentionPattern = new RegExp(`@${botNumber}|Supremia`, 'i');
-            const context = msg.message?.extendedTextMessage?.contextInfo || {};
+            // Vérifie si le bot est mentionné
+            const botNumber = '@111536592965872';
+            const botMentionPattern = new RegExp(`${botNumber}|Supremia`, 'i');
 
             const text = extractText(msg);
             const isMentioned = remoteJid.endsWith('@g.us') ?
-                (text && (botMentionPattern.test(text) || (context?.mentionedJid && context.mentionedJid.includes(BOT_JID)))) :
+                (text && botMentionPattern.test(text)) :
                 true;
 
-            // Logs de débogage
-            console.log('📝 Message texte:', text);
-            console.log('🔍 isReplyToBot:', isReplyToBot);
-            console.log('🔍 isMentioned:', isMentioned);
-            console.log('🤖 Bot JID:', BOT_JID);
-            console.log('🔢 Bot number normalisé:', botNumber);
+            if (DEBUG) {
+                console.log('🔍 Analyse message:');
+                console.log('isReplyToBot:', isReplyToBot);
+                console.log('isMentioned:', isMentioned);
+                console.log('Bot number:', botNumber);
+            }
 
             if (!text) {
                 console.log('ℹ️ Message sans texte - ignoré');
