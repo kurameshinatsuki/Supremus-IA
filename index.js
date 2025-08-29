@@ -333,20 +333,21 @@ async function startBot(sock, state) {
                         console.log('📤 Envoi réponse');
 
                         // Ajouter la mention en groupe
-                        if (remoteJid.endsWith('@g.us')) {
-                            await sock.sendMessage(remoteJid, {
-                                text: `${reply}`,
-                                mentions: [senderJid]
-                            }, {
-                                quoted: msg
-                            });
-                        } else {
-                            await sock.sendMessage(remoteJid, {
-                                text: reply
-                            }, {
-                                quoted: msg
-                            });
-                        }
+                        if (reply) {
+    if (remoteJid.endsWith('@g.us')) {
+        await sock.sendMessage(remoteJid, {
+            text: reply.text,
+            mentions: reply.mentions
+        }, { quoted: msg });
+    } else {
+        await sock.sendMessage(remoteJid, {
+            text: reply.text
+        }, { quoted: msg });
+    }
+
+    await addMessageToMemory(senderJid, reply.text, true);
+    cacheBotReply(remoteJid, reply.text);
+}
 
                         // Mettre à jour la mémoire avec la réponse du bot
                         await addMessageToMemory(senderJid, reply, true);
