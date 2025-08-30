@@ -1,8 +1,7 @@
-# 🌸 NazunaBot - WhatsApp AI Bot
+# 🤖 SUPREMUS AI - WhatsApp Roleplay Assistant
 
-&#x20; &#x20;
-
-NazunaBot est un bot WhatsApp intelligent basé sur **Baileys** et **Google Gemini AI**, capable de répondre automatiquement aux messages, de réagir aux mentions, et même d’envoyer des stickers aléatoires 🎴.
+SUPREMUS AI est un bot WhatsApp intelligent développé par **SUPRÊMUS PROD** pour automatiser et enrichir l’expérience de jeu textuel dans la **SRPN (Supremus Rôle Play Nation)**.  
+Basé sur **Baileys** et **Google Gemini AI**, il permet de répondre automatiquement aux messages, de gérer des activités RP et de publier des annonces officielles.
 
 ---
 
@@ -14,24 +13,28 @@ NazunaBot est un bot WhatsApp intelligent basé sur **Baileys** et **Google Gemi
 4. [Configuration](#-configuration)
 5. [Lancement](#-lancement)
 6. [Structure du projet](#-structure-du-projet)
-7. [Aperçu des logs](#-aperçu-des-logs)
-8. [📸 Screenshots & Démo](#-screenshots--démo)
-9. [Problèmes fréquents](#-problèmes-fréquents)
-10. [Licence](#-licence)
+7. [Exemple d’utilisation](#-exemple-dutilisation)
+8. [Problèmes fréquents](#-problèmes-fréquents)
+9. [Licence](#-licence)
 
 ---
 
 ## ✨ Fonctionnalités
 
 - 🤖 **Réponses IA** avec l’API **Gemini**
-- 🎯 Déclenchement automatique si :
-  - Mention `@nazuna`
-  - Mention du bot dans un groupe
-  - Réponse directe au bot
-  - Message en privé (DM)
+- 🎮 Support des **jeux SRPN** :
+  - ABM Fight
+  - Origamy World
+  - Yu-Gi-Oh Speed Duel
+  - Speed Rush
+- 📢 **Annonces officielles** (gagnant, perdant, score…)
 - 🎴 Envoi de **stickers aléatoires** depuis `./stickers/`
-- 📂 Gestion de session sécurisée (via dossier `./session/`)
-- 🛠️ Logs détaillés pour chaque message reçu
+- 📂 **Sessions sécurisées** avec Baileys (`./session/`)
+- 🔔 Déclenchement automatique si :
+  - Mention du bot dans un groupe
+  - Réponse directe à un message du bot
+  - Message privé (DM)
+  - Commande SRPN spécifique
 
 ---
 
@@ -40,6 +43,7 @@ NazunaBot est un bot WhatsApp intelligent basé sur **Baileys** et **Google Gemi
 - [Node.js](https://nodejs.org/) **v20.x ou supérieur**
 - Un compte WhatsApp (numéro valide)
 - Une clé API **Google Gemini**
+- Git installé
 
 ---
 
@@ -47,117 +51,8 @@ NazunaBot est un bot WhatsApp intelligent basé sur **Baileys** et **Google Gemi
 
 ```bash
 # Cloner le projet
-git clone https://github.com/ton-user/NazunaBot.git
-cd NazunaBot
+git clone https://github.com/ton-user/SupremusAI.git
+cd SupremusAI
 
 # Installer les dépendances
 npm install
-```
-
----
-
-## 🔑 Configuration
-
-Créer un fichier `.env` à la racine du projet :
-
-```env
-# === Configuration API ===
-GEMINI_API_KEY=TON_CLE_API
-
-# === Session Baileys (ne pas modifier sauf besoin avancé) ===
-SESSION_FOLDER=./session
-```
-
----
-
-## 🚀 Lancement
-
-Démarrer le bot :
-
-```bash
-node bot.js
-```
-
-👉 Lors du premier lancement, un **code de pairage** sera généré :
-
-- Ouvre WhatsApp → Paramètres → **Appareils liés**
-- Clique sur **Lier un appareil avec code**
-- Saisis le code affiché dans le terminal ✅
-
----
-
-## 📂 Structure du projet
-
-```
-NazunaBot/
-│── bot.js           # Fichier principal
-│── nazunaAI.js      # Gestion des réponses IA via Gemini
-│── config.js        # Configuration centrale
-│── .env             # Variables d’environnement
-│── /stickers/       # Dossier des stickers .webp
-│── /session/        # Données de session WhatsApp (auto-générées)
-```
-
----
-
-## 📊 Aperçu des logs
-
-Exemple de message reçu :
-
-```
-======================
-📩 Nouveau message reçu
-👤 Expéditeur: 120363378895570599@g.us
-💬 Contenu brut: { ... }
-➡️ Question utilisateur: Salut Nazuna !
- Réponse IA: Bonjour 👋, comment vas-tu ?
-✨ Sticker envoyé: neko_smile.webp
-```
-
----
-
-## 📸 Screenshots & Démo
-
-### 1. Terminal au lancement
-
-
-
-### 2. Bot en conversation privée
-
-
-
-### 3. Réponses dans un groupe
-
-
-
-### 4. Démo animée (GIF)
-
-
-
-👉 Tu pourras remplacer ce GIF par ton propre enregistrement avec [ScreenToGif](https://www.screentogif.com/) ou [Kap](https://getkap.co/).
-
----
-
-## 🐞 Problèmes fréquents
-
-### ❌ Erreur : `TypeError: Cannot read properties of null (reading 'stickerMessage')`
-
-✔️ Correction : toujours vérifier `if (msg.message?.stickerMessage)` avant d’accéder aux stickers.\
-👉 Déjà corrigé dans la dernière version du code.
-
-### ❌ Impossible de se connecter
-
-- Vérifie que ton numéro est valide
-- Vérifie ta connexion internet
-- Supprime le dossier `/session/` et relance pour regénérer un code
-
----
-
-## 📜 Licence
-
-Ce projet est sous licence **MIT** – libre d’utilisation, modification et distribution.
-
----
-
-💡 Développé avec ❤️ pour automatiser WhatsApp et ajouter une touche d’IA 🌸
-
