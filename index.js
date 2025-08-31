@@ -220,6 +220,7 @@ async function startBot(sock, state) {
 
       prettyLog(msg);
 
+      // Ignorer si c'est le bot lui-même
       if (msg.key.fromMe) {
         const text = extractText(msg);
         if (text) cacheBotReply(msg.key.remoteJid, text);
@@ -229,38 +230,30 @@ async function startBot(sock, state) {
       const text = extractText(msg);
       if (!text) return;
 
+      const remoteJid = msg.key.remoteJid;
+      const isGroup = remoteJid.endsWith('@g.us');
+
+      // Vérifie si on répond au bot
       const quotedText = msg.message.extendedTextMessage?.contextInfo?.quotedMessage ? 
         extractTextFromQuoted(msg.message.extendedTextMessage.contextInfo) : null;
+      const isReplyToBot = quotedText && quotedMatchesBot(remoteJid, quotedText);
 
-      const isReplyToBot = quotedText && quotedMatchesBot(msg.key.remoteJid, quotedText);
-
-      // Détection des mentions
+      // Vérifie si le bot est mentionné
       const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
-      const botNumber = '111536592965872'; // Votre numéro de bot
+      const botNumber = '111536592965872'; // <-- Mets ton numéro de bot ici
       const isMentioned = mentionedJids.some(jid => jid.includes(botNumber)) || 
                          (text && text.includes('@' + botNumber)) ||
                          (text && text.toLowerCase().includes('supremia'));
-         
-        
-         const isMentioned = remoteJid.endsWith('@g.us') ?
-                (text && botMentionPattern.test(text)) :
-                true;
 
-            if (DEBUG) {
-                console.log('🔍 Analyse message:');
-                console.log('isReplyToBot:', isReplyToBot);
-                console.log('isMentioned:', isMentioned);
-                console.log('Bot number:', botNumber);
-            }
-
-            if (!text) {
-                console.log('ℹ️ Message sans texte - ignoré');
-                return;
-            }
-
+      // Vérifie si c'est une commande
       const isCommand = text.startsWith('/');
 
-      if (isCommand || isReplyToBot || isMentioned) {
+      // Règle de décision
+      const shouldReply = !isGroup || isCommand || isReplyToBot || isMentioned;
+
+      console.log(`📌 shouldReply=${shouldReply} | isGroup=${isGroup} | isCommand=${isCommand} | isReplyToBot=${isReplyToBot} | isMentioned=${isMentioned}`);
+
+      if (shouldReply) {
         try {
           let reply = null;
 
@@ -269,17 +262,19 @@ async function startBot(sock, state) {
             reply = await handleCommand(command, args, msg, sock);
           }
 
-          if ((!isCommand || reply === null) && (isReplyToBot || isMentioned)) {
+          if ((!isCommand || reply === null) && (isReplyToBot || isMentioned || !isGroup)) {
             const senderJid = msg.key.participant || msg.key.remoteJid;
-            console.log(`🤖 Message de ${senderJid} dans ${msg.key.remoteJid}`);
+            console.log(`🤖 Génération réponse pour ${senderJid} dans ${msg.key.remoteJid}`);
             reply = await nazunaReply(text, senderJid, msg.key.remoteJid);
           }
 
           if (reply) {
-            await sock.sendMessage(msg.key.remoteJid, { text: reply }, { quoted: msg });
+            // Réponse avec citation du message spécifique
+            await sock.sendMessage(msg.key.remoteJid, { text: reply, quoted: msg });
             cacheBotReply(msg.key.remoteJid, reply);
           }
 
+          // Bonus: parfois envoie un sticker fun
           if (!isCommand && Math.random() < 0.2) {
             const stickerPath = await getRandomSticker();
             if (stickerPath) {
@@ -291,7 +286,8 @@ async function startBot(sock, state) {
         } catch (error) {
           console.error('Erreur lors du traitement du message:', error);
           await sock.sendMessage(msg.key.remoteJid, { 
-            text: '❌ Désolé, une erreur est survenue. Veuillez réessayer plus tard.' 
+            text: '❌ Désolé, une erreur est survenue. Veuillez réessayer plus tard.',
+            quoted: msg
           });
         }
       }
