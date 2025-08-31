@@ -205,7 +205,7 @@ function quotedMatchesBot(chatId, quotedText) {
 // -------- main message handler --------
 async function startBot(sock, state) {
   let BOT_JID = (sock.user && sock.user.id) || (state?.creds?.me?.id) || process.env.BOT_JID || null;
-  
+
   sock.ev.on('connection.update', (u) => {
     if (u.connection === 'open' && sock.user?.id) {
       BOT_JID = sock.user.id;
@@ -227,19 +227,21 @@ async function startBot(sock, state) {
       }
 
       const text = extractText(msg);
+      if (!text) return;
+
       const quotedText = msg.message.extendedTextMessage?.contextInfo?.quotedMessage ? 
         extractTextFromQuoted(msg.message.extendedTextMessage.contextInfo) : null;
 
       const isReplyToBot = quotedText && quotedMatchesBot(msg.key.remoteJid, quotedText);
 
-      // Détection des mentions
+      // Détection des mentions - CORRIGÉ
       const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
-      const isMentioned = mentionedJids.includes(BOT_JID) || 
-                          mentionedJids.includes(BOT_JID.replace(/@s\.whatsapp\.net$/, '')) ||
-                          (text && text.includes('@' + BOT_JID.split('@')[0])) ||
-                          (text && text.includes('Supremia'));
+      const botNumber = '111536592965872'; // Votre numéro de bot
+      const isMentioned = mentionedJids.some(jid => jid.includes(botNumber)) || 
+                         (text && text.includes('@' + botNumber)) ||
+                         (text && text.toLowerCase().includes('supremia'));
 
-      const isCommand = text && text.startsWith('/');
+      const isCommand = text.startsWith('/');
 
       if (isCommand || isReplyToBot || isMentioned) {
         try {
@@ -253,7 +255,7 @@ async function startBot(sock, state) {
           if ((!isCommand || reply === null) && (isReplyToBot || isMentioned)) {
             const senderJid = msg.key.participant || msg.key.remoteJid;
             console.log(`🤖 Message de ${senderJid} dans ${msg.key.remoteJid}`);
-            reply = await nazunaReply(text, senderJid, msg.key.remoteJid, sock);
+            reply = await nazunaReply(text, senderJid, msg.key.remoteJid);
           }
 
           if (reply) {
@@ -277,7 +279,7 @@ async function startBot(sock, state) {
         }
       }
     } catch (err) {
-      console.error('❌ Erreur dans messages.upsert handler:', err && err.stack ? err.stack : err);
+      console.error('❌ Erreur dans messages.upsert handler:', err);
     }
   });
 }
