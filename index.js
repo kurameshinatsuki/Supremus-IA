@@ -241,6 +241,23 @@ async function startBot(sock, state) {
                          (text && text.includes('@' + botNumber)) ||
                          (text && text.toLowerCase().includes('supremia'));
 
+        const text = extractText(msg);
+        const isMentioned = remoteJid.endsWith('@g.us') ?
+                (text && botMentionPattern.test(text)) :
+                true;
+
+            if (DEBUG) {
+                console.log('🔍 Analyse message:');
+                console.log('isReplyToBot:', isReplyToBot);
+                console.log('isMentioned:', isMentioned);
+                console.log('Bot number:', botNumber);
+            }
+
+            if (!text) {
+                console.log('ℹ️ Message sans texte - ignoré');
+                return;
+            }
+
       const isCommand = text.startsWith('/');
 
       if (isCommand || isReplyToBot || isMentioned) {
@@ -259,9 +276,23 @@ async function startBot(sock, state) {
           }
 
           if (reply) {
-            await sock.sendMessage(msg.key.remoteJid, { text: reply, quoted: msg });
-            cacheBotReply(msg.key.remoteJid, reply);
-          }
+                        console.log('📤 Envoi réponse');
+
+               // Ajouter la mention en groupes             
+      if (remoteJid.endsWith('@g.us')) {
+                            await sock.sendMessage(remoteJid, {
+                                text: `${reply}`,
+                                mentions: [senderJid]
+                            }, {
+                                quoted: msg
+                            });
+                        } else {
+                            await sock.sendMessage(remoteJid, {
+                                text: reply
+                            }, {
+                                quoted: msg
+                            });
+                        }
 
           if (!isCommand && Math.random() < 0.2) {
             const stickerPath = await getRandomSticker();
