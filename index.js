@@ -241,7 +241,7 @@ async function startBot(sock, state) {
                          (text && text.includes('@' + botNumber)) ||
                          (text && text.toLowerCase().includes('supremia'));
          
-         const text = extractText(msg);
+         let text = extractText(msg);
          const isMentioned = remoteJid.endsWith('@g.us') ?
                 (text && botMentionPattern.test(text)) :
                 true;
