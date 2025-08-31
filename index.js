@@ -253,7 +253,7 @@ async function startBot(sock, state) {
           if ((!isCommand || reply === null) && (isReplyToBot || isMentioned)) {
             const senderJid = msg.key.participant || msg.key.remoteJid;
             console.log(`🤖 Message de ${senderJid} dans ${msg.key.remoteJid}`);
-            reply = await nazunaReply(text, senderJid, msg.key.remoteJid);
+            reply = await nazunaReply(text, senderJid, msg.key.remoteJid, sock);
           }
 
           if (reply) {
