@@ -259,7 +259,7 @@ async function startBot(sock, state) {
           }
 
           if (reply) {
-            await sock.sendMessage(msg.key.remoteJid, { text: reply });
+            await sock.sendMessage(msg.key.remoteJid, { text: reply, quoted: ms });
             cacheBotReply(msg.key.remoteJid, reply);
           }
 
