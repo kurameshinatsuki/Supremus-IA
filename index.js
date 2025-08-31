@@ -234,15 +234,15 @@ async function startBot(sock, state) {
 
       const isReplyToBot = quotedText && quotedMatchesBot(msg.key.remoteJid, quotedText);
 
-      // Détection des mentions - CORRIGÉ
+      // Détection des mentions
       const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
       const botNumber = '111536592965872'; // Votre numéro de bot
       const isMentioned = mentionedJids.some(jid => jid.includes(botNumber)) || 
                          (text && text.includes('@' + botNumber)) ||
                          (text && text.toLowerCase().includes('supremia'));
-
-        const text = extractText(msg);
-        const isMentioned = remoteJid.endsWith('@g.us') ?
+         
+         const text = extractText(msg);
+         const isMentioned = remoteJid.endsWith('@g.us') ?
                 (text && botMentionPattern.test(text)) :
                 true;
 
@@ -276,23 +276,9 @@ async function startBot(sock, state) {
           }
 
           if (reply) {
-                        console.log('📤 Envoi réponse');
-
-               // Ajouter la mention en groupes             
-      if (remoteJid.endsWith('@g.us')) {
-                            await sock.sendMessage(remoteJid, {
-                                text: `${reply}`,
-                                mentions: [senderJid]
-                            }, {
-                                quoted: msg
-                            });
-                        } else {
-                            await sock.sendMessage(remoteJid, {
-                                text: reply
-                            }, {
-                                quoted: msg
-                            });
-                        }
+            await sock.sendMessage(msg.key.remoteJid, { text: reply }, { quoted: msg });
+            cacheBotReply(msg.key.remoteJid, reply);
+          }
 
           if (!isCommand && Math.random() < 0.2) {
             const stickerPath = await getRandomSticker();
