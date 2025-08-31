@@ -49,7 +49,7 @@ function loadUserMemory() {
  * @param {string} userText - Texte envoyé par l'utilisateur.
  * @param {string} sender - Identifiant de l'expéditeur.
  * @param {string} remoteJid - Identifiant de la conversation (privé ou groupe).
- * @returns {Promise<{text: string, mentions: string[]}>} - Réponse générée par Gemini + mentions
+ * @returns {Promise<string>} - Réponse générée par Gemini.
  */
 async function nazunaReply(userText, sender, remoteJid) {
     try {
@@ -57,58 +57,64 @@ async function nazunaReply(userText, sender, remoteJid) {
         const memory = loadUserMemory();
         const training = loadTrainingData();
 
-        // Récupérer le nom de l'utilisateur
-        const userName = memory[sender]?.name || sender.split('@')[0];
+// Récupérer le nom de l'utilisateur
+const userName = memory[sender]?.name || sender.split('@')[0];
 
-        // Préparer le contexte de conversation
-        let conversationContext = "";
+// Préparer le contexte de conversation
+let conversationContext = "";
 
-        if (remoteJid.endsWith('@g.us')) {
-            // Contexte de groupe - Gestion collective
-            conversationContext = "Conversation de groupe récente:\n";
+if (remoteJid.endsWith('@g.us')) {
+    // Contexte de groupe - Gestion collective
+    conversationContext = "Conversation de groupe récente:\n";
 
-            if (!memory[remoteJid]) {
-                memory[remoteJid] = { recentMessages: [] };
-            }
+    // S'assure que le groupe existe dans la mémoire
+    if (!memory[remoteJid]) {
+        memory[remoteJid] = { recentMessages: [] };
+    }
 
-            memory[remoteJid].recentMessages.push({
-                sender: userName,
-                text: userText,
-                timestamp: Date.now()
-            });
+    memory[remoteJid].recentMessages.push({
+        sender: userName,
+        text: body, 
+        timestamp: Date.now()
+    });
 
-            const maxGroupMessages = 50;
-            memory[remoteJid].recentMessages = memory[remoteJid].recentMessages.slice(-maxGroupMessages);
+    const maxGroupMessages = 50;
+    memory[remoteJid].recentMessages = memory[remoteJid].recentMessages.slice(-maxGroupMessages);
 
-            const groupMessagesForContext = memory[remoteJid].recentMessages
-                .map(msg => `${msg.sender}: ${msg.text}`)
-                .join('\n');
+    // Construit le contexte en formatant les messages du groupe
+    const groupMessagesForContext = memory[remoteJid].recentMessages
+        .map(msg => `${msg.sender}: ${msg.text}`)
+        .join('\n');
 
-            conversationContext += groupMessagesForContext + '\n';
+    conversationContext += groupMessagesForContext + '\n';
 
-            if (memory[sender]?.conversations?.length > 0) {
-                conversationContext += "\nDernier échange en privé avec moi:\n";
-                const lastPrivateMsg = memory[sender].conversations.slice(-1)[0];
-                conversationContext += `${userName}: ${lastPrivateMsg.text}\n`;
-            }
-        } else {
-            if (!memory[sender]) {
-                memory[sender] = { conversations: [] };
-            }
+    if (memory[sender]?.conversations?.length > 0) {
+        conversationContext += "\nDernier échange en privé avec moi:\n";
+        const lastPrivateMsg = memory[sender].conversations.slice(-1)[0]; 
+        conversationContext += `${userName}: ${lastPrivateMsg.text}\n`;
+    }
 
-            memory[sender].conversations.push({
-                text: userText,
-                timestamp: Date.now()
-            });
+} else {
+   
+    if (!memory[sender]) {
+        memory[sender] = { conversations: [] };
+    }
 
-            if (memory[sender].conversations.length > 0) {
-                conversationContext = "Historique de notre conversation:\n" +
-                    memory[sender].conversations
-                        .slice(-50)
-                        .map(c => `${userName}: ${c.text}`)
-                        .join('\n') + '\n';
-            }
-        }
+    // Ajoute le message actuel à l'historique de l'utilisateur
+    memory[sender].conversations.push({
+        text: messageText,
+        timestamp: Date.now()
+    });
+
+    // Construit le contexte avec l'historique personnel
+    if (memory[sender].conversations.length > 0) {
+        conversationContext = "Historique de notre conversation:\n" +
+            memory[sender].conversations
+                .slice(-50) // 50 derniers messages
+                .map(c => `${userName}: ${c.text}`)
+                .join('\n') + '\n';
+    }
+}
 
         // Construire le prompt final
         const prompt = `${training}\n\n${conversationContext}\n${userName}: ${userText}\n:`;
@@ -117,29 +123,34 @@ async function nazunaReply(userText, sender, remoteJid) {
         const response = await result.response;
         const text = response.text().trim();
 
-        // Mettre à jour la mémoire
+        // Mettre à jour la mémoire avec la nouvelle conversation
         if (!memory[sender]) {
             memory[sender] = { name: userName, conversations: [] };
         }
+        
         if (!memory[sender].conversations) {
             memory[sender].conversations = [];
         }
-
+        
+        // Ajouter le message de l'utilisateur
         memory[sender].conversations.push({
             text: userText,
             timestamp: Date.now()
         });
-
+        
+        // Ajouter la réponse du bot
         memory[sender].conversations.push({
             text: text,
             timestamp: Date.now(),
             fromBot: true
         });
-
+        
+        // Garder seulement les 20 derniers messages
         if (memory[sender].conversations.length > 20) {
-            memory[sender].conversations = memory[sender].conversations.slice(-20);
+            memory[sender].conversations = memory[sender].conversations.slice(-50);
         }
-
+        
+        // Sauvegarder la mémoire
         try {
             const memoryPath = path.join(__dirname, 'nazuna_memory.json');
             fs.writeFileSync(memoryPath, JSON.stringify(memory, null, 2));
@@ -147,17 +158,10 @@ async function nazunaReply(userText, sender, remoteJid) {
             console.error('Erreur sauvegarde mémoire:', error);
         }
 
-        // Retourne texte + mentions
-        return {
-            text: text || "Mon IA est en cours de configuration... Reviens bientôt !",
-            mentions: remoteJid.endsWith('@g.us') ? [sender] : [] // tag l'expéditeur en groupe
-        };
+        return text || "Mon IA est en cours de configuration... Reviens bientôt !";
     } catch (e) {
         console.error("[NazunaAI] Erreur:", e.message);
-        return {
-            text: "Mon IA est en cours de configuration... Reviens bientôt !",
-            mentions: []
-        };
+        return "Mon IA est en cours de configuration... Reviens bientôt !";
     }
 }
 
