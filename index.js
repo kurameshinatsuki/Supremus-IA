@@ -205,8 +205,7 @@ function quotedMatchesBot(chatId, quotedText) {
 // -------- main message handler --------
 async function startBot(sock, state) {
   let BOT_JID = (sock.user && sock.user.id) || (state?.creds?.me?.id) || process.env.BOT_JID || null;
-  if (BOT_JID) console.log('🤖 Bot JID initial (fallback):', BOT_JID);
-
+  
   sock.ev.on('connection.update', (u) => {
     if (u.connection === 'open' && sock.user?.id) {
       BOT_JID = sock.user.id;
@@ -217,12 +216,7 @@ async function startBot(sock, state) {
   sock.ev.on('messages.upsert', async ({ messages }) => {
     try {
       const msg = messages && messages[0];
-      if (!msg) return;
-
-      if (!msg.message) {
-        if (DEBUG) console.log('⚠️ Message sans payload reçu — ignoré.');
-        return;
-      }
+      if (!msg || !msg.message) return;
 
       prettyLog(msg);
 
@@ -233,18 +227,19 @@ async function startBot(sock, state) {
       }
 
       const text = extractText(msg);
-      if (!text && !text?.startsWith('/')) return;
-
       const quotedText = msg.message.extendedTextMessage?.contextInfo?.quotedMessage ? 
         extractTextFromQuoted(msg.message.extendedTextMessage.contextInfo) : null;
 
       const isReplyToBot = quotedText && quotedMatchesBot(msg.key.remoteJid, quotedText);
 
+      // Détection des mentions
       const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
-      const isMentioned = msg.key.remoteJid.endsWith('@g.us') ? 
-        mentionedJids.includes(sock.user.id) : true;
+      const isMentioned = mentionedJids.includes(BOT_JID) || 
+                          mentionedJids.includes(BOT_JID.replace(/@s\.whatsapp\.net$/, '')) ||
+                          (text && text.includes('@' + BOT_JID.split('@')[0])) ||
+                          (text && text.includes('Supremia'));
 
-      const isCommand = text.startsWith('/');
+      const isCommand = text && text.startsWith('/');
 
       if (isCommand || isReplyToBot || isMentioned) {
         try {
@@ -256,10 +251,9 @@ async function startBot(sock, state) {
           }
 
           if ((!isCommand || reply === null) && (isReplyToBot || isMentioned)) {
-            
-const senderJid = msg.key.participant || msg.key.remoteJid;
-console.log(`🤖 Message de ${senderJid} dans ${msg.key.remoteJid}`);
-reply = await nazunaReply(text, senderJid, msg.key.remoteJid);
+            const senderJid = msg.key.participant || msg.key.remoteJid;
+            console.log(`🤖 Message de ${senderJid} dans ${msg.key.remoteJid}`);
+            reply = await nazunaReply(text, senderJid, msg.key.remoteJid);
           }
 
           if (reply) {
