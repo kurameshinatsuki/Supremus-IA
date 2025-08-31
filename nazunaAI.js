@@ -1,4 +1,4 @@
-// nazunaAI.js
+// nazunaAI.js - Version améliorée avec meilleure identification
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
@@ -48,26 +48,61 @@ function saveUserMemory(memory) {
     }
 }
 
-async function nazunaReply(userText, sender, remoteJid) {
+// Fonction pour récupérer les infos utilisateur depuis le message
+async function getUserInfo(senderJid, sock, remoteJid) {
+    try {
+        // Essayer de récupérer les infos du contact
+        const contact = await sock.fetchContacts([senderJid]);
+        if (contact && contact[0] && contact[0].name) {
+            return contact[0].name;
+        }
+        
+        // Pour les groupes, essayer de récupérer le nom du participant
+        if (remoteJid.endsWith('@g.us')) {
+            const groupMetadata = await sock.groupMetadata(remoteJid);
+            const participant = groupMetadata.participants.find(p => p.id === senderJid);
+            if (participant && participant.name) {
+                return participant.name;
+            }
+        }
+    } catch (error) {
+        console.error("Erreur récupération infos utilisateur:", error.message);
+    }
+    return senderJid.split('@')[0]; // Fallback: numéro sans @
+}
+
+async function nazunaReply(userText, sender, remoteJid, sock) {
     try {
         const memory = loadUserMemory();
         const training = loadTrainingData();
 
-        const userName = memory[sender]?.name || sender.split('@')[0];
+        // Récupérer le nom de l'utilisateur (amélioré)
+        let userName = memory[sender]?.name;
+        if (!userName && sock) {
+            userName = await getUserInfo(sender, sock, remoteJid);
+            if (!memory[sender]) memory[sender] = {};
+            memory[sender].name = userName;
+        }
+        userName = userName || sender.split('@')[0];
+
         let conversationContext = "";
         const maxContextLength = 3000;
 
-        if (remoteJid.endsWith('@g.us')) {
-            conversationContext = "Conversation de groupe récente:\n";
+        // Ajouter l'identification de l'utilisateur dans le contexte
+        const userIdentity = `Utilisateur: ${userName} (${sender})\n`;
 
+        if (remoteJid.endsWith('@g.us')) {
             if (!memory[remoteJid]) {
-                memory[remoteJid] = { recentMessages: [] };
+                memory[remoteJid] = { recentMessages: [], groupName: remoteJid };
             }
+
+            conversationContext = "Conversation de groupe récente:\n";
 
             memory[remoteJid].recentMessages.push({
                 sender: userName,
                 text: userText,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                userId: sender
             });
 
             const maxGroupMessages = 50;
@@ -92,7 +127,8 @@ async function nazunaReply(userText, sender, remoteJid) {
 
             memory[sender].conversations.push({
                 text: userText,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                userId: sender
             });
 
             const maxPrivateMessages = 20;
@@ -107,7 +143,7 @@ async function nazunaReply(userText, sender, remoteJid) {
             }
         }
 
-        conversationContext = conversationContext.slice(0, maxContextLength);
+        conversationContext = userIdentity + conversationContext.slice(0, maxContextLength);
 
         const prompt = `${training}\n\n${conversationContext}\n${userName}: ${userText}\nNazuna:`;
 
