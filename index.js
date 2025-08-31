@@ -8,14 +8,14 @@ const { default: makeWASocket, useMultiFileAuthState, delay } = require('@whiske
 const { nazunaReply } = require('./nazunaAI');
 
 const DEBUG = (process.env.DEBUG === 'true') || false;
-let pair = false; // Variable pour suivre si on a déjà tenté le pairing
+let pair = false;
 
 function ask(questionText) {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   return new Promise(resolve => rl.question(questionText, answer => {
     rl.close();
     resolve(answer.trim());
-  });
+  }));
 }
 
 // -------- command handlers --------
@@ -30,7 +30,7 @@ async function handleCommand(command, args, msg, sock) {
              "• /tagall - Mentionne tous les membres du groupe\n" +
              "• /help - Affiche ce message d'aide";
     default:
-      return null; // Commande non reconnue
+      return null;
   }
 }
 
@@ -43,25 +43,22 @@ async function handleTagAll(msg, sock) {
     const groupMetadata = await sock.groupMetadata(msg.key.remoteJid);
     const participants = groupMetadata.participants;
 
-    // Crée une liste des mentions
     const mentions = [];
     let mentionText = '';
 
     participants.forEach(participant => {
-      // Ne pas mentionner le bot lui-même
       if (participant.id !== sock.user.id) {
         mentions.push(participant.id);
         mentionText += `@${participant.id.split('@')[0]} `;
       }
     });
 
-    // Envoie le message avec les mentions
     await sock.sendMessage(msg.key.remoteJid, {
       text: `📢 Mention de tous les membres :\n${mentionText}`,
       mentions: mentions
     });
 
-    return null; // On a déjà envoyé le message, pas besoin de réponse
+    return null;
   } catch (error) {
     console.error('Erreur lors du tagall:', error);
     return "❌ Une erreur est survenue lors de la mention des membres.";
@@ -70,22 +67,24 @@ async function handleTagAll(msg, sock) {
 
 // -------- helpers --------
 function normalizeLocal(jid = '') {
-  // retourne la partie avant @ (ex: 22912345678 pour 22912345678@lid ou @s.whatsapp.net)
   return String(jid || '').split('@')[0];
 }
+
 function jidEquals(a, b) {
   if (!a || !b) return false;
   return normalizeLocal(a) === normalizeLocal(b);
 }
+
 function extractTextFromQuoted(contextInfo = {}) {
-  // quotedMessage peut contenir conversation ou extendedTextMessage
   const qm = contextInfo?.quotedMessage || {};
   return qm?.conversation || qm?.extendedTextMessage?.text || null;
 }
+
 function getMessageType(msg) {
   if (!msg || !msg.message) return null;
   return Object.keys(msg.message)[0];
 }
+
 function extractText(msg) {
   if (!msg || !msg.message) return '';
   const m = msg.message;
@@ -95,6 +94,7 @@ function extractText(msg) {
   if (m.videoMessage?.caption) return m.videoMessage.caption;
   return '';
 }
+
 function prettyLog(msg) {
   const key = msg.key || {};
   const remote = key.remoteJid || 'unknown';
@@ -119,19 +119,16 @@ function prettyLog(msg) {
   console.log('==========================\n');
 }
 
-// retire préfixes emoji/ponctuation (pour matcher le texte cité plus facilement)
 function stripLeadingNonAlnum(s = '') {
   if (!s) return '';
   try {
-    // enlève caractères initiaux non lettres/chiffres (emoji, symboles, espaces)
     return String(s).replace(/^[^\p{L}\p{N}]+/u, '').trim();
   } catch (e) {
-    // fallback simple si engine RegExp ne supporte pas \p
     return String(s).replace(/^[^a-zA-Z0-9]+/, '').trim();
   }
 }
 
-// -------- sticker helper (async, conversion and cache) --------
+// -------- sticker helper --------
 async function getRandomSticker() {
   try {
     const stickersDir = path.join(__dirname, 'stickers');
@@ -167,25 +164,25 @@ async function getRandomSticker() {
   }
 }
 
-// -------- bot message cache (pour detection reply-to) --------
-// Structure: Map<chatId, Array<{text, ts}>>
+// -------- bot message cache --------
 const botMessageCache = new Map();
+
 function cacheBotReply(chatId, text) {
   if (!chatId || !text) return;
   const arr = botMessageCache.get(chatId) || [];
   const t = String(text || '').trim();
   arr.unshift({ text: t, ts: Date.now() });
 
-  // aussi stocker version "stripped" (sans emoji/prefix) pour matching quotes qui perdent emoji
   const stripped = stripLeadingNonAlnum(t);
   if (stripped && stripped !== t) arr.unshift({ text: stripped, ts: Date.now() });
 
-  while (arr.length > 160) arr.pop(); // laisse un peu plus d'historique
+  while (arr.length > 160) arr.pop();
   botMessageCache.set(chatId, arr);
   if (DEBUG) {
     console.log('DEBUG cacheBotReply:', chatId, '=>', arr.slice(0,6).map(i => i.text));
   }
 }
+
 function quotedMatchesBot(chatId, quotedText) {
   if (!chatId || !quotedText) return false;
   const arr = botMessageCache.get(chatId) || [];
@@ -207,7 +204,6 @@ function quotedMatchesBot(chatId, quotedText) {
 
 // -------- main message handler --------
 async function startBot(sock, state) {
-  // resolve bot id fallback
   let BOT_JID = (sock.user && sock.user.id) || (state?.creds?.me?.id) || process.env.BOT_JID || null;
   if (BOT_JID) console.log('🤖 Bot JID initial (fallback):', BOT_JID);
 
@@ -228,51 +224,37 @@ async function startBot(sock, state) {
         return;
       }
 
-      // Log le message reçu (debug)
       prettyLog(msg);
 
-      // Vérifie si c'est un message du bot lui-même
       if (msg.key.fromMe) {
-        // Si c'est un message du bot, on le met en cache
         const text = extractText(msg);
         if (text) cacheBotReply(msg.key.remoteJid, text);
         return;
       }
 
-      // Récupère le texte du message
       const text = extractText(msg);
-      
-      // Ignorer les messages sans texte qui ne sont pas des commandes
       if (!text && !text?.startsWith('/')) return;
 
-      // Vérifie si c'est un message cité (reply)
       const quotedText = msg.message.extendedTextMessage?.contextInfo?.quotedMessage ? 
         extractTextFromQuoted(msg.message.extendedTextMessage.contextInfo) : null;
 
-      // Détecte si c'est une réponse à un message du bot
       const isReplyToBot = quotedText && quotedMatchesBot(msg.key.remoteJid, quotedText);
 
-      // Vérifie si le bot est mentionné (pour les groupes) ou si c'est un message privé
       const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
       const isMentioned = msg.key.remoteJid.endsWith('@g.us') ? 
         mentionedJids.includes(sock.user.id) : true;
 
-      // Vérifie si c'est une commande (commence par /)
       const isCommand = text.startsWith('/');
 
-      // Si c'est une commande ou une réponse au bot ou une mention, on traite le message
       if (isCommand || isReplyToBot || isMentioned) {
         try {
           let reply = null;
 
-          // Si c'est une commande, on la traite
           if (isCommand) {
             const [command, ...args] = text.slice(1).split(/\s+/);
             reply = await handleCommand(command, args, msg, sock);
           }
 
-          // Si ce n'est pas une commande ou si la commande n'a pas été reconnue
-          // et que c'est une réponse au bot ou une mention, on utilise l'IA
           if ((!isCommand || reply === null) && (isReplyToBot || isMentioned)) {
             reply = await nazunaReply(
               text, 
@@ -281,15 +263,11 @@ async function startBot(sock, state) {
             );
           }
 
-          // Envoie la réponse si elle existe
           if (reply) {
             await sock.sendMessage(msg.key.remoteJid, { text: reply });
-            // Met en cache la réponse du bot
             cacheBotReply(msg.key.remoteJid, reply);
           }
 
-          // Envoie un sticker aléatoire de temps en temps (20% de chance)
-          // Sauf si c'était une commande (pour éviter les réponses multiples)
           if (!isCommand && Math.random() < 0.2) {
             const stickerPath = await getRandomSticker();
             if (stickerPath) {
@@ -326,7 +304,6 @@ async function main() {
 
   sock.ev.on("creds.update", saveCreds);
 
-  // Gestion du pairing automatique comme dans le premier exemple
   if (!sock.authState.creds.registered && !pair) {
     try {
       await delay(3000);
