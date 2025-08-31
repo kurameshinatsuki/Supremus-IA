@@ -15,13 +15,13 @@ function ask(questionText) {
   return new Promise(resolve => rl.question(questionText, answer => {
     rl.close();
     resolve(answer.trim());
-  }));
+  });
 }
 
 // -------- command handlers --------
 async function handleCommand(command, args, msg, sock) {
   const commandName = command.toLowerCase();
-  
+
   switch(commandName) {
     case 'tagall':
       return handleTagAll(msg, sock);
@@ -42,11 +42,11 @@ async function handleTagAll(msg, sock) {
   try {
     const groupMetadata = await sock.groupMetadata(msg.key.remoteJid);
     const participants = groupMetadata.participants;
-    
+
     // Crée une liste des mentions
     const mentions = [];
     let mentionText = '';
-    
+
     participants.forEach(participant => {
       // Ne pas mentionner le bot lui-même
       if (participant.id !== sock.user.id) {
@@ -54,13 +54,13 @@ async function handleTagAll(msg, sock) {
         mentionText += `@${participant.id.split('@')[0]} `;
       }
     });
-    
+
     // Envoie le message avec les mentions
     await sock.sendMessage(msg.key.remoteJid, {
       text: `📢 Mention de tous les membres :\n${mentionText}`,
       mentions: mentions
     });
-    
+
     return null; // On a déjà envoyé le message, pas besoin de réponse
   } catch (error) {
     console.error('Erreur lors du tagall:', error);
@@ -239,15 +239,11 @@ async function startBot(sock, state) {
         return;
       }
 
-      // Récupère les métadonnées du groupe si c'est un groupe
-      let groupMetadata = {};
-      if (msg.key.remoteJid.endsWith('@g.us')) {
-        try {
-          groupMetadata = await sock.groupMetadata(msg.key.remoteJid);
-        } catch (err) {
-          console.error('Erreur récupération métadonnées groupe:', err);
-        }
-      }
+      // Récupère le texte du message
+      const text = extractText(msg);
+      
+      // Ignorer les messages sans texte qui ne sont pas des commandes
+      if (!text && !text?.startsWith('/')) return;
 
       // Vérifie si c'est un message cité (reply)
       const quotedText = msg.message.extendedTextMessage?.contextInfo?.quotedMessage ? 
@@ -257,38 +253,34 @@ async function startBot(sock, state) {
       const isReplyToBot = quotedText && quotedMatchesBot(msg.key.remoteJid, quotedText);
 
       // Vérifie si le bot est mentionné (pour les groupes) ou si c'est un message privé
-
-            // Vérifie si le bot est mentionné
-            const botNumber = '@111536592965872';
-            const botMentionPattern = new RegExp(`${botNumber}|Supremia`, 'i');
-
+      const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
       const isMentioned = msg.key.remoteJid.endsWith('@g.us') ? 
-        msg.message.extendedTextMessage?.text?.includes('@' + sock.user.id.split('@')[0]) : true;
+        mentionedJids.includes(sock.user.id) : true;
 
-      // Récupère le texte du message
-      const text = extractText(msg);
-      if (!text) return;
-      
       // Vérifie si c'est une commande (commence par /)
       const isCommand = text.startsWith('/');
-      
+
       // Si c'est une commande ou une réponse au bot ou une mention, on traite le message
       if (isCommand || isReplyToBot || isMentioned) {
         try {
           let reply = null;
-          
+
           // Si c'est une commande, on la traite
           if (isCommand) {
             const [command, ...args] = text.slice(1).split(/\s+/);
             reply = await handleCommand(command, args, msg, sock);
           }
-          
+
           // Si ce n'est pas une commande ou si la commande n'a pas été reconnue
           // et que c'est une réponse au bot ou une mention, on utilise l'IA
           if ((!isCommand || reply === null) && (isReplyToBot || isMentioned)) {
-            reply = await nazunaReply(text, msg.key.remoteJid);
+            reply = await nazunaReply(
+              text, 
+              msg.key.participant || msg.key.remoteJid,
+              msg.key.remoteJid
+            );
           }
-          
+
           // Envoie la réponse si elle existe
           if (reply) {
             await sock.sendMessage(msg.key.remoteJid, { text: reply });
@@ -321,7 +313,7 @@ async function startBot(sock, state) {
 
 // -------- main --------
 async function main() {
-  const { state, saveCreds } = await useMultiFileAuthState('./auth'); // Changé de './session' à './auth'
+  const { state, saveCreds } = await useMultiFileAuthState('./auth');
   const sock = makeWASocket({
     auth: state,
     printQRInTerminal: false,
