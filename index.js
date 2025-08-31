@@ -256,11 +256,10 @@ async function startBot(sock, state) {
           }
 
           if ((!isCommand || reply === null) && (isReplyToBot || isMentioned)) {
-            reply = await nazunaReply(
-              text, 
-              msg.key.participant || msg.key.remoteJid,
-              msg.key.remoteJid
-            );
+            
+const senderJid = msg.key.participant || msg.key.remoteJid;
+console.log(`🤖 Message de ${senderJid} dans ${msg.key.remoteJid}`);
+reply = await nazunaReply(text, senderJid, msg.key.remoteJid);
           }
 
           if (reply) {
