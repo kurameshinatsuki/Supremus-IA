@@ -1,4 +1,4 @@
-// nazunaAI.js - Version corrigée
+// nazunaAI.js - Version corrigée et améliorée
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
@@ -31,12 +31,22 @@ function loadUserMemory() {
     try {
         const memoryPath = path.join(__dirname, 'nazuna_memory.json');
         if (fs.existsSync(memoryPath)) {
-            return JSON.parse(fs.readFileSync(memoryPath, 'utf8'));
+            const data = JSON.parse(fs.readFileSync(memoryPath, 'utf8'));
+            // Vérifier la structure pour la rétrocompatibilité
+            if (data.users === undefined) {
+                // Ancien format: convertir en nouveau format
+                const newData = { users: {}, groups: {} };
+                for (const [sender, userData] of Object.entries(data)) {
+                    newData.users[sender] = userData;
+                }
+                return newData;
+            }
+            return data;
         }
     } catch (error) {
         console.error('Erreur lecture mémoire:', error);
     }
-    return {};
+    return { users: {}, groups: {} };
 }
 
 function saveUserMemory(memory) {
@@ -48,26 +58,68 @@ function saveUserMemory(memory) {
     }
 }
 
-async function nazunaReply(userText, sender, remoteJid) {
+async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup = false) {
     try {
         const memory = loadUserMemory();
         const training = loadTrainingData();
 
-        const userName = memory[sender]?.name || sender.split('@')[0];
+        // Utiliser le pushName si disponible, sinon utiliser l'ID
+        const userName = pushName || memory.users[sender]?.name || sender.split('@')[0];
+        
+        // Mettre à jour le nom si pushName est fourni et différent
+        if (pushName && (!memory.users[sender] || memory.users[sender].name !== pushName)) {
+            if (!memory.users[sender]) {
+                memory.users[sender] = { name: userName, conversations: [] };
+            } else {
+                memory.users[sender].name = pushName;
+            }
+            saveUserMemory(memory);
+        }
+        
         let conversationContext = "";
 
         // Initialiser la mémoire utilisateur si nécessaire
-        if (!memory[sender]) {
-            memory[sender] = { name: userName, conversations: [] };
+        if (!memory.users[sender]) {
+            memory.users[sender] = { name: userName, conversations: [] };
         }
 
-        // Construire le contexte de conversation
-        if (memory[sender].conversations && memory[sender].conversations.length > 0) {
-            conversationContext = "Historique de notre conversation:\n" +
-                memory[sender].conversations
-                    .slice(-5) // 5 derniers messages seulement
-                    .map(c => `${c.fromUser ? userName : 'Nazuna'}: ${c.text}`)
-                    .join('\n') + '\n';
+        // Gestion des conversations de groupe
+        if (isGroup) {
+            if (!memory.groups[remoteJid]) {
+                memory.groups[remoteJid] = { participants: {}, lastMessages: [] };
+            }
+            
+            // Mettre à jour les participants
+            if (pushName) {
+                memory.groups[remoteJid].participants[sender] = pushName;
+            }
+            
+            // Garder les 10 derniers messages du groupe
+            memory.groups[remoteJid].lastMessages.push({
+                sender: sender,
+                name: userName,
+                text: userText,
+                timestamp: Date.now()
+            });
+            
+            if (memory.groups[remoteJid].lastMessages.length > 10) {
+                memory.groups[remoteJid].lastMessages = memory.groups[remoteJid].lastMessages.slice(-10);
+            }
+            
+            // Construire le contexte de groupe
+            conversationContext = "Conversation de groupe:\n" +
+                memory.groups[remoteJid].lastMessages
+                    .map(m => `${m.name}: ${m.text}`)
+                    .join('\n') + '\n\n';
+        } else {
+            // Conversation privée
+            if (memory.users[sender].conversations && memory.users[sender].conversations.length > 0) {
+                conversationContext = "Historique de notre conversation:\n" +
+                    memory.users[sender].conversations
+                        .slice(-5)
+                        .map(c => `${c.fromUser ? userName : 'Nazuna'}: ${c.text}`)
+                        .join('\n') + '\n';
+            }
         }
 
         // Construire le prompt final
@@ -75,34 +127,51 @@ async function nazunaReply(userText, sender, remoteJid) {
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
+        
+        if (!response || !response.text) {
+            throw new Error("Réponse vide de l'API Gemini");
+        }
+        
         const text = response.text().trim();
+        
+        if (!text) {
+            return { text: "Je n'ai pas bien compris. Pouvez-vous reformuler?" };
+        }
 
         // Ajouter le message de l'utilisateur à l'historique
-        memory[sender].conversations.push({
+        memory.users[sender].conversations.push({
             text: userText,
             timestamp: Date.now(),
             fromUser: true
         });
 
         // Ajouter la réponse du bot à l'historique
-        memory[sender].conversations.push({
+        memory.users[sender].conversations.push({
             text: text,
             timestamp: Date.now(),
             fromBot: true
         });
 
         // Garder seulement les 10 derniers messages
-        if (memory[sender].conversations.length > 10) {
-            memory[sender].conversations = memory[sender].conversations.slice(-10);
+        if (memory.users[sender].conversations.length > 10) {
+            memory.users[sender].conversations = memory.users[sender].conversations.slice(-10);
         }
 
         // Sauvegarder la mémoire
         saveUserMemory(memory);
 
-        return text || "Mon IA est en cours de configuration... Reviens bientôt !";
+        return { text: text };
     } catch (e) {
-        console.error("[NazunaAI] Erreur:", e.message);
-        return "Mon IA est en cours de configuration... Reviens bientôt !";
+        console.error("[NazunaAI] Erreur détaillée:", e);
+        
+        // Messages d'erreur plus spécifiques
+        if (e.message.includes("API_KEY") || e.message.includes("quota")) {
+            return { text: "Service temporairement indisponible. Veuillez réessayer plus tard." };
+        } else if (e.message.includes("Réponse vide")) {
+            return { text: "Je n'ai pas pu générer de réponse. Pouvez-vous reformuler votre question?" };
+        } else {
+            return { text: "Désolé, je rencontre un problème technique. Veuillez réessayer." };
+        }
     }
 }
 
