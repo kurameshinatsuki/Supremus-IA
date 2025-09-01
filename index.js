@@ -295,6 +295,7 @@ async function startBot(sock, state) {
 
       const remoteJid = msg.key.remoteJid;
       const isGroup = remoteJid.endsWith('@g.us');
+      const pushName = msg.pushName || msg.notifyName || null;
 
       // Si l’utilisateur répond à un message du bot
       const quotedText = msg.message.extendedTextMessage?.contextInfo?.quotedMessage
@@ -341,11 +342,11 @@ async function startBot(sock, state) {
         // 2) IA (mention / reply / privé)
         const senderJid = msg.key.participant || remoteJid;
         console.log(`🤖 IA: génération de réponse pour ${senderJid} dans ${remoteJid}`);
-        reply = await nazunaReply(text, senderJid, remoteJid);
+        const replyObj = await nazunaReply(text, senderJid, remoteJid, pushName, isGroup);
 
-        if (reply) {
-          await sendReply(sock, msg, { text: reply });
-          cacheBotReply(remoteJid, reply);
+        if (replyObj && replyObj.text) {
+          await sendReply(sock, msg, { text: replyObj.text });
+          cacheBotReply(remoteJid, replyObj.text);
         }
 
         // 3) bonus sticker de temps en temps (sans citation volontairement)
