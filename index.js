@@ -52,7 +52,7 @@ function prettyLog(msg) {
   const timestamp = msg.messageTimestamp
     ? new Date(msg.messageTimestamp * 1000).toLocaleString()
     : new Date().toLocaleString();
-  
+
   console.log('\n==========================');
   console.log('📩 Nouveau message —', timestamp);
   console.log('👥 Chat :', remote, isGroup ? '(Groupe)' : '(Privé)');
@@ -144,12 +144,15 @@ async function startBot(sock, state) {
 
     const senderJid = msg.key.participant || remoteJid;
     const mentionedJids = contextInfo?.mentionedJid || [];
-    const botNumber = '111536592965872';
+    const botNumber = '111536592965872'; // Remplacez par le numéro réel de votre bot
+    const botJid = botNumber + '@s.whatsapp.net';
 
-    // ===== Détection des mentions =====
-    const textMentionsBot = text.includes('@' + botNumber) || text.toLowerCase().includes('supremia');
+    // ===== Détection des mentions et des citations du bot =====
+    const textMentionsBot = text.includes('@' + botNumber);
     const quoteMentionsBot = quotedText && quotedText.includes('@' + botNumber);
-    const isMentioned = textMentionsBot || quoteMentionsBot;
+    const isQuotingBot = quotedSender === botJid; // Vérifie si le message cité est du bot
+
+    const isMentioned = textMentionsBot || quoteMentionsBot || isQuotingBot; // Ajoute la détection de citation
 
     const isCommand = text.startsWith('/');
     const shouldReply = !isGroup || isCommand || isMentioned;
