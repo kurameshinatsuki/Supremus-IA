@@ -203,6 +203,7 @@ async function getRandomSticker() {
   }
 }
 
+
 /* =========================
  *   CACHE DES MSG DU BOT
  * ========================= */
@@ -210,7 +211,7 @@ const botMessageCache = new Map();
 
 /**
  * Mémorise les derniers textes envoyés par le bot dans un chat
- * pour détecter si un utilisateur répond à l'un d'eux.
+ * pour détecter si un utilisateur répond à l’un d’eux.
  */
 function cacheBotReply(chatId, text) {
   if (!chatId || !text) return;
