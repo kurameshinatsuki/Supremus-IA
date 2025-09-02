@@ -1,4 +1,5 @@
-// index.js - reply-to detection via cache + robust mentions + sticker conversion (sharp) + proper quoting
+//     ===== index.js =====     //
+
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
