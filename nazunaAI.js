@@ -1,11 +1,12 @@
-// nazunaAI.js - Version corrigée
+//     ===== nazunaAI.js =====     //
+
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 
 const trainingPath = path.join(__dirname, 'Training IA.json');
 
@@ -106,7 +107,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
                 conversationContext = "Historique de notre conversation:\n" +
                     memory.users[sender].conversations
                         .slice(-5)
-                        .map(c => `${c.fromUser ? userName : 'Nazuna'}: ${c.text}`)
+                        .map(c => `${c.fromUser ? userName : 'Supremia'}: ${c.text}`)
                         .join('\n') + '\n';
             }
         }
@@ -118,9 +119,9 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
         }
 
         const prompt = `${training}\n\n${conversationContext}\n` +
-            `Important: Quand tu veux interpeller quelqu’un en groupe, utilise @Nom (ex: @Alice, @John Suprêmus). ` +
-            `Je (le bot) convertirai ces @Nom en mentions réelles.\n` +
-            `${userName}: ${userText}\nNazuna:`;
+            `Important: Quand tu veux interpeller quelqu’un en groupe, utilise son nom ou tag le @<numéro> (ex: Makima Supremia ou @111536592965872). ` +
+            `Je (le bot) convertirai ces @<numero> en mentions cliquable.\n` +
+            `${userName}: ${userText}\nSupremia:`;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
@@ -168,7 +169,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
     } catch (e) {
         console.error("[NazunaAI] Erreur:", e?.stack || e);
         return {
-            text: "Désolé, je rencontre un problème technique. Veuillez réessayer.",
+            text: "*Je suis épuisée, écris-moi plus tard.",
             mentions: []
         };
     }
