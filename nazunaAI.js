@@ -106,7 +106,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
                 conversationContext = "Historique de notre conversation:\n" +
                     memory.users[sender].conversations
                         .slice(-5)
-                        .map(c => `${c.fromUser ? userName : 'Nazuna'}: ${c.text}`)
+                        .map(c => `${c.fromUser ? userName : 'Supremia'}: ${c.text}`)
                         .join('\n') + '\n';
             }
         }
@@ -121,7 +121,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
         const prompt = `${training}\n\n${conversationContext}\n` +
             `Important: Quand tu veux interpeller quelqu’un en groupe, utilise @Nom (ex: @Alice, @John Suprêmus). ` +
             `Le bot transformera ça en mention réelle.\n` +
-            `${userName}: ${userText}\nNazuna:`;
+            `${userName}: ${userText}\nSupremia:`;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
