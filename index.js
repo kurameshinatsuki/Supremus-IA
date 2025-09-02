@@ -148,6 +148,7 @@ async function startBot(sock, state) {
 
     const senderJid = msg.key.participant || remoteJid;
     const mentionedJids = contextInfo?.mentionedJid || [];
+
     const botNumber = process.env.BOT_NUMBER?.replace(/[^0-9]/g, '') || '111536592965872';
     const isMentioned =
       mentionedJids.some(jid => jid.includes(botNumber)) ||
@@ -155,7 +156,14 @@ async function startBot(sock, state) {
       (text && text.toLowerCase().includes('supremia'));
 
     const isCommand = text.startsWith('/');
-    const shouldReply = !isGroup || isCommand || quotedMessageInfo || isMentioned;
+
+    // ✅ Correction : le bot répond uniquement si
+    // - privé
+    // - commande
+    // - mention directe
+    // - OU reply à un message envoyé par le bot
+    const repliedToBot = quotedSender && BOT_JID && quotedSender.includes(normalizeLocal(BOT_JID));
+    const shouldReply = !isGroup || isCommand || isMentioned || repliedToBot;
     if (!shouldReply) return;
 
     try {
