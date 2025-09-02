@@ -1,4 +1,4 @@
-// index.js - reply-to detection via cache + robust mentions + sticker conversion (sharp) + proper quoting
+// index.js - Version mise à jour
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
@@ -100,6 +100,13 @@ function extractTextFromQuoted(contextInfo = {}) {
     qm?.extendedTextMessage?.text ||
     null
   );
+}
+
+/**
+ * Récupère l'expéditeur d'un message cité
+ */
+function extractQuotedSender(contextInfo = {}) {
+  return contextInfo?.participant || null;
 }
 
 /**
@@ -295,6 +302,8 @@ async function startBot(sock, state) {
 
       const remoteJid = msg.key.remoteJid;
       const isGroup = remoteJid.endsWith('@g.us');
+
+      // Récupérer le pushName
       const pushName = msg.pushName || msg.notifyName || null;
 
       // Si l’utilisateur répond à un message du bot
@@ -342,10 +351,34 @@ async function startBot(sock, state) {
         // 2) IA (mention / reply / privé)
         const senderJid = msg.key.participant || remoteJid;
         console.log(`🤖 IA: génération de réponse pour ${senderJid} dans ${remoteJid}`);
-        const replyObj = await nazunaReply(text, senderJid, remoteJid, pushName, isGroup);
 
-        if (replyObj && replyObj.text) {
-          await sendReply(sock, msg, { text: replyObj.text });
+        // Préparer les informations du message cité
+        let quotedMessageInfo = null;
+        const contextInfo = msg.message?.extendedTextMessage?.contextInfo;
+        if (contextInfo && contextInfo.quotedMessage) {
+          const quotedText = extractTextFromQuoted(contextInfo);
+          const quotedSender = extractQuotedSender(contextInfo);
+          if (quotedText && quotedSender) {
+            quotedMessageInfo = {
+              sender: quotedSender,
+              text: quotedText
+            };
+          }
+        }
+
+        // Appeler nazunaReply avec les bons paramètres
+        const replyObj = await nazunaReply(text, senderJid, remoteJid, pushName, isGroup, quotedMessageInfo);
+
+        if (replyObj.text) {
+          // Envoyer le message avec mentions si nécessaire
+          if (replyObj.mentions && replyObj.mentions.length > 0) {
+            await sendReply(sock, msg, { 
+              text: replyObj.text, 
+              mentions: replyObj.mentions 
+            });
+          } else {
+            await sendReply(sock, msg, { text: replyObj.text });
+          }
           cacheBotReply(remoteJid, replyObj.text);
         }
 
