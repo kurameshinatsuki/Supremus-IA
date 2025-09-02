@@ -31,7 +31,12 @@ function loadUserMemory() {
     try {
         const memoryPath = path.join(__dirname, 'nazuna_memory.json');
         if (fs.existsSync(memoryPath)) {
-            return JSON.parse(fs.readFileSync(memoryPath, 'utf8'));
+            const data = JSON.parse(fs.readFileSync(memoryPath, 'utf8'));
+            if (data.users === undefined) {
+                data.users = data;
+                data.groups = {};
+            }
+            return data;
         }
     } catch (error) {
         console.error('Erreur lecture mémoire:', error);
@@ -48,122 +53,124 @@ function saveUserMemory(memory) {
     }
 }
 
-async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup = false, quotedText = null, quotedSender = null) {
+/**
+ * Normalise un nom (minuscule, sans accents, espaces simplifiés)
+ */
+function normalizeName(name) {
+    return String(name || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^\p{L}\p{N}]+/gu, " ")
+        .trim();
+}
+
+async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup = false, quotedMessage = null) {
     try {
         const memory = loadUserMemory();
         const training = loadTrainingData();
 
-        // Normaliser l'ID de l'expéditeur pour les LID
-        const normalizedSender = sender.replace(/@lid$/, '@s.whatsapp.net');
+        const userName = pushName || memory.users[sender]?.name || sender.split('@')[0];
 
-        // Utiliser le pushName si disponible, sinon utiliser l'ID
-        const userName = pushName || memory.users[normalizedSender]?.name || normalizedSender.split('@')[0];
-
-        // Mettre à jour le nom si pushName est fourni et différent
-        if (pushName && (!memory.users[normalizedSender] || memory.users[normalizedSender].name !== pushName)) {
-            if (!memory.users[normalizedSender]) {
-                memory.users[normalizedSender] = { name: userName, conversations: [] };
-            }
-            memory.users[normalizedSender].name = pushName;
-            saveUserMemory(memory);
+        if (!memory.users[sender]) {
+            memory.users[sender] = { name: userName, conversations: [] };
+        } else if (pushName && memory.users[sender].name !== pushName) {
+            memory.users[sender].name = pushName;
         }
 
         let conversationContext = "";
+        let mentionObjects = []; // { jid, name, raw }
 
-        // Gestion des conversations de groupe
         if (isGroup) {
             if (!memory.groups[remoteJid]) {
                 memory.groups[remoteJid] = { participants: {}, lastMessages: [] };
             }
-
-            // Mettre à jour les participants
             if (pushName) {
-                memory.groups[remoteJid].participants[normalizedSender] = pushName;
+                memory.groups[remoteJid].participants[sender] = pushName;
             }
-
-            // Garder les 15 derniers messages du groupe
             memory.groups[remoteJid].lastMessages.push({
-                sender: normalizedSender,
+                sender: sender,
                 name: userName,
                 text: userText,
                 timestamp: Date.now()
             });
-
-            if (memory.groups[remoteJid].lastMessages.length > 15) {
-                memory.groups[remoteJid].lastMessages = memory.groups[remoteJid].lastMessages.slice(-15);
+            if (memory.groups[remoteJid].lastMessages.length > 10) {
+                memory.groups[remoteJid].lastMessages = memory.groups[remoteJid].lastMessages.slice(-10);
             }
-
-            // Construire le contexte de groupe
             conversationContext = "Conversation de groupe:\n" +
                 memory.groups[remoteJid].lastMessages
                     .map(m => `${m.name}: ${m.text}`)
                     .join('\n') + '\n\n';
         } else {
-            // Conversation privée
-            if (!memory.users[normalizedSender]) {
-                memory.users[normalizedSender] = { name: userName, conversations: [] };
-            }
-
-            if (memory.users[normalizedSender].conversations && memory.users[normalizedSender].conversations.length > 0) {
+            if (memory.users[sender].conversations && memory.users[sender].conversations.length > 0) {
                 conversationContext = "Historique de notre conversation:\n" +
-                    memory.users[normalizedSender].conversations
+                    memory.users[sender].conversations
                         .slice(-5)
-                        .map(c => `${c.fromUser ? userName : 'Supremia'}: ${c.text}`)
+                        .map(c => `${c.fromUser ? userName : 'Nazuna'}: ${c.text}`)
                         .join('\n') + '\n';
             }
         }
 
-        // Ajouter le message cité s'il existe
-        let quotedContext = "";
-        if (quotedText && quotedSender) {
-            const quotedName = memory.users[quotedSender]?.name || quotedSender.split('@')[0];
-            quotedContext = `Message cité de ${quotedName}: "${quotedText}"\n`;
+        if (quotedMessage) {
+            const quotedSender = quotedMessage.sender;
+            const quotedName = memory.users[quotedSender]?.name || memory.groups[remoteJid]?.participants[quotedSender] || quotedSender.split('@')[0];
+            conversationContext += `Message cité de ${quotedName}: ${quotedMessage.text}\n`;
         }
 
-        // Construire le prompt final
-        const prompt = `${training}\n\n${quotedContext}${conversationContext}${userName}: ${userText}\nSupremia:`;
+        const prompt = `${training}\n\n${conversationContext}\n` +
+            `Important: Quand tu veux interpeller quelqu’un en groupe, utilise @Nom (ex: @Alice, @John Suprêmus). ` +
+            `Je (le bot) convertirai ces @Nom en mentions réelles.\n` +
+            `${userName}: ${userText}\nNazuna:`;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
-        const text = response.text().trim();
+        const text = (response && response.text) ? response.text().trim() : '';
 
-        // Ajouter le message de l'utilisateur à l'historique
-        if (isGroup) {
-            // Pour les groupes, on a déjà ajouté le message au contexte groupe
-        } else {
-            memory.users[normalizedSender].conversations.push({
+        if (!isGroup) {
+            memory.users[sender].conversations.push({
                 text: userText,
                 timestamp: Date.now(),
                 fromUser: true
             });
-
-            // Ajouter la réponse du bot à l'historique
-            memory.users[normalizedSender].conversations.push({
+            memory.users[sender].conversations.push({
                 text: text,
                 timestamp: Date.now(),
                 fromBot: true
             });
-
-            // Garder seulement les 10 derniers messages
-            if (memory.users[normalizedSender].conversations.length > 10) {
-                memory.users[normalizedSender].conversations = memory.users[normalizedSender].conversations.slice(-10);
+            if (memory.users[sender].conversations.length > 10) {
+                memory.users[sender].conversations = memory.users[sender].conversations.slice(-10);
             }
         }
 
-        // Sauvegarder la mémoire
         saveUserMemory(memory);
 
-        // Détecter si la réponse doit mentionner quelqu'un
-        const mentions = [];
-        // Exemple: si la réponse contient "@admin", mentionner l'admin
-        // Ici, on peut ajouter une logique pour extraire les mentions depuis la réponse
-        // Pour l'instant, on ne mentionne personne
+        if (isGroup && text) {
+            const mentionRegex = /@([^\n\r]+)/g;
+            let match;
+            while ((match = mentionRegex.exec(text)) !== null) {
+                const rawMention = match[1].trim();
+                const normalizedMention = normalizeName(rawMention);
 
-        return { text: text || "Je n'ai pas pu générer de réponse. Pouvez-vous reformuler?", mentions };
+                for (const [jid, name] of Object.entries(memory.groups[remoteJid].participants)) {
+                    // On suppose que jid = lid complet
+                    if (normalizeName(name).startsWith(normalizedMention)) {
+                        mentionObjects.push({ jid, name, raw: rawMention });
+                        break;
+                    }
+                }
+            }
+        }
 
+        return {
+            text: text || "Désolé, je n'ai pas pu générer de réponse.",
+            mentions: mentionObjects
+        };
     } catch (e) {
-        console.error("[NazunaAI] Erreur:", e.message);
-        return { text: "Désolé, je rencontre un problème technique. Veuillez réessayer.", mentions: [] };
+        console.error("[NazunaAI] Erreur:", e?.stack || e);
+        return {
+            text: "Désolé, je rencontre un problème technique. Veuillez réessayer.",
+            mentions: []
+        };
     }
 }
 
