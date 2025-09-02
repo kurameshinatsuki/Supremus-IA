@@ -68,7 +68,7 @@ async function handleTagAll(msg, sock) {
     await sock.sendMessage(
       jid,
       { text: `📢 Mention de tous les membres :\n${mentionText}`, mentions },
-      { quoted: msg } // ✅ la citation correcte est ici (3ᵉ param)
+      { quoted: msg }
     );
 
     return null;
@@ -185,7 +185,7 @@ async function getRandomSticker() {
     const files = fs.readdirSync(stickersDir).filter(f => /\.(webp|png|jpe?g)$/i.test(f));
     if (files.length === 0) return null;
 
-    const randomFile = files[Math.floor(Math.random() * files.length)];
+    const randomFile = files[Math.floor(Math.random() * Math.random() * files.length)];
     const inputPath = path.join(stickersDir, randomFile);
 
     if (/\.webp$/i.test(randomFile)) return inputPath;
@@ -215,10 +215,6 @@ async function getRandomSticker() {
  * ========================= */
 const botMessageCache = new Map();
 
-/**
- * Mémorise les derniers textes envoyés par le bot dans un chat
- * pour détecter si un utilisateur répond à l’un d’eux.
- */
 function cacheBotReply(chatId, text) {
   if (!chatId || !text) return;
   const arr = botMessageCache.get(chatId) || [];
@@ -235,9 +231,6 @@ function cacheBotReply(chatId, text) {
   }
 }
 
-/**
- * Vérifie si le texte cité correspond à un des derniers messages du bot
- */
 function quotedMatchesBot(chatId, quotedText) {
   if (!chatId || !quotedText) return false;
   const arr = botMessageCache.get(chatId) || [];
@@ -258,11 +251,24 @@ function quotedMatchesBot(chatId, quotedText) {
 }
 
 /* =========================
- *   ENVOI AVEC CITATION
+ *  MENTIONS CLIQUABLES
  * ========================= */
 /**
+ * WhatsApp (via Baileys) n’allume la *bulle mention* que si:
+ *  - on fournit `mentions: ['jid@s.whatsapp.net', ...]`
+ *  - ET que le texte contient `@<numero>` pour chaque JID
+ * Cette fonction préfixe donc le message avec les @numéros nécessaires.
+ */
+function ensureClickableMentions(text, mentions) {
+  if (!Array.isArray(mentions) || mentions.length === 0) return text;
+  const uniq = Array.from(new Set(mentions.filter(Boolean)));
+  const tags = uniq.map(jid => `@${normalizeLocal(jid)}`).join(' ');
+  return `${tags}\n${text}`.trim();
+}
+
+/**
  * Envoie une réponse en citant *toujours* le message d’origine.
- * NOTE: `quoted` doit être dans les *options* (3ᵉ paramètre) avec Baileys.
+ * NOTE: `quoted` doit être dans les options (3ᵉ param) avec Baileys.
  */
 async function sendReply(sock, msg, contentObj, optionsExtra = {}) {
   const jid = msg.key.remoteJid;
@@ -306,7 +312,7 @@ async function startBot(sock, state) {
       // Récupérer le pushName
       const pushName = msg.pushName || msg.notifyName || null;
 
-      // Si l’utilisateur répond à un message du bot
+      // Réponse à un message du bot ?
       const quotedText = msg.message.extendedTextMessage?.contextInfo?.quotedMessage
         ? extractTextFromQuoted(msg.message.extendedTextMessage.contextInfo)
         : null;
@@ -314,7 +320,7 @@ async function startBot(sock, state) {
 
       // Mention du bot (via @numéro ou via liste mentions)
       const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
-      const botNumber = process.env.BOT_NUMBER?.replace(/[^0-9]/g, '') || '111536592965872'; // ← adapte ici
+      const botNumber = process.env.BOT_NUMBER?.replace(/[^0-9]/g, '') || '111536592965872';
       const isMentioned =
         mentionedJids.some(jid => jid.includes(botNumber)) ||
         (text && text.includes('@' + botNumber)) ||
@@ -366,20 +372,26 @@ async function startBot(sock, state) {
           }
         }
 
-        // Appeler nazunaReply avec les bons paramètres
+        // Appeler nazunaReply
         const replyObj = await nazunaReply(text, senderJid, remoteJid, pushName, isGroup, quotedMessageInfo);
 
-        if (replyObj.text) {
-          // Envoyer le message avec mentions si nécessaire
-          if (replyObj.mentions && replyObj.mentions.length > 0) {
-            await sendReply(sock, msg, { 
-              text: replyObj.text, 
-              mentions: replyObj.mentions 
+        if (replyObj && replyObj.text) {
+          const hasMentions = Array.isArray(replyObj.mentions) && replyObj.mentions.length > 0;
+
+          // 🔒 RENDRE LES MENTIONS CLIQUABLES
+          const finalText = (isGroup && hasMentions)
+            ? ensureClickableMentions(replyObj.text, replyObj.mentions)
+            : replyObj.text;
+
+          if (hasMentions) {
+            await sendReply(sock, msg, {
+              text: finalText,
+              mentions: replyObj.mentions
             });
           } else {
-            await sendReply(sock, msg, { text: replyObj.text });
+            await sendReply(sock, msg, { text: finalText });
           }
-          cacheBotReply(remoteJid, replyObj.text);
+          cacheBotReply(remoteJid, finalText);
         }
 
         // 3) bonus sticker de temps en temps (sans citation volontairement)
@@ -439,7 +451,7 @@ main().catch(err => {
 
 const express = require('express');
 const app = express();
-const port = process.env.PORT || 5000; // Assurez-vous d'ajouter cette ligne pour définir le port
+const port = process.env.PORT || 5000;
 
 app.get('/', (req, res) => {
   res.send(`
@@ -450,7 +462,6 @@ app.get('/', (req, res) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Supremus-IA by John Supremus</title>
         <style>
-            /* Styles pour centrer le texte */
             body {
                 display: flex;
                 justify-content: center;
