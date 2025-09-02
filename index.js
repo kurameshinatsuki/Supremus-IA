@@ -145,10 +145,13 @@ async function startBot(sock, state) {
     const senderJid = msg.key.participant || remoteJid;
     const mentionedJids = contextInfo?.mentionedJid || [];
     const botNumber = '111536592965872';
-    const isMentioned = mentionedJids.some(jid => jid.includes(botNumber)) || (text && text.includes('@' + botNumber)) || (text && text.toLowerCase().includes('supremia'));
-    const isCommand = text.startsWith('/');
 
-    // ===== Nouvelle condition =====
+    // ===== Détection des mentions =====
+    const textMentionsBot = text.includes('@' + botNumber) || text.toLowerCase().includes('supremia');
+    const quoteMentionsBot = quotedText && quotedText.includes('@' + botNumber);
+    const isMentioned = textMentionsBot || quoteMentionsBot;
+
+    const isCommand = text.startsWith('/');
     const shouldReply = !isGroup || isCommand || isMentioned;
 
     if (!shouldReply) return;
@@ -164,14 +167,14 @@ async function startBot(sock, state) {
         }
       }
 
-      // On envoie le contexte à l'IA uniquement si le bot est mentionné
+      // On envoie le contexte à l'IA si elle est mentionnée dans le message ou le quote
       const replyObj = await nazunaReply(
         text,
         senderJid,
         remoteJid,
         pushName,
         isGroup,
-        isMentioned ? quotedMessageInfo : null // <-- attention ici
+        isMentioned ? quotedMessageInfo : null
       );
 
       if (!replyObj || !replyObj.text) return;
@@ -183,6 +186,7 @@ async function startBot(sock, state) {
 
       await sendReply(sock, msg, mentionJids.length > 0 ? { text: finalText, mentions: mentionJids } : { text: finalText });
       cacheBotReply && cacheBotReply(remoteJid, finalText);
+
     } catch (error) {
       console.error('❌ Erreur lors du traitement du message:', error?.stack || error);
       await sendReply(sock, msg, { text: '❌ Désolé, une erreur est survenue. Veuillez réessayer plus tard.' });
