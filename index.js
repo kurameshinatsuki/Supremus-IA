@@ -296,6 +296,9 @@ async function startBot(sock, state) {
       const remoteJid = msg.key.remoteJid;
       const isGroup = remoteJid.endsWith('@g.us');
 
+      // Récupérer le pushName
+      const pushName = msg.pushName || msg.notifyName || null;
+
       // Si l’utilisateur répond à un message du bot
       const quotedText = msg.message.extendedTextMessage?.contextInfo?.quotedMessage
         ? extractTextFromQuoted(msg.message.extendedTextMessage.contextInfo)
@@ -340,20 +343,15 @@ async function startBot(sock, state) {
 
         // 2) IA (mention / reply / privé)
         const senderJid = msg.key.participant || remoteJid;
-        const pushName = msg.pushName || msg.notifyName || null;
+        console.log(`🤖 IA: génération de réponse pour ${senderJid} dans ${remoteJid}`);
 
-        // Récupérer le message cité pour le contexte
-        let quotedMessage = null;
-        if (msg.message.extendedTextMessage?.contextInfo?.quotedMessage) {
-          const quotedMsg = msg.message.extendedTextMessage.contextInfo;
-          quotedMessage = {
-            sender: quotedMsg.participant || senderJid,
-            text: extractTextFromQuoted(quotedMsg)
-          };
+        // Récupérer l'expéditeur du message cité s'il y en a un
+        let quotedSender = null;
+        if (msg.message.extendedTextMessage?.contextInfo?.participant) {
+          quotedSender = msg.message.extendedTextMessage.contextInfo.participant;
         }
 
-        console.log(`🤖 IA: génération de réponse pour ${senderJid} dans ${remoteJid}`);
-        const replyObj = await nazunaReply(text, senderJid, remoteJid, pushName, isGroup, quotedMessage);
+        const replyObj = await nazunaReply(text, senderJid, remoteJid, pushName, isGroup, quotedText, quotedSender);
 
         if (replyObj) {
           if (replyObj.mentions && replyObj.mentions.length > 0) {
