@@ -31,12 +31,7 @@ function loadUserMemory() {
     try {
         const memoryPath = path.join(__dirname, 'nazuna_memory.json');
         if (fs.existsSync(memoryPath)) {
-            const data = JSON.parse(fs.readFileSync(memoryPath, 'utf8'));
-            if (data.users === undefined) {
-                data.users = data;
-                data.groups = {};
-            }
-            return data;
+            return JSON.parse(fs.readFileSync(memoryPath, 'utf8'));
         }
     } catch (error) {
         console.error('Erreur lecture mémoire:', error);
@@ -53,129 +48,113 @@ function saveUserMemory(memory) {
     }
 }
 
-/**
- * Normalise un nom (minuscule, sans accents, sans emojis, espaces simplifiés)
- */
-function normalizeName(name) {
-    return String(name || "")
-        .toLowerCase()
-        .normalize("NFD") // décompose accents
-        .replace(/[\u0300-\u036f]/g, "") // supprime diacritiques
-        .replace(/[^\p{L}\p{N}]+/gu, " ") // remplace non lettres/chiffres par espace
-        .trim();
-}
-
 async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup = false, quotedMessage = null) {
     try {
         const memory = loadUserMemory();
         const training = loadTrainingData();
 
-        const userName = pushName || memory.users[sender]?.name || sender.split('@')[0];
-        
-        if (!memory.users[sender]) {
-            memory.users[sender] = { name: userName, conversations: [] };
-        } else if (pushName && memory.users[sender].name !== pushName) {
-            memory.users[sender].name = pushName;
+        // Normaliser l'ID de l'expéditeur pour les LIDs
+        const normalizedSender = sender.endsWith('@lid') ? sender : sender.split('@')[0] + '@lid';
+
+        // Utiliser le pushName si disponible, sinon utiliser l'ID
+        const userName = pushName || memory.users[normalizedSender]?.name || normalizedSender.split('@')[0];
+
+        // Mettre à jour le nom utilisateur
+        if (!memory.users[normalizedSender]) {
+            memory.users[normalizedSender] = { name: userName, conversations: [] };
+        } else if (pushName && memory.users[normalizedSender].name !== pushName) {
+            memory.users[normalizedSender].name = pushName;
         }
 
         let conversationContext = "";
-        let mentionedJids = [];
 
+        // Gestion des conversations de groupe
         if (isGroup) {
             if (!memory.groups[remoteJid]) {
                 memory.groups[remoteJid] = { participants: {}, lastMessages: [] };
             }
+
+            // Mettre à jour les participants
             if (pushName) {
-                memory.groups[remoteJid].participants[sender] = pushName;
+                memory.groups[remoteJid].participants[normalizedSender] = pushName;
             }
+
+            // Garder les 10 derniers messages du groupe
             memory.groups[remoteJid].lastMessages.push({
-                sender: sender,
+                sender: normalizedSender,
                 name: userName,
                 text: userText,
                 timestamp: Date.now()
             });
+
             if (memory.groups[remoteJid].lastMessages.length > 10) {
                 memory.groups[remoteJid].lastMessages = memory.groups[remoteJid].lastMessages.slice(-10);
             }
+
+            // Construire le contexte de groupe
             conversationContext = "Conversation de groupe:\n" +
                 memory.groups[remoteJid].lastMessages
                     .map(m => `${m.name}: ${m.text}`)
                     .join('\n') + '\n\n';
         } else {
-            if (memory.users[sender].conversations && memory.users[sender].conversations.length > 0) {
+            // Conversation privée
+            if (memory.users[normalizedSender].conversations && memory.users[normalizedSender].conversations.length > 0) {
                 conversationContext = "Historique de notre conversation:\n" +
-                    memory.users[sender].conversations
+                    memory.users[normalizedSender].conversations
                         .slice(-5)
                         .map(c => `${c.fromUser ? userName : 'Supremia'}: ${c.text}`)
                         .join('\n') + '\n';
             }
         }
 
+        // Ajouter le message cité au contexte si disponible
         if (quotedMessage) {
             const quotedSender = quotedMessage.sender;
-            const quotedName = memory.users[quotedSender]?.name || memory.groups[remoteJid]?.participants[quotedSender] || quotedSender.split('@')[0];
-            conversationContext += `Message cité de ${quotedName}: ${quotedMessage.text}\n`;
+            const quotedName = memory.users[quotedSender]?.name || quotedSender.split('@')[0];
+            conversationContext += `Message cité de ${quotedName}: "${quotedMessage.text}"\n`;
         }
 
-        // ✅ Ajout d’une consigne pour inciter l’IA à utiliser les @Nom
-        const prompt = `${training}\n\n${conversationContext}\n` +
-            `Important: Quand tu veux interpeller quelqu’un en groupe, utilise @Nom (ex: @Alice, @John Suprêmus). ` +
-            `Le bot transformera ça en mention réelle.\n` +
-            `${userName}: ${userText}\nSupremia:`;
+        // Construire le prompt final
+        const prompt = `${training}\n\n${conversationContext}\n${userName}: ${userText}\nSupremia:`;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text().trim();
 
-        if (!isGroup) {
-            memory.users[sender].conversations.push({
-                text: userText,
-                timestamp: Date.now(),
-                fromUser: true
-            });
+        // Ajouter le message de l'utilisateur à l'historique
+        memory.users[normalizedSender].conversations.push({
+            text: userText,
+            timestamp: Date.now(),
+            fromUser: true
+        });
+
+        // Ajouter la réponse du bot à l'historique
+        memory.users[normalizedSender].conversations.push({
+            text: text,
+            timestamp: Date.now(),
+            fromBot: true
+        });
+
+        // Garder seulement les 10 derniers messages
+        if (memory.users[normalizedSender].conversations.length > 10) {
+            memory.users[normalizedSender].conversations = memory.users[normalizedSender].conversations.slice(-10);
         }
 
-        if (!isGroup) {
-            memory.users[sender].conversations.push({
-                text: text,
-                timestamp: Date.now(),
-                fromBot: true
-            });
-        }
-
-        if (memory.users[sender].conversations.length > 10) {
-            memory.users[sender].conversations = memory.users[sender].conversations.slice(-10);
-        }
-
+        // Sauvegarder la mémoire
         saveUserMemory(memory);
 
-        // ✅ Détection améliorée des mentions multi-mots
-        if (isGroup) {
-            const mentionRegex = /@([^\n\r]+)/g;
-            let match;
-            while ((match = mentionRegex.exec(text)) !== null) {
-                const rawMention = match[1].trim();
-                const normalizedMention = normalizeName(rawMention);
-
-                for (const [jid, name] of Object.entries(memory.groups[remoteJid].participants)) {
-                    if (normalizeName(name).startsWith(normalizedMention)) {
-                        mentionedJids.push(jid);
-                        break;
-                    }
-                }
-            }
+        // Analyser la réponse pour détecter des mentions
+        const mentions = [];
+        const mentionRegex = /@(\d+)/g;
+        let match;
+        while ((match = mentionRegex.exec(text)) !== null) {
+            mentions.push(match[1] + '@lid');
         }
 
-        return {
-            text: text || "Désolé, je n'ai pas pu générer de réponse. Pouvez-vous reformuler?",
-            mentions: mentionedJids
-        };
+        return { text: text, mentions: mentions };
     } catch (e) {
         console.error("[NazunaAI] Erreur:", e.message);
-        return {
-            text: "Désolé, je rencontre un problème technique. Veuillez réessayer.",
-            mentions: []
-        };
+        return { text: "Désolé, je rencontre un problème technique. Veuillez réessayer.", mentions: [] };
     }
 }
 
