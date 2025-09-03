@@ -353,25 +353,30 @@ async function startBot(sock, state) {
         const quotedSender = contextInfo?.participant || null;
         const quotedMessageInfo = quotedTextForAI && quotedSender ? { sender: quotedSender, text: quotedTextForAI } : null;
 
-        const replyObj = await nazunaReply(
-          text, 
-          senderJid, 
-          remoteJid, 
-          pushName, 
-          isGroup,
-          quotedMessageInfo
-        );
+        // ... (le reste du code reste inchangé jusqu'à la partie de traitement des messages)
 
-        if (replyObj && replyObj.text) {
-          // Préparer l'objet de message avec les mentions
-          const messageData = {
-            text: replyObj.text,
-            mentions: replyObj.mentions || []
-          };
-          
-          await sendReply(sock, msg, messageData);
-          cacheBotReply(remoteJid, replyObj.text);
-        }
+// Dans la partie de traitement des messages IA :
+const replyObj = await nazunaReply(
+    text, 
+    senderJid, 
+    remoteJid, 
+    pushName, 
+    isGroup,
+    quotedMessageInfo
+);
+
+if (replyObj && replyObj.text) {
+    // Préparer l'objet de message avec les mentions
+    const messageData = {
+        text: replyObj.text,
+        mentions: replyObj.mentions || []
+    };
+    
+    await sendReply(sock, msg, messageData);
+    cacheBotReply(remoteJid, replyObj.text);
+}
+
+// ... (le reste du code reste inchangé)
 
         // 3) bonus sticker de temps en temps (sans citation volontairement)
         if (!isCommand && Math.random() < 0.2) {
