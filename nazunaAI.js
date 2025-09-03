@@ -94,13 +94,13 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
 
         let conversationContext = "";
         let mentionJids = []; // Stocker les JIDs pour les mentions
+        let userMentions = []; // Stocker les mentions trouvées dans userText
 
         if (isGroup) {
             if (!memory.groups[remoteJid]) {
                 memory.groups[remoteJid] = { participants: {}, lastMessages: [] };
             }
             if (pushName) {
-                // Stocker le jid et le nom
                 memory.groups[remoteJid].participants[sender] = { name: pushName, jid: sender, number: userNumber };
             }
             memory.groups[remoteJid].lastMessages.push({
@@ -132,7 +132,23 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
             conversationContext += `Message cité de ${quotedName}: ${quotedMessage.text}\n`;
         }
 
-        // Ajouter la liste des participants au prompt pour aider l'IA
+        // === Détection des tags dans le message utilisateur ===
+        if (isGroup && userText) {
+            const mentionRegex = /@(\d+)/g;
+            let match;
+            const participants = memory.groups[remoteJid]?.participants || {};
+            while ((match = mentionRegex.exec(userText)) !== null) {
+                const number = match[1];
+                for (const [jid, info] of Object.entries(participants)) {
+                    if (info.number === number) {
+                        userMentions.push({ number, jid });
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Ajouter la liste des participants au prompt
         let participantsList = "";
         if (isGroup && memory.groups[remoteJid]?.participants) {
             participantsList = "Participants du groupe (avec leurs numéros):\n";
@@ -142,7 +158,16 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
             participantsList += "\n";
         }
 
+        // Contexte supplémentaire si l'utilisateur a tagué des gens
+        let mentionContext = "";
+        if (userMentions.length > 0) {
+            mentionContext = "L’utilisateur a mentionné les personnes suivantes: " +
+                userMentions.map(u => `@${u.number}`).join(', ') + ".\n" +
+                "Tu peux aussi les mentionner dans ta réponse si c’est pertinent.\n";
+        }
+
         const prompt = `${training}\n\n${participantsList}${conversationContext}\n` +
+            `${mentionContext}` +
             `TRÈS IMPORTANT: 
             - Pour mentionner quelqu'un, utilise toujours SON NUMÉRO avec le format @numéro
             - L'utilisateur actuel (${userName}) a pour numéro: @${userNumber}
@@ -170,7 +195,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
             }
         }
 
-        // Si c'est un groupe, on cherche les mentions @numéro dans la réponse
+        // === Gestion des tags dans la réponse IA ===
         if (isGroup && text) {
             const mentionRegex = /@(\d+)/g;
             let match;
@@ -178,18 +203,26 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
 
             while ((match = mentionRegex.exec(text)) !== null) {
                 const number = match[1];
-                // Chercher le participant correspondant au numéro
                 for (const [jid, info] of Object.entries(participants)) {
-                    if (info.number === number) {
+                    if (info.number === number && !mentionJids.includes(jid)) {
                         mentionJids.push(jid);
                         break;
                     }
                 }
             }
 
-            // Si l'utilisateur demande à être tagué, on l'ajoute aux mentions
+            // Si l'utilisateur demande explicitement à être tagué
             if (userText.toLowerCase().includes('tag moi') || userText.toLowerCase().includes('mentionne moi')) {
-                mentionJids.push(sender);
+                if (!mentionJids.includes(sender)) {
+                    mentionJids.push(sender);
+                }
+            }
+
+            // Ajouter aussi les tags que l'utilisateur avait déjà faits
+            for (const m of userMentions) {
+                if (!mentionJids.includes(m.jid)) {
+                    mentionJids.push(m.jid);
+                }
             }
         }
 
@@ -197,7 +230,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
 
         return {
             text: text || "Désolé, je n'ai pas pu générer de réponse.",
-            mentions: mentionJids // Retourner les JIDs à mentionner
+            mentions: mentionJids
         };
     } catch (e) {
         console.error("[NazunaAI] Erreur:", e?.stack || e);
