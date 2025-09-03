@@ -66,17 +66,30 @@ function normalizeName(name) {
         .trim();
 }
 
+/**
+ * Extrait le numéro d'un JID
+ */
+function extractNumberFromJid(jid) {
+    return String(jid || "").split('@')[0];
+}
+
 async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup = false, quotedMessage = null) {
     try {
         const memory = loadUserMemory();
         const training = loadTrainingData();
 
         const userName = pushName || memory.users[sender]?.name || sender.split('@')[0];
+        const userNumber = extractNumberFromJid(sender);
 
         if (!memory.users[sender]) {
-            memory.users[sender] = { name: userName, conversations: [] };
-        } else if (pushName && memory.users[sender].name !== pushName) {
-            memory.users[sender].name = pushName;
+            memory.users[sender] = { name: userName, number: userNumber, conversations: [] };
+        } else {
+            if (pushName && memory.users[sender].name !== pushName) {
+                memory.users[sender].name = pushName;
+            }
+            if (memory.users[sender].number !== userNumber) {
+                memory.users[sender].number = userNumber;
+            }
         }
 
         let conversationContext = "";
@@ -88,7 +101,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
             }
             if (pushName) {
                 // Stocker le jid et le nom
-                memory.groups[remoteJid].participants[sender] = { name: pushName, jid: sender };
+                memory.groups[remoteJid].participants[sender] = { name: pushName, jid: sender, number: userNumber };
             }
             memory.groups[remoteJid].lastMessages.push({
                 sender: sender,
@@ -124,15 +137,17 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
         if (isGroup && memory.groups[remoteJid]?.participants) {
             participantsList = "Participants du groupe (avec leurs numéros):\n";
             for (const [jid, info] of Object.entries(memory.groups[remoteJid].participants)) {
-                const number = jid.split('@')[0];
-                participantsList += `- ${info.name} (@${number})\n`;
+                participantsList += `- ${info.name} (@${info.number})\n`;
             }
             participantsList += "\n";
         }
 
         const prompt = `${training}\n\n${participantsList}${conversationContext}\n` +
-            `TRÈS IMPORTANT: Quand tu veux mentionner quelqu'un, utilise toujours son numéro avec le format @numéro. N'utilise jamais le nom pour les mentions car cela ne fonctionne pas.\n` +
-            `Exemple: Si tu veux mentionner John Supremus, utilise @22898133388 et non pas @John Supremus.\n` +
+            `TRÈS IMPORTANT: 
+            - Pour mentionner quelqu'un, utilise toujours SON NUMÉRO avec le format @numéro
+            - L'utilisateur actuel (${userName}) a pour numéro: @${userNumber}
+            - N'utilise JAMAIS le nom pour les mentions car cela ne fonctionne pas
+            - Si on te demande de "tag" ou "mentionner" quelqu'un, utilise toujours son numéro\n` +
             `${userName}: ${userText}\nSupremia:`;
 
         const result = await model.generateContent(prompt);
@@ -160,17 +175,21 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
             const mentionRegex = /@(\d+)/g;
             let match;
             const participants = memory.groups[remoteJid]?.participants || {};
-            
+
             while ((match = mentionRegex.exec(text)) !== null) {
                 const number = match[1];
-                // Chercher le participant correspondant au numéro (le jid est stocké sous forme de numéro@lid)
+                // Chercher le participant correspondant au numéro
                 for (const [jid, info] of Object.entries(participants)) {
-                    const participantNumber = jid.split('@')[0];
-                    if (participantNumber === number) {
+                    if (info.number === number) {
                         mentionJids.push(jid);
                         break;
                     }
                 }
+            }
+
+            // Si l'utilisateur demande à être tagué, on l'ajoute aux mentions
+            if (userText.toLowerCase().includes('tag moi') || userText.toLowerCase().includes('mentionne moi')) {
+                mentionJids.push(sender);
             }
         }
 
