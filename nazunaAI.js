@@ -119,14 +119,25 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
             conversationContext += `Message cité de ${quotedName}: ${quotedMessage.text}\n`;
         }
 
-        const prompt = `${training}\n\n${conversationContext}\n` +
-            `Important: Quand tu veux interpeller quelqu'un en groupe, utilise son nom ou tag le @<numéro> (ex: Makima Supremia ou @111536592965872). ` +
-            `Je (le bot) convertirai ces @<numero> en mentions cliquable.\n` +
+        // Ajouter la liste des participants au prompt pour aider l'IA
+        let participantsList = "";
+        if (isGroup && memory.groups[remoteJid]?.participants) {
+            participantsList = "Participants du groupe:\n";
+            for (const [jid, info] of Object.entries(memory.groups[remoteJid].participants)) {
+                const number = jid.split('@')[0];
+                participantsList += `- ${info.name} (${number})\n`;
+            }
+            participantsList += "\n";
+        }
+
+        const prompt = `${training}\n\n${participantsList}${conversationContext}\n` +
+            `Important: Quand tu veux interpeller quelqu'un en groupe, utilise son nom ou tag le avec @numéro (ex: Makima Supremia ou @22898133388). ` +
+            `Je (le bot) convertirai ces @numéro en mentions cliquable.\n` +
             `${userName}: ${userText}\nSupremia:`;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
-        const text = (response && response.text) ? response.text().trim() : '';
+        let text = (response && response.text) ? response.text().trim() : '';
 
         if (!isGroup) {
             memory.users[sender].conversations.push({
@@ -157,6 +168,8 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
                     const participantNumber = jid.split('@')[0];
                     if (participantNumber === number) {
                         mentionJids.push(jid);
+                        // Remplacer le @numéro par le nom dans le texte pour plus de naturel
+                        text = text.replace(`@${number}`, `@${info.name}`);
                         break;
                     }
                 }
