@@ -122,17 +122,17 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
         // Ajouter la liste des participants au prompt pour aider l'IA
         let participantsList = "";
         if (isGroup && memory.groups[remoteJid]?.participants) {
-            participantsList = "Participants du groupe:\n";
+            participantsList = "Participants du groupe (avec leurs numéros):\n";
             for (const [jid, info] of Object.entries(memory.groups[remoteJid].participants)) {
                 const number = jid.split('@')[0];
-                participantsList += `- ${info.name} (${number})\n`;
+                participantsList += `- ${info.name} (@${number})\n`;
             }
             participantsList += "\n";
         }
 
         const prompt = `${training}\n\n${participantsList}${conversationContext}\n` +
-            `Important: Quand tu veux interpeller quelqu'un en groupe, utilise son nom ou tag le avec @numéro (ex: Makima Supremia ou @22898133388). ` +
-            `Je (le bot) convertirai ces @numéro en mentions cliquable.\n` +
+            `TRÈS IMPORTANT: Quand tu veux mentionner quelqu'un, utilise toujours son numéro avec le format @numéro. N'utilise jamais le nom pour les mentions car cela ne fonctionne pas.\n` +
+            `Exemple: Si tu veux mentionner John Supremus, utilise @22898133388 et non pas @John Supremus.\n` +
             `${userName}: ${userText}\nSupremia:`;
 
         const result = await model.generateContent(prompt);
@@ -168,8 +168,6 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
                     const participantNumber = jid.split('@')[0];
                     if (participantNumber === number) {
                         mentionJids.push(jid);
-                        // Remplacer le @numéro par le nom dans le texte pour plus de naturel
-                        text = text.replace(`@${number}`, `@${info.name}`);
                         break;
                     }
                 }
