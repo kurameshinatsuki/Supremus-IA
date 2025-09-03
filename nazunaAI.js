@@ -172,7 +172,8 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
             - Pour mentionner quelqu'un, utilise toujours SON NUMÉRO avec le format @numéro
             - L'utilisateur actuel (${userName}) a pour numéro: @${userNumber}
             - N'utilise JAMAIS le nom pour les mentions car cela ne fonctionne pas
-            - Si on te demande de "tag" ou "mentionner" quelqu'un, utilise toujours son numéro\n` +
+            - Si on te demande de "tag" ou "mentionner" quelqu'un, utilise toujours son numéro
+            - Tu peux mentionner d'autres utilisateurs que ${userName} si c'est pertinent\n` +
             `${userName}: ${userText}\nSupremia:`;
 
         const result = await model.generateContent(prompt);
