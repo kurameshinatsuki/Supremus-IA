@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
+// Initialisation Gemini Flash
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
@@ -54,9 +55,6 @@ function saveUserMemory(memory) {
     }
 }
 
-/**
- * Normalise un nom (minuscule, sans accents, espaces simplifiés)
- */
 function normalizeName(name) {
     return String(name || "")
         .toLowerCase()
@@ -153,7 +151,6 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
                 const normalizedMention = normalizeName(rawMention);
 
                 for (const [jid, name] of Object.entries(memory.groups[remoteJid].participants)) {
-                    // On suppose que jid = lid complet
                     if (normalizeName(name).startsWith(normalizedMention)) {
                         mentionObjects.push({ jid, name, raw: rawMention });
                         break;
