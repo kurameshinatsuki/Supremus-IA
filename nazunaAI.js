@@ -73,13 +73,6 @@ function extractNumberFromJid(jid) {
     return String(jid || "").split('@')[0];
 }
 
-/**
- * Nettoie un numéro de téléphone (supprime tous les caractères non numériques)
- */
-function cleanPhoneNumber(number) {
-    return String(number || "").replace(/[^\d]/g, '');
-}
-
 async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup = false, quotedMessage = null) {
     try {
         const memory = loadUserMemory();
@@ -101,13 +94,13 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
 
         let conversationContext = "";
         let mentionJids = []; // Stocker les JIDs pour les mentions
-        let userMentions = []; // Stocker les mentions trouvées dans userText
 
         if (isGroup) {
             if (!memory.groups[remoteJid]) {
                 memory.groups[remoteJid] = { participants: {}, lastMessages: [] };
             }
             if (pushName) {
+                // Stocker le jid et le nom
                 memory.groups[remoteJid].participants[sender] = { name: pushName, jid: sender, number: userNumber };
             }
             memory.groups[remoteJid].lastMessages.push({
@@ -139,24 +132,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
             conversationContext += `Message cité de ${quotedName}: ${quotedMessage.text}\n`;
         }
 
-        // === Détection des tags dans le message utilisateur ===
-        if (isGroup && userText) {
-            const mentionRegex = /@(\d+)/g;
-            let match;
-            const participants = memory.groups[remoteJid]?.participants || {};
-            while ((match = mentionRegex.exec(userText)) !== null) {
-                const number = match[1];
-                for (const [jid, info] of Object.entries(participants)) {
-                    // Compare les numéros normalisés
-                    if (cleanPhoneNumber(info.number) === cleanPhoneNumber(number)) {
-                        userMentions.push({ number: info.number, jid });
-                        break;
-                    }
-                }
-            }
-        }
-
-        // Ajouter la liste des participants au prompt
+        // Ajouter la liste des participants au prompt pour aider l'IA
         let participantsList = "";
         if (isGroup && memory.groups[remoteJid]?.participants) {
             participantsList = "Participants du groupe (avec leurs numéros):\n";
@@ -166,22 +142,12 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
             participantsList += "\n";
         }
 
-        // Contexte supplémentaire si l'utilisateur a tagué des gens
-        let mentionContext = "";
-        if (userMentions.length > 0) {
-            mentionContext = "L'utilisateur a mentionné les personnes suivantes: " +
-                userMentions.map(u => `@${u.number}`).join(', ') + ".\n" +
-                "Tu peux aussi les mentionner dans ta réponse si c'est pertinent.\n";
-        }
-
         const prompt = `${training}\n\n${participantsList}${conversationContext}\n` +
-            `${mentionContext}` +
             `TRÈS IMPORTANT: 
             - Pour mentionner quelqu'un, utilise toujours SON NUMÉRO avec le format @numéro
             - L'utilisateur actuel (${userName}) a pour numéro: @${userNumber}
             - N'utilise JAMAIS le nom pour les mentions car cela ne fonctionne pas
-            - Si on te demande de "tag" ou "mentionner" quelqu'un, utilise toujours son numéro
-            - Tu peux mentionner d'autres utilisateurs que ${userName} si c'est pertinent\n` +
+            - Si on te demande de "tag" ou "mentionner" quelqu'un, utilise toujours son numéro\n` +
             `${userName}: ${userText}\nSupremia:`;
 
         const result = await model.generateContent(prompt);
@@ -199,55 +165,31 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
                 timestamp: Date.now(),
                 fromBot: true
             });
-            if (memory.users[sender].conversations.length > 10) {
-                memory.users[sender].conversations = memory.users[sender].conversations.slice(-10);
+            if (memory.users[sender].conversations.length > 500) {
+                memory.users[sender].conversations = memory.users[sender].conversations.slice(-500);
             }
         }
 
-        // === Gestion des tags dans la réponse IA ===
+        // Si c'est un groupe, on cherche les mentions @numéro dans la réponse
         if (isGroup && text) {
             const mentionRegex = /@(\d+)/g;
             let match;
             const participants = memory.groups[remoteJid]?.participants || {};
 
-            // Détecter toutes les mentions dans la réponse de l'IA
             while ((match = mentionRegex.exec(text)) !== null) {
                 const number = match[1];
-                let found = false;
-                
+                // Chercher le participant correspondant au numéro
                 for (const [jid, info] of Object.entries(participants)) {
-                    // Compare les numéros normalisés
-                    if (cleanPhoneNumber(info.number) === cleanPhoneNumber(number) && !mentionJids.includes(jid)) {
+                    if (info.number === number) {
                         mentionJids.push(jid);
-                        found = true;
                         break;
                     }
                 }
-                
-                // Si correspondance exacte non trouvée, essayez une correspondance partielle
-                if (!found) {
-                    for (const [jid, info] of Object.entries(participants)) {
-                        // Correspondance partielle (derniers chiffres)
-                        if (cleanPhoneNumber(info.number).endsWith(cleanPhoneNumber(number)) && !mentionJids.includes(jid)) {
-                            mentionJids.push(jid);
-                            break;
-                        }
-                    }
-                }
             }
 
-            // Si l'utilisateur demande explicitement à être tagué
+            // Si l'utilisateur demande à être tagué, on l'ajoute aux mentions
             if (userText.toLowerCase().includes('tag moi') || userText.toLowerCase().includes('mentionne moi')) {
-                if (!mentionJids.includes(sender)) {
-                    mentionJids.push(sender);
-                }
-            }
-
-            // Ajouter aussi les tags que l'utilisateur avait déjà faits
-            for (const m of userMentions) {
-                if (!mentionJids.includes(m.jid)) {
-                    mentionJids.push(m.jid);
-                }
+                mentionJids.push(sender);
             }
         }
 
@@ -255,7 +197,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
 
         return {
             text: text || "Désolé, je n'ai pas pu générer de réponse.",
-            mentions: mentionJids
+            mentions: mentionJids // Retourner les JIDs à mentionner
         };
     } catch (e) {
         console.error("[NazunaAI] Erreur:", e?.stack || e);
