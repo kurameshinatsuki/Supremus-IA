@@ -50,7 +50,7 @@ async function handleCommand(command, args, msg, sock) {
  */
 async function handleTagAll(msg, sock) {
   const jid = msg.key.remoteJid;
-  if (!jid || !jid.endsWith('@g.us')) {
+  if (!jid.endsWith('@g.us')) {
     return "❌ Cette commande n'est disponible que dans les groupes.";
   }
 
@@ -62,8 +62,7 @@ async function handleTagAll(msg, sock) {
     let mentionText = '';
 
     participants.forEach(p => {
-      // p.id contient normalement le jid/lid complet (ex: 111536592965872@lid)
-      if (p.id !== sock.user?.id) {
+      if (p.id !== sock.user.id) {
         mentions.push(p.id);
         mentionText += `@${String(p.id).split('@')[0]} `;
       }
@@ -72,7 +71,7 @@ async function handleTagAll(msg, sock) {
     await sock.sendMessage(
       jid,
       { text: `📢 Mention de tous les membres :\n${mentionText}`, mentions },
-      { quoted: msg }
+      { quoted: msg } // ✅ la citation correcte est ici (3ᵉ param)
     );
 
     return null;
@@ -207,6 +206,7 @@ async function getRandomSticker() {
   }
 }
 
+
 /* =========================
  *   CACHE DES MSG DU BOT
  * ========================= */
@@ -311,7 +311,7 @@ async function startBot(sock, state) {
       const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
       const botNumber = process.env.BOT_NUMBER?.replace(/[^0-9]/g, '') || '111536592965872'; // ← adapte ici
       const isMentioned =
-        mentionedJids.some(jid => String(jid).includes(botNumber)) ||
+        mentionedJids.some(jid => jid.includes(botNumber)) ||
         (text && text.includes('@' + botNumber)) ||
         (text && text.toLowerCase().includes('supremia'));
 
@@ -363,11 +363,13 @@ async function startBot(sock, state) {
         );
 
         if (replyObj && replyObj.text) {
-          // Envoi de la réponse en incluant les mentions retournées par l'IA
-          await sendReply(sock, msg, { 
+          // Préparer l'objet de message avec les mentions
+          const messageData = {
             text: replyObj.text,
-            mentions: replyObj.mentions?.map(m => m.jid) || []
-          });
+            mentions: replyObj.mentions || []
+          };
+          
+          await sendReply(sock, msg, messageData);
           cacheBotReply(remoteJid, replyObj.text);
         }
 
