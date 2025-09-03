@@ -73,6 +73,13 @@ function extractNumberFromJid(jid) {
     return String(jid || "").split('@')[0];
 }
 
+/**
+ * Nettoie un numéro de téléphone (supprime tous les caractères non numériques)
+ */
+function cleanPhoneNumber(number) {
+    return String(number || "").replace(/[^\d]/g, '');
+}
+
 async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup = false, quotedMessage = null) {
     try {
         const memory = loadUserMemory();
@@ -140,8 +147,9 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
             while ((match = mentionRegex.exec(userText)) !== null) {
                 const number = match[1];
                 for (const [jid, info] of Object.entries(participants)) {
-                    if (info.number === number) {
-                        userMentions.push({ number, jid });
+                    // Compare les numéros normalisés
+                    if (cleanPhoneNumber(info.number) === cleanPhoneNumber(number)) {
+                        userMentions.push({ number: info.number, jid });
                         break;
                     }
                 }
@@ -205,10 +213,25 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
             // Détecter toutes les mentions dans la réponse de l'IA
             while ((match = mentionRegex.exec(text)) !== null) {
                 const number = match[1];
+                let found = false;
+                
                 for (const [jid, info] of Object.entries(participants)) {
-                    if (info.number === number && !mentionJids.includes(jid)) {
+                    // Compare les numéros normalisés
+                    if (cleanPhoneNumber(info.number) === cleanPhoneNumber(number) && !mentionJids.includes(jid)) {
                         mentionJids.push(jid);
+                        found = true;
                         break;
+                    }
+                }
+                
+                // Si correspondance exacte non trouvée, essayez une correspondance partielle
+                if (!found) {
+                    for (const [jid, info] of Object.entries(participants)) {
+                        // Correspondance partielle (derniers chiffres)
+                        if (cleanPhoneNumber(info.number).endsWith(cleanPhoneNumber(number)) && !mentionJids.includes(jid)) {
+                            mentionJids.push(jid);
+                            break;
+                        }
                     }
                 }
             }
