@@ -172,7 +172,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
     } catch (e) {
         console.error("[NazunaAI] Erreur:", e?.stack || e);
         return {
-            text: "*Je suis épuisée, écris-moi plus tard.",
+            text: "*Je suis épuisée, écris-moi plus tard.*",
             mentions: []
         };
     }
