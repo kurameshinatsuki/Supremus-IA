@@ -5,7 +5,6 @@ const fs = require('fs');
 const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-// Initialisation Gemini Flash
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
@@ -55,6 +54,9 @@ function saveUserMemory(memory) {
     }
 }
 
+/**
+ * Normalise un nom (minuscule, sans accents, espaces simplifiés)
+ */
 function normalizeName(name) {
     return String(name || "")
         .toLowerCase()
@@ -78,14 +80,15 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
         }
 
         let conversationContext = "";
-        let mentionObjects = []; // { jid, name, raw }
+        let mentionJids = []; // Stocker les JIDs pour les mentions
 
         if (isGroup) {
             if (!memory.groups[remoteJid]) {
                 memory.groups[remoteJid] = { participants: {}, lastMessages: [] };
             }
             if (pushName) {
-                memory.groups[remoteJid].participants[sender] = pushName;
+                // Stocker le jid et le nom
+                memory.groups[remoteJid].participants[sender] = { name: pushName, jid: sender };
             }
             memory.groups[remoteJid].lastMessages.push({
                 sender: sender,
@@ -112,12 +115,12 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
 
         if (quotedMessage) {
             const quotedSender = quotedMessage.sender;
-            const quotedName = memory.users[quotedSender]?.name || memory.groups[remoteJid]?.participants[quotedSender] || quotedSender.split('@')[0];
+            const quotedName = memory.users[quotedSender]?.name || memory.groups[remoteJid]?.participants[quotedSender]?.name || quotedSender.split('@')[0];
             conversationContext += `Message cité de ${quotedName}: ${quotedMessage.text}\n`;
         }
 
         const prompt = `${training}\n\n${conversationContext}\n` +
-            `Important: Quand tu veux interpeller quelqu’un en groupe, utilise son nom ou tag le @<numéro> (ex: Makima Supremia ou @111536592965872). ` +
+            `Important: Quand tu veux interpeller quelqu'un en groupe, utilise son nom ou tag le @<numéro> (ex: Makima Supremia ou @111536592965872). ` +
             `Je (le bot) convertirai ces @<numero> en mentions cliquable.\n` +
             `${userName}: ${userText}\nSupremia:`;
 
@@ -141,27 +144,30 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
             }
         }
 
-        saveUserMemory(memory);
-
+        // Si c'est un groupe, on cherche les mentions @numéro dans la réponse
         if (isGroup && text) {
-            const mentionRegex = /@([^\n\r]+)/g;
+            const mentionRegex = /@(\d+)/g;
             let match;
+            const participants = memory.groups[remoteJid]?.participants || {};
+            
             while ((match = mentionRegex.exec(text)) !== null) {
-                const rawMention = match[1].trim();
-                const normalizedMention = normalizeName(rawMention);
-
-                for (const [jid, name] of Object.entries(memory.groups[remoteJid].participants)) {
-                    if (normalizeName(name).startsWith(normalizedMention)) {
-                        mentionObjects.push({ jid, name, raw: rawMention });
+                const number = match[1];
+                // Chercher le participant correspondant au numéro (le jid est stocké sous forme de numéro@lid)
+                for (const [jid, info] of Object.entries(participants)) {
+                    const participantNumber = jid.split('@')[0];
+                    if (participantNumber === number) {
+                        mentionJids.push(jid);
                         break;
                     }
                 }
             }
         }
 
+        saveUserMemory(memory);
+
         return {
             text: text || "Désolé, je n'ai pas pu générer de réponse.",
-            mentions: mentionObjects
+            mentions: mentionJids // Retourner les JIDs à mentionner
         };
     } catch (e) {
         console.error("[NazunaAI] Erreur:", e?.stack || e);
