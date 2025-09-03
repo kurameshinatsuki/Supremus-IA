@@ -161,9 +161,9 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
         // Contexte supplémentaire si l'utilisateur a tagué des gens
         let mentionContext = "";
         if (userMentions.length > 0) {
-            mentionContext = "L’utilisateur a mentionné les personnes suivantes: " +
+            mentionContext = "L'utilisateur a mentionné les personnes suivantes: " +
                 userMentions.map(u => `@${u.number}`).join(', ') + ".\n" +
-                "Tu peux aussi les mentionner dans ta réponse si c’est pertinent.\n";
+                "Tu peux aussi les mentionner dans ta réponse si c'est pertinent.\n";
         }
 
         const prompt = `${training}\n\n${participantsList}${conversationContext}\n` +
@@ -202,6 +202,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
             let match;
             const participants = memory.groups[remoteJid]?.participants || {};
 
+            // Détecter toutes les mentions dans la réponse de l'IA
             while ((match = mentionRegex.exec(text)) !== null) {
                 const number = match[1];
                 for (const [jid, info] of Object.entries(participants)) {
