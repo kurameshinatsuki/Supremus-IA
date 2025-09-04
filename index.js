@@ -373,7 +373,7 @@ async function startBot(sock, state) {
         }
 
         // 3) bonus sticker de temps en temps (sans citation volontairement)
-        if (!isCommand && Math.random() < 0.2) {
+        if (!isCommand && Math.random() < 0.6) {
           const stickerPath = await getRandomSticker();
           if (stickerPath) {
             await sock.sendMessage(remoteJid, { sticker: { url: stickerPath } });
