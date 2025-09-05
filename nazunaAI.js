@@ -204,7 +204,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
         // Construction du prompt complet pour l'IA
         const prompt = `${training}\n\n${participantsList}${conversationContext}\n` +
             `TRÈS IMPORTANT: 
-            - Pour mentionner quelqu'un, utilise toujours SON NUMÉRO avec le format @numéro
+            - Pour mentionner quelqu'un, utilise toujours SON NUMÉRO avec le format @numéro (ex: Salut, @22554191184.)
             - L'utilisateur actuel (${userName}) a pour numéro: @${userNumber}
             - N'utilise JAMAIS le nom pour les mentions car cela ne fonctionne pas
             - Si on te demande de "tag" ou "mentionner" quelqu'un, utilise toujours son numéro\n` +
