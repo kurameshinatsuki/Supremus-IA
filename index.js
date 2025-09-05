@@ -5,8 +5,9 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const sharp = require('sharp');
-const { default: makeWASocket, useMultiFileAuthState, delay } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useMultiFileAuthState, delay, downloadContentFromMessage } = require('@whiskeysockets/baileys');
 const { nazunaReply } = require('./nazunaAI');
+const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 
 const DEBUG = (process.env.DEBUG === 'true') || false;
 let pair = false;
@@ -122,30 +123,30 @@ function getMessageType(msg) {
  */
 function extractText(msg) {
   if (!msg || !msg.message) return '';
-  
+
   const m = msg.message;
   // Message texte simple
   if (m.conversation) return m.conversation;
-  
+
   // Message texte étendu
   if (m.extendedTextMessage?.text) return m.extendedTextMessage.text;
-  
+
   // Messages média avec caption
   const mediaTypes = ['imageMessage', 'videoMessage', 'documentMessage'];
   for (const type of mediaTypes) {
     if (m[type]?.caption) return m[type].caption;
   }
-  
+
   // Messages viewOnce (messages supprimés après visualisation)
   if (m.viewOnceMessage?.message) {
     return extractText({ message: m.viewOnceMessage.message });
   }
-  
+
   // Messages éphemères (disappearing messages)
   if (m.ephemeralMessage?.message) {
     return extractText({ message: m.ephemeralMessage.message });
   }
-  
+
   return '';
 }
 
@@ -194,7 +195,7 @@ function stripLeadingNonAlnum(s = '') {
 }
 
 /**
- * Stickers aléatoires (optionnel)
+ * Stickers aléatoires avec signature Suprêmus/Makima
  */
 async function getRandomSticker() {
   try {
@@ -207,22 +208,20 @@ async function getRandomSticker() {
     const randomFile = files[Math.floor(Math.random() * files.length)];
     const inputPath = path.join(stickersDir, randomFile);
 
-    if (/\.webp$/i.test(randomFile)) return inputPath;
+    const buffer = fs.readFileSync(inputPath);
 
-    const outputPath = inputPath.replace(/\.(png|jpe?g)$/i, '.webp');
-    if (!fs.existsSync(outputPath)) {
-      try {
-        await sharp(inputPath)
-          .resize({ width: 512, height: 512, fit: 'inside' })
-          .webp({ quality: 90 })
-          .toFile(outputPath);
-        console.log(`🔄 Conversion ${randomFile} → ${path.basename(outputPath)}`);
-      } catch (err) {
-        console.error('⚠️ Erreur de conversion en webp:', err?.message || err);
-        return null;
-      }
-    }
-    return outputPath;
+    // Créer un sticker avec les métadonnées Suprêmus/Makima
+    const sticker = new Sticker(buffer, {
+      pack: "Suprêmus",
+      author: "Makima",
+      type: StickerTypes.FULL,
+      quality: 100,
+    });
+
+    const tempPath = path.join(__dirname, `temp_${Date.now()}.webp`);
+    await sticker.toFile(tempPath);
+    
+    return tempPath;
   } catch (err) {
     console.error('⚠️ Impossible de charger les stickers:', err?.message || err);
     return null;
@@ -287,6 +286,24 @@ async function sendReply(sock, msg, contentObj, optionsExtra = {}) {
   const jid = msg.key.remoteJid;
   const opts = { quoted: msg, ...optionsExtra };
   console.log('🧷 sendReply -> quoting stanzaId:', msg.key.id, '| to:', jid);
+  return sock.sendMessage(jid, contentObj, opts);
+}
+
+/**
+ * Envoie une réponse avec un délai et l'indicateur "en train d'écrire"
+ */
+async function sendReplyWithTyping(sock, msg, contentObj, optionsExtra = {}) {
+  const jid = msg.key.remoteJid;
+  const opts = { quoted: msg, ...optionsExtra };
+
+  // Activer l'indicateur "en train d'écrire"
+  await sock.sendPresenceUpdate('composing', jid);
+  
+  // Attendre 5 secondes
+  await delay(5000);
+  
+  // Désactiver l'indicateur et envoyer le message
+  await sock.sendPresenceUpdate('paused', jid);
   return sock.sendMessage(jid, contentObj, opts);
 }
 
@@ -368,7 +385,7 @@ async function startBot(sock, state) {
           const [command, ...args] = text.slice(1).trim().split(/\s+/);
           reply = await handleCommand(command, args, msg, sock);
           if (reply) {
-            await sendReply(sock, msg, { text: reply });
+            await sendReplyWithTyping(sock, msg, { text: reply });
             cacheBotReply(remoteJid, reply);
             return;
           }
@@ -400,15 +417,22 @@ async function startBot(sock, state) {
             mentions: replyObj.mentions || []
           };
 
-          await sendReply(sock, msg, messageData);
+          await sendReplyWithTyping(sock, msg, messageData);
           cacheBotReply(remoteJid, replyObj.text);
         }
 
         // 3) bonus sticker de temps en temps (sans citation volontairement)
-        if (!isCommand && Math.random() < 0.6) {
+        if (!isCommand && Math.random() < 0.2) {
           const stickerPath = await getRandomSticker();
           if (stickerPath) {
-            await sock.sendMessage(remoteJid, { sticker: { url: stickerPath } });
+            await sock.sendMessage(remoteJid, { sticker: fs.readFileSync(stickerPath) });
+            
+            // Supprimer le fichier temporaire
+            try {
+              fs.unlinkSync(stickerPath);
+            } catch (e) {
+              console.error('Erreur suppression sticker temporaire:', e);
+            }
           }
         }
       } catch (error) {
