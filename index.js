@@ -101,9 +101,6 @@ function extractTextFromQuoted(contextInfo = {}) {
   return (
     qm?.conversation ||
     qm?.extendedTextMessage?.text ||
-    qm?.imageMessage?.caption ||
-    qm?.videoMessage?.caption ||
-    qm?.documentMessage?.caption ||
     null
   );
 }
@@ -118,34 +115,14 @@ function getMessageType(msg) {
 
 /**
  * Récupère un texte lisible d'un WAMessage (caption inclus)
- * Version améliorée pour gérer plus de types de messages
  */
 function extractText(msg) {
   if (!msg || !msg.message) return '';
-  
   const m = msg.message;
-  // Message texte simple
   if (m.conversation) return m.conversation;
-  
-  // Message texte étendu
   if (m.extendedTextMessage?.text) return m.extendedTextMessage.text;
-  
-  // Messages média avec caption
-  const mediaTypes = ['imageMessage', 'videoMessage', 'documentMessage'];
-  for (const type of mediaTypes) {
-    if (m[type]?.caption) return m[type].caption;
-  }
-  
-  // Messages viewOnce (messages supprimés après visualisation)
-  if (m.viewOnceMessage?.message) {
-    return extractText({ message: m.viewOnceMessage.message });
-  }
-  
-  // Messages éphemères (disappearing messages)
-  if (m.ephemeralMessage?.message) {
-    return extractText({ message: m.ephemeralMessage.message });
-  }
-  
+  if (m.imageMessage?.caption) return m.imageMessage.caption;
+  if (m.videoMessage?.caption) return m.videoMessage.caption;
   return '';
 }
 
@@ -166,7 +143,7 @@ function prettyLog(msg) {
   const context = msg.message?.extendedTextMessage?.contextInfo || {};
   const mentions = Array.isArray(context?.mentionedJid) ? context.mentionedJid : [];
   const quoted = context?.quotedMessage
-    ? extractTextFromQuoted(context)
+    ? (context.quotedMessage.conversation || '[message cité non textuel]')
     : null;
 
   console.log('\n==========================');
@@ -317,20 +294,11 @@ async function startBot(sock, state) {
       }
 
       const text = extractText(msg);
+      if (!text) return;
+
       const remoteJid = msg.key.remoteJid;
       const isGroup = remoteJid.endsWith('@g.us');
       const pushName = msg.pushName || msg.notifyName || null;
-
-      // Vérifier si c'est un message avec média mais sans texte
-      if (!text) {
-        // Si c'est un message média sans légende, on ne le traite pas
-        const messageType = getMessageType(msg);
-        const isMedia = ['imageMessage', 'videoMessage', 'documentMessage', 'audioMessage'].includes(messageType);
-        if (isMedia) {
-          console.log('📸 Message média sans légende - ignoré');
-          return;
-        }
-      }
 
       // Si l'utilisateur répond à un message du bot
       const quotedText = msg.message.extendedTextMessage?.contextInfo?.quotedMessage
@@ -347,7 +315,7 @@ async function startBot(sock, state) {
         (text && text.toLowerCase().includes('supremia'));
 
       // Commande ?
-      const isCommand = text && text.startsWith('/');
+      const isCommand = text.startsWith('/');
 
       // Décision :
       // - privé => toujours répondre
