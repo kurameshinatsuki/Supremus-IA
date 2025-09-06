@@ -9,7 +9,7 @@ const { default: makeWASocket, useMultiFileAuthState, delay, downloadContentFrom
 const { nazunaReply } = require('./nazunaAI');
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 
-const DEBUG = (process.env.DEBUG === 'true') || false;
+const DEBUG = (process.env.DEBUG === 'false') || true;
 let pair = false;
 
 // Système de rate limiting
@@ -403,7 +403,7 @@ async function startBot(sock, state) {
 
             // Mention du bot (via @numéro ou via liste mentions)
             const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
-            const botNumber = process.env.BOT_NUMBER?.replace(/[^0-9]/g, '') || '2250717367363'; // Numéro par défaut
+            const botNumber = process.env.BOT_NUMBER?.replace(/[^0-9]/g, '') || '213073981898825'; // Numéro par défaut
             const isMentioned =
                 mentionedJids.some(jid => jid.includes(botNumber)) ||
                 (text && text.includes('@' + botNumber)) ||
@@ -468,7 +468,7 @@ async function startBot(sock, state) {
                 }
 
                 // 3) bonus sticker de temps en temps (seulement 5% de chance)
-                if (!isCommand && Math.random() < 0.05) {
+                if (!isCommand && Math.random() < 0.2) {
                     const stickerPath = await getRandomSticker();
                     if (stickerPath) {
                         await sock.sendMessage(remoteJid, { sticker: fs.readFileSync(stickerPath) });
