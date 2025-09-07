@@ -8,9 +8,17 @@ const sharp = require('sharp');
 const { default: makeWASocket, useMultiFileAuthState, delay, downloadContentFromMessage } = require('@whiskeysockets/baileys');
 const { nazunaReply } = require('./nazunaAI');
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
+const { syncDatabase } = require('./models'); // Ajout de l'import pour la base de données
 
 const DEBUG = (process.env.DEBUG === 'false') || true;
 let pair = false;
+
+// Initialisation de la base de données
+syncDatabase().then(() => {
+  console.log('✅ Base de données PostgreSQL initialisée');
+}).catch(err => {
+  console.error('❌ Erreur initialisation base de données:', err);
+});
 
 // Système de rate limiting
 const messageLimiter = new Map();
@@ -495,25 +503,35 @@ async function startBot(sock, state) {
  *         MAIN
  * ========================= */
 async function main() {
-    const { state, saveCreds } = await useMultiFileAuthState('./auth');
-    const sock = makeWASocket({
-        auth: state,
-        printQRInTerminal: true, // Utiliser QR code au lieu du pairing code
-        browser: ['Ubuntu', 'Chrome', '20.0.04'],
-        getMessage: async key => {
-            console.log('⚠️ Message non déchiffré, retry demandé:', key);
-            return { conversation: '🔄 Réessaye d\'envoyer ton message' };
-        }
-    });
+    try {
+        // Attendre que la base de données soit initialisée
+        await syncDatabase();
+        console.log('✅ Base de données PostgreSQL prête');
 
-    sock.ev.on('creds.update', saveCreds);
+        const { state, saveCreds } = await useMultiFileAuthState('./auth');
+        const sock = makeWASocket({
+            auth: state,
+            printQRInTerminal: true, // Utiliser QR code au lieu du pairing code
+            browser: ['Ubuntu', 'Chrome', '20.0.04'],
+            getMessage: async key => {
+                console.log('⚠️ Message non déchiffré, retry demandé:', key);
+                return { conversation: '🔄 Réessaye d\'envoyer ton message' };
+            }
+        });
 
-    // Désactiver le pairing code automatisé pour plus de sécurité
-    console.log('📱 Scannez le QR code affiché pour connecter votre compte');
+        sock.ev.on('creds.update', saveCreds);
 
-    await startBot(sock, state);
+        // Désactiver le pairing code automatisé pour plus de sécurité
+        console.log('📱 Scannez le QR code affiché pour connecter votre compte');
+
+        await startBot(sock, state);
+    } catch (error) {
+        console.error('💥 Erreur fatale lors du démarrage:', error);
+        process.exit(1);
+    }
 }
 
 main().catch(err => {
     console.error('💥 Erreur fatale:', err?.stack || err);
+    process.exit(1);
 });
