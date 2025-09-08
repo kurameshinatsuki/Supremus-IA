@@ -172,29 +172,44 @@ function extractText(msg) {
     if (!msg || !msg.message) return '';
 
     const m = msg.message;
+    let text = '';
+
     // Message texte simple
-    if (m.conversation) return m.conversation;
-
+    if (m.conversation) {
+        text = m.conversation;
+    }
     // Message texte étendu
-    if (m.extendedTextMessage?.text) return m.extendedTextMessage.text;
-
+    else if (m.extendedTextMessage?.text) {
+        text = m.extendedTextMessage.text;
+        // Convertir les mentions JID en numéros
+        const mentions = m.extendedTextMessage.contextInfo?.mentionedJid || [];
+        mentions.forEach(jid => {
+            const number = jid.split('@')[0];
+            text = text.replace(`@${jid}`, `@${number}`);
+        });
+    }
     // Messages média avec caption
-    const mediaTypes = ['imageMessage', 'videoMessage', 'documentMessage'];
-    for (const type of mediaTypes) {
-        if (m[type]?.caption) return m[type].caption;
+    else {
+        const mediaTypes = ['imageMessage', 'videoMessage', 'documentMessage'];
+        for (const type of mediaTypes) {
+            if (m[type]?.caption) {
+                text = m[type].caption;
+                break;
+            }
+        }
     }
 
     // Messages viewOnce (messages supprimés après visualisation)
-    if (m.viewOnceMessage?.message) {
+    if (!text && m.viewOnceMessage?.message) {
         return extractText({ message: m.viewOnceMessage.message });
     }
 
     // Messages éphemères (disappearing messages)
-    if (m.ephemeralMessage?.message) {
+    if (!text && m.ephemeralMessage?.message) {
         return extractText({ message: m.ephemeralMessage.message });
     }
 
-    return '';
+    return text;
 }
 
 /**
@@ -411,7 +426,7 @@ async function startBot(sock, state) {
 
             // Mention du bot (via @numéro ou via liste mentions)
             const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
-            const botNumber = process.env.BOT_NUMBER?.replace(/[^0-9]/g, '213073981898825') || '213073981898825'; // Numéro par défaut
+            const botNumber = process.env.BOT_NUMBER?.replace(/[^0-9]/g, '') || '213073981898825'; // Numéro par défaut
             const isMentioned =
                 mentionedJids.some(jid => jid.includes(botNumber)) ||
                 (text && text.includes('@' + botNumber)) ||
@@ -499,6 +514,20 @@ async function startBot(sock, state) {
     });
 }
 
+// Ajouter cette fonction de reconnexion
+async function reconnectOnFailure(sock, state) {
+    sock.ev.on('connection.update', (update) => {
+        const { connection, lastDisconnect } = update;
+        if (connection === 'close') {
+            const shouldReconnect = lastDisconnect.error?.output?.statusCode !== 401;
+            if (shouldReconnect) {
+                console.log('🔄 Tentative de reconnexion...');
+                setTimeout(() => startBot(sock, state), 5000);
+            }
+        }
+    });
+}
+
 /* =========================
  *         MAIN
  * ========================= */
@@ -520,8 +549,8 @@ async function main() {
         });
 
         sock.ev.on('creds.update', saveCreds);
+        reconnectOnFailure(sock, state); // Ajout de la gestion de reconnexion
 
-        // Désactiver le pairing code automatisé pour plus de sécurité
         console.log('📱 Scannez le QR code affiché pour connecter votre compte');
 
         await startBot(sock, state);
