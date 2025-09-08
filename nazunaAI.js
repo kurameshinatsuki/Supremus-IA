@@ -128,7 +128,9 @@ function normalizeName(name) {
  * Extrait le numéro de téléphone d'un JID
  */
 function extractNumberFromJid(jid) {
-  return String(jid || "").split('@')[0];
+  return String(jid || "")
+    .replace(/@s\.whatsapp\.net$/, '') // Retirer le domaine
+    .replace(/\D/g, ''); // Garder uniquement les chiffres
 }
 
 /**
@@ -258,7 +260,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
 
     // Traitement des mentions dans les groupes
     if (isGroup && text && groupMemory?.participants) {
-      const mentionRegex = /@(\d{5,})/g;
+      const mentionRegex = /@(\d+)/g;
       let match;
       const participants = groupMemory.participants;
 
@@ -278,7 +280,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
       mentionJids = [...new Set(mentionJids)];
 
       // Nettoyage des mentions invalides
-      text = text.replace(/@(\d{5,})/g, (full, num) => {
+      text = text.replace(/@(\d+)/g, (full, num) => {
         const found = Object.values(participants).find(p => p.number === num);
         return found ? `@${num}` : num;
       });
