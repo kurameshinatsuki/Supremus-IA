@@ -1,4 +1,4 @@
-//     ===== index.js =====     //
+// index.js - Version modifiée avec système de visuels
 
 require('dotenv').config();
 const fs = require('fs');
@@ -8,7 +8,8 @@ const sharp = require('sharp');
 const { default: makeWASocket, useMultiFileAuthState, delay, downloadContentFromMessage } = require('@whiskeysockets/baileys');
 const { nazunaReply } = require('./nazunaAI');
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
-const { syncDatabase } = require('./models'); // Ajout de l'import pour la base de données
+const { syncDatabase } = require('./models');
+const { detecterVisuel } = require('./visuels'); // Import du module visuels
 
 const DEBUG = (process.env.DEBUG === 'false') || true;
 let pair = false;
@@ -465,14 +466,27 @@ async function startBot(sock, state) {
                 );
 
                 if (replyObj && replyObj.text) {
-                    // Préparer l'objet de message avec les mentions
-                    const messageData = {
-                        text: replyObj.text,
-                        mentions: replyObj.mentions || []
-                    };
-
-                    await sendReplyWithTyping(sock, msg, messageData);
-                    cacheBotReply(remoteJid, replyObj.text);
+                    // Détection de visuel
+                    const visuel = detecterVisuel(text) || detecterVisuel(replyObj.text);
+                    
+                    if (visuel && visuel.urlImage) {
+                        // Envoyer l'image avec la réponse en légende
+                        await sock.sendMessage(remoteJid, {
+                            image: { url: visuel.urlImage },
+                            caption: replyObj.text,
+                            mentions: replyObj.mentions || []
+                        }, { quoted: msg });
+                        
+                        cacheBotReply(remoteJid, replyObj.text);
+                    } else {
+                        // Envoi normal si pas de visuel détecté
+                        const messageData = {
+                            text: replyObj.text,
+                            mentions: replyObj.mentions || []
+                        };
+                        await sendReplyWithTyping(sock, msg, messageData);
+                        cacheBotReply(remoteJid, replyObj.text);
+                    }
                 }
 
                 // 3) bonus sticker de temps en temps (seulement 5% de chance)
