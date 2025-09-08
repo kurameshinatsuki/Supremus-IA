@@ -255,7 +255,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
   - L'utilisateur actuel (${userName}) a pour numéro: @${userNumber}
   - N'utilise JAMAIS le nom pour les mentions car cela ne fonctionne pas
   - Si on te demande de "tag" ou "mentionner" quelqu'un, utilise toujours son numéro
-  - Tu dois tag uniquement dans les conversations de groupe
+  - Tu dois tag uniquement dans les Conversations de groupe et non les Historique de conversation en privé
 
   GESTION DES IDENTITÉS :
   - Le numéro est toujours la VÉRITÉ, le nom affiché peut être faux ou trompeur.
