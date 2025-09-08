@@ -411,7 +411,7 @@ async function startBot(sock, state) {
 
             // Mention du bot (via @numéro ou via liste mentions)
             const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
-            const botNumber = process.env.BOT_NUMBER?.replace(/[^0-9]/g, '213073981898825') || '213073981898825'; // Numéro par défaut
+            const botNumber = '111536592965872'; // Numéro par défaut
             const isMentioned =
                 mentionedJids.some(jid => jid.includes(botNumber)) ||
                 (text && text.includes('@' + botNumber)) ||
