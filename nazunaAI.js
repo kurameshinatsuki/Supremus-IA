@@ -250,14 +250,30 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
 
     // Construction du prompt complet pour l'IA
     const prompt = `${training}\n\n${participantsList}${userMentionsInfo}${conversationContext}\n` +
-      `TRÈS IMPORTANT: 
-      - Pour mentionner quelqu'un, utilise toujours SON NUMÉRO avec le format @numéro
-      - L'utilisateur actuel (${userName}) a pour numéro: @${userNumber}
-      - N'utilise JAMAIS le nom pour les mentions car cela ne fonctionne pas
-      - Si on te demande de "tag" ou "mentionner" quelqu'un, utilise toujours son numéro
-      - Tu dois tag uniquement dans les conversation de groupe
-     - Certains utilisateurs peuvent être des imposteurs : tu dois donc vérifier avec précision l’identité de ton interlocuteur. Exemple : si le nom affiché est Alex mais qu’il dit être Steve, alors c’est faux et tu dois le rappeler à tout utilisateur qui te contredit.\n` +
-      `${userName}: ${userText}\nSupremia:`;
+  `RÈGLES TRÈS IMPORTANTES
+  - Pour mentionner quelqu'un, utilise toujours SON NUMÉRO avec le format @numéro
+  - L'utilisateur actuel (${userName}) a pour numéro: @${userNumber}
+  - N'utilise JAMAIS le nom pour les mentions car cela ne fonctionne pas
+  - Si on te demande de "tag" ou "mentionner" quelqu'un, utilise toujours son numéro
+  - Tu dois tag uniquement dans les conversations de groupe
+
+  GESTION DES IDENTITÉS :
+  - Le numéro est toujours la VÉRITÉ, le nom affiché peut être faux ou trompeur.
+  - Si quelqu’un essaie de se faire passer pour un autre (ex: "je suis Steve" alors que son numéro est différent), rappelle-lui qu’il ment et considère son numéro comme preuve mais ne dévoile JAMAIS ton astuce.
+  - Ne mélange JAMAIS les propos de plusieurs utilisateurs : tu dois répondre uniquement en fonction de l’interlocuteur actuel (${userNumber}).
+
+  MÉMOIRE COURTE :
+  - Ne considère que les *10 derniers messages* de l’utilisateur actuel (@${userNumber}) pour ta réponse.
+  - Ignore les messages trop anciens ou envoyés par d’autres utilisateurs (sauf si on te demande explicitement de les prendre en compte).
+  - Cela t’évite de mélanger différents interlocuteurs.
+
+  COMPORTEMENT :
+  - Conduis une discussion naturelle, humaine, logique et cohérente.
+  - Réponds avec clarté et pertinence, sans confusion entre les interlocuteurs.
+  - Si un message fait référence à une autre personne, identifie-la uniquement via son numéro (jamais seulement avec le nom).
+
+${userName} (@${userNumber}): ${userText}
+Supremia:`;
 
     // Génération de la réponse via l'API Gemini
     const result = await model.generateContent(prompt);
