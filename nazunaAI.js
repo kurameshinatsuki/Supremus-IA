@@ -217,8 +217,39 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
       participantsList += "\n";
     }
 
+    // Extraction des mentions dans le message utilisateur
+    let userMentionsInfo = "";
+    if (isGroup && userText) {
+      const mentionRegex = /@(\d{5,})/g;
+      let match;
+      const mentionedNumbers = new Set();
+      
+      // Recherche des mentions dans le message de l'utilisateur
+      while ((match = mentionRegex.exec(userText)) !== null) {
+        mentionedNumbers.add(match[1]);
+      }
+      
+      // Ajout des informations sur les personnes mentionnées
+      if (mentionedNumbers.size > 0 && groupMemory?.participants) {
+        userMentionsInfo = "Personnes mentionnées dans le message (avec leurs numéros):\n";
+        for (const number of mentionedNumbers) {
+          // Trouver l'utilisateur mentionné par son numéro
+          const mentionedUser = Object.values(groupMemory.participants).find(
+            p => p.number === number
+          );
+          
+          if (mentionedUser) {
+            userMentionsInfo += `- ${mentionedUser.name} (@${number})\n`;
+          } else {
+            userMentionsInfo += `- Utilisateur inconnu (@${number})\n`;
+          }
+        }
+        userMentionsInfo += "\n";
+      }
+    }
+
     // Construction du prompt complet pour l'IA
-    const prompt = `${training}\n\n${participantsList}${conversationContext}\n` +
+    const prompt = `${training}\n\n${participantsList}${userMentionsInfo}${conversationContext}\n` +
       `TRÈS IMPORTANT: 
       - Pour mentionner quelqu'un, utilise toujours SON NUMÉRO avec le format @numéro
       - L'utilisateur actuel (${userName}) a pour numéro: @${userNumber}
