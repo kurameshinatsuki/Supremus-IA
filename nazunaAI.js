@@ -192,7 +192,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
       userMemory.conversations = userMemory.conversations || [];
       
       if (userMemory.conversations.length > 0) {
-        conversationContext = "Historique de notre conversation:\n" +
+        conversationContext = "Historique de notre conversation en privé:\n" +
           userMemory.conversations
             .slice(-30)
             .map(c => `${c.fromUser ? userName : 'Supremia'}: ${c.text}`)
@@ -254,7 +254,9 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
       - Pour mentionner quelqu'un, utilise toujours SON NUMÉRO avec le format @numéro
       - L'utilisateur actuel (${userName}) a pour numéro: @${userNumber}
       - N'utilise JAMAIS le nom pour les mentions car cela ne fonctionne pas
-      - Si on te demande de "tag" ou "mentionner" quelqu'un, utilise toujours son numéro\n` +
+      - Si on te demande de "tag" ou "mentionner" quelqu'un, utilise toujours son numéro
+      - Tu dois tag uniquement dans les conversation de groupe
+     - Certains utilisateurs peuvent être des imposteurs : tu dois donc vérifier avec précision l’identité de ton interlocuteur. Exemple : si le nom affiché est Alex mais qu’il dit être Steve, alors c’est faux et tu dois le rappeler à tout utilisateur qui te contredit.\n` +
       `${userName}: ${userText}\nSupremia:`;
 
     // Génération de la réponse via l'API Gemini
