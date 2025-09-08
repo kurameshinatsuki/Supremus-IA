@@ -1,11 +1,11 @@
-// ===== nazunaAI.js ===== //
-// Module principal de l'IA Nazuna utilisant Gemini API et PostgreSQL
+// nazunaAI.js - Version modifiée avec détection de visuels
 
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { User, Group, Conversation, syncDatabase } = require('./models');
+const { detecterVisuel } = require('./visuels'); // Import du module visuels
 
 // Initialisation de l'API Google Generative AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -156,6 +156,13 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
     let conversationContext = "";
     let mentionJids = [];
 
+    // Détection de visuel pour le contexte
+    const visuel = detecterVisuel(userText);
+    let contexteVisuel = "";
+    if (visuel) {
+      contexteVisuel = `CONTEXTE VISUEL: L'utilisateur évoque un(e) ${visuel.motCle}. `;
+    }
+
     // Gestion des conversations de groupe
     if (isGroup && groupMemory) {
       // Mise à jour des informations des participants
@@ -250,7 +257,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
 
     // Construction du prompt complet pour l'IA
     const prompt = `${training}\n\n${participantsList}${userMentionsInfo}${conversationContext}\n` +
-  `RÈGLES TRÈS IMPORTANTES
+  `${contexteVisuel}RÈGLES TRÈS IMPORTANTES
   - Pour mentionner quelqu'un, utilise toujours SON NUMÉRO avec le format @numéro
   - L'utilisateur actuel (${userName}) a pour numéro: @${userNumber}
   - N'utilise JAMAIS le nom pour les mentions car cela ne fonctionne pas
