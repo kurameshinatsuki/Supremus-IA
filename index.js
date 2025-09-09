@@ -260,8 +260,8 @@ async function getRandomSticker() {
 
         // Créer un sticker avec les métadonnées Suprêmus/Makima
         const sticker = new Sticker(buffer, {
-            pack: "Suprêmus",
-            author: "Makima",
+            pack: "Makima",
+            author: "Suprêmus",
             type: StickerTypes.FULL,
             quality: 100,
         });
@@ -342,8 +342,8 @@ async function sendReplyWithTyping(sock, msg, contentObj, optionsExtra = {}) {
     const jid = msg.key.remoteJid;
     const opts = { quoted: msg, ...optionsExtra };
 
-    // Délai aléatoire entre 2 et 8 secondes pour paraître plus humain
-    const randomDelay = Math.floor(Math.random() * 6000) + 2000;
+    // Délai aléatoire entre 2 et 5 secondes pour paraître plus humain
+    const randomDelay = Math.floor(Math.random() * 5000) + 2000;
     
     // Activer l'indicateur "en train d'écrire"
     await sock.sendPresenceUpdate('composing', jid);
@@ -489,8 +489,8 @@ async function startBot(sock, state) {
                     }
                 }
 
-                // 3) bonus sticker de temps en temps (seulement 5% de chance)
-                if (!isCommand && Math.random() < 0.2) {
+                // 3) bonus sticker de temps en temps (seulement 40% de chance)
+                if (!isCommand && Math.random() < 0.4) {
                     const stickerPath = await getRandomSticker();
                     if (stickerPath) {
                         await sock.sendMessage(remoteJid, { sticker: fs.readFileSync(stickerPath) });
