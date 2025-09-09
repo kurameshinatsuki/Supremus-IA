@@ -467,7 +467,7 @@ async function startBot(sock, state) {
 
                 if (replyObj && replyObj.text) {
                     // Détection de visuel
-                    const visuel = detecterVisuel(text) || detecterVisuel(replyObj.text);
+                    const visuel = /*detecterVisuel(text) ||*/ detecterVisuel(replyObj.text);
                     
                     if (visuel && visuel.urlImage) {
                         // Envoyer l'image avec la réponse en légende
