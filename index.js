@@ -343,7 +343,7 @@ async function sendReplyWithTyping(sock, msg, contentObj, optionsExtra = {}) {
     const opts = { quoted: msg, ...optionsExtra };
 
     // Délai aléatoire entre 2 et 5 secondes pour paraître plus humain
-    const randomDelay = Math.floor(Math.random() * 5000) + 2000;
+    const randomDelay = Math.floor(Math.random() * 6000) + 2000;
     
     // Activer l'indicateur "en train d'écrire"
     await sock.sendPresenceUpdate('composing', jid);
@@ -489,8 +489,8 @@ async function startBot(sock, state) {
                     }
                 }
 
-                // 3) bonus sticker de temps en temps (seulement 40% de chance)
-                if (!isCommand && Math.random() < 0.4) {
+                // 3) bonus sticker de temps en temps (seulement 10% de chance)
+                if (!isCommand && Math.random() < 0.1) {
                     const stickerPath = await getRandomSticker();
                     if (stickerPath) {
                         await sock.sendMessage(remoteJid, { sticker: fs.readFileSync(stickerPath) });
@@ -526,7 +526,7 @@ async function main() {
         const sock = makeWASocket({
             auth: state,
             printQRInTerminal: true, // Utiliser QR code au lieu du pairing code
-            browser: ['Ubuntu', 'Chrome', '20.0.04'],
+            browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
             getMessage: async key => {
                 console.log('⚠️ Message non déchiffré, retry demandé:', key);
                 return { conversation: '🔄 Réessaye d\'envoyer ton message' };
