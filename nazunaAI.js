@@ -1,4 +1,4 @@
-// nazunaAI.js - Version modifiée avec détection de visuels
+// nazunaAI.js - Version modifiée avec détection de visuels et contexte OCR
 
 require('dotenv').config();
 const fs = require('fs');
@@ -156,6 +156,12 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
     let conversationContext = "";
     let mentionJids = [];
 
+    // Vérifier si le texte provient d'OCR et l'indiquer dans le contexte
+    let ocrContext = "";
+    if (userText && userText.includes("📝")) {
+      ocrContext = "CONTEXTE OCR: Le texte a été extrait d'une image ou d'un document. Il peut contenir des erreurs de reconnaissance. ";
+    }
+
     // Détection de visuel pour le contexte
     const visuel = detecterVisuel(userText);
     let contexteVisuel = "";
@@ -256,9 +262,9 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
     }
 
     // Construction du prompt complet pour l'IA
-    // Prompt ultra-autonome pour Supremia
-const prompt = `${training}\n\n${participantsList}\n${userMentionsInfo}\n${conversationContext}\n${contexteVisuel}\n
+    const prompt = `${training}\n\n${participantsList}\n${userMentionsInfo}\n${conversationContext}\n${ocrContext}\n${contexteVisuel}\n
 > RAPPEL CRITIQUE POUR SUPREMIA <
+${ocrContext ? "- Le texte provient d'une image/document, soyez attentif aux erreurs de reconnaissance." : ""}
 
 IDENTITÉ & TAGS :
 - Pour mentionner quelqu'un, utilise toujours SON NUMÉRO avec le format @numéro.
@@ -266,16 +272,16 @@ IDENTITÉ & TAGS :
 - N'utilise JAMAIS le nom pour les mentions.
 - Si on te demande de "tag" ou "mentionner" quelqu'un, utilise toujours son numéro.
 - Tu dois tag uniquement dans les conversations de groupe et non dans l'historique privé.
-- Ne mélange JAMAIS les propos de plusieurs utilisateurs : répond uniquement en fonction de l’interlocuteur actuel (${userNumber}) sur le sujet dont vous discutez sauf lors d'une supervision Origamy World, traité les joueurs de façon collectif si ils sont dans la même zone.
+- Ne mélange JAMAIS les propos de plusieurs utilisateurs : répond uniquement en fonction de l'interlocuteur actuel (${userNumber}) sur le sujet dont vous discutez sauf lors d'une supervision Origamy World, traité les joueurs de façon collectif si ils sont dans la même zone.
 
 MÉMOIRE COURTE :
-- Considère uniquement les 10 derniers messages de l’utilisateur actuel (@${userNumber}) pour ta réponse sauf durant la supervision Origamy World.
-- Ignore les messages trop anciens ou envoyés par d’autres utilisateurs, sauf instruction explicite ou supervision Origamy World.
+- Considère uniquement les 10 derniers messages de l'utilisateur actuel (@${userNumber}) pour ta réponse sauf durant la supervision Origamy World.
+- Ignore les messages trop anciens ou envoyés par d'autres utilisateurs, sauf instruction explicite ou supervision Origamy World.
 
 COMPORTEMENT & AUTONOMIE MAXIMALE :
 - Conduis la conversation de manière naturelle, humaine, cohérente et pertinente.
 - Réponds avec clarté et précision, en appliquant toutes les règles et mécaniques SRPN déjà contenues dans le training.
-- Sois proactive et stratégique, capable de **prévoir les actions possibles de l’utilisateur et des autres joueurs**.
+- Sois proactive et stratégique, capable de **prévoir les actions possibles de l'utilisateur et des autres joueurs**.
 - Prends des décisions autonomes pour gérer les situations RP, combats et événements sans supervision explicite, tout en respectant les règles du jeu.
 - Fournis des verdicts MJ détaillés, immersifs et réalistes pour Origamy World, ABM, Speed Rush, etc., sans jamais ajouter de commentaires hors du modèle de verdict.
 - Applique les mécaniques de combat ABM avec rigueur : distance, tours, contre, enchaînements, objectifs narratifs.
