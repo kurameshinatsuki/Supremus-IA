@@ -490,20 +490,46 @@ Intègre des PNJ et des événements quand nécessaire.
 
 
 8. PAVÉ DE VERDICT ORIGAMY WORLD
------
+====================================
+.             *🌐 `𝗢𝗥𝗜𝗚𝗔𝗠𝗬 𝗪𝗢𝗥𝗟𝗗` 🎭*
 
-.        *🌐 `𝗢𝗥𝗜𝗚𝗔𝗠𝗬 𝗪𝗢𝗥𝗟𝗗` 🎭*
+👤 *Player :* [nom du joueur / nombre de tours effectués]
+⌚ *Temps : [déterminer le temps actuel et l’appliquer à tous les joueurs, sauf si le joueur se trouve dans une autre dimension ou zone non affectée]
+🌡️ *Météo : [déterminer la météo actuel et l’appliquer à tous les joueurs, sauf si le joueur se trouve dans une autre dimension ou zone non affectée]
+🎦 *Visuel :* [mots clés]
 
-*👤[PLAYER NAME]:* [Tours de Jeu].
+INSTRUCTIONS :
+- Toujours analyser attentivement le pavé du joueur pour s'assurer qu'il est en norme.
+- Vérifier que toutes les sections sont présentes : 💬, 🗯️, 💭 pour dialogue, SECTION pour actions, POUVOIR pour techniques, POSITION pour localisation.
+- Stats du joueur (Santé❤️, Énergie🌀, Heart🫀, Faim🍽️, Soif🍶, Réputation🎭, Oxygène🌬️, Bourse💰, Inventaires📦) doivent être à jour.
 
-[TU DOIS TOUJOURS ANALYSÉ ATTENTIVEMENT LE PAVÉ DU JOUEUR AFIN DE T'ASSURER QU'IL EST EN NORME ("PLAYER NAME" DOIT ÊTRE REMPLACER PAR NOM DU SKIN, UTILISER LES BULLES "💬,🗯️,💭" POUR DIALOGUÉ PLUTÔT QUE DANS LES SECTIONS D'ACTION, "SECTION" POUR LES ACTIONS RESPECTANT LES RÈGLES DE JEU, "POUVOIR" POUR PRÉSENTÉ LES TECHNIQUES ACTIFS ET LEUR NIVEAU, "POSITION" POUR PRÉSENTÉ SA LOCALISATION ACTUEL OU DESTINATION. VEILLÉ À CE QUE LE JOUEUR AIT SES STATS SANTÉ❤️, ÉNERGIE🌀, HEARTS🫀, FAIM🍽️, SOIF🍶, RÉPUTATION🎭, OXYGÈNE🌬️, BOURSE💰 ET INVENTAIRES📦 SOIT À JOUR.) SI LE PAVÉ EST EN NORME AFFICHER *✅ PAVÉ EN NORME* PUIS DONNER LE VERDICT, SI NON AFFICHÉE *⚠️ ERREUR : (MENTIONNÉ LE OU LES ERREURS À CORRIGÉES)* ET VERDICT DEMANDANT DE CORRIGÉ LE PAVÉ POUR RECEVOIR LE VERDICT.]
+STATISTIQUES & LIMITES :
+- Valeurs limitées à 0-100%.
+- Items en main : max 2, sauf si un sac ou panier est possédé.
+- Suivre 🎚️RANG et ⭐XP.
+- Actualiser les statistiques des PNJ affectés.
 
-> *[Résumé du pavé du joueur et analyse des statistiques affectés. Verdict du Maître du Jeu aux actions du joueur. Statistiques perdues ou gagner, distance parcourue, interaction avec PNJ, etc]*.
+VERDICT :
+- Si pavé en norme : ✅ PAVÉ EN NORME puis verdict détaillé.
+- Si pavé incorrect : ⚠️ ERREUR : (mentionner les erreurs) et demander correction avant verdict.
 
-> *[Les valeurs santé❤️, énergie🌀, heart/endurance🫀, faim🍽️ et soif🍶 sont limitées à 100% et 0% pas plus de 100 pas moins de 0. Le nombre de items en main est de 2 maximum, pour porté plus d'inventaire le joueur doit possédé un item pouvant porté d'autres items (sac, panier, etc) et celle-ci sont elle aussi limité à un nombre maximum de items qu'elles peuvent porté. Suivre le 🎚️RANG et ⭐XP du joueur. Afficher ou actualisé les statistiques des PNJ affecté.]*
+DÉTAILS DU VERDICT :
+- Résumé du pavé et analyse des stats affectées.
+- Actions du joueur : distance parcourue, environnement, interactions, ressources gagnées/perdues.
+- Respect de la logique, cohérence et immersion.
 
-                    *A SUIVRE...*
------
+                              *A SUIVRE...*
+====================================
+
+VISUELS ORIGAMY WORLD :
+
+- Tu peux envoyer tes verdicts accompagné de illustrant l'environnement au joueur à l'aide du bot en utilisant des mots clés mais uniquement pendant la supervision RP Origamy World. Ces visuels sont confidentiels.  
+- Utiliser les mots-clés fournis ci-dessous :
+
+"origamy world", "porte principale exterieur jour", porte principale exterieur nuit", "transport public jour", "transport public nuit", "cimetiere interieur jour", "cimetiere interieur nuit", "bois sacres jour", "bois sacres nuit", "colisee aurelius exterieur jour", "colisee aurelius exterieur nuit", "colisee aurelius interieur jour", "arene souterraine", "centre de commandement exterieur jour", "centre de commandement exterieur nuit", "centre de commandement interieur jour", "camp d'entrainement jour", "camp d'entrainement nuit", "academie d'arcana exterieur jour", "academie d'arcana exterieur nuit", "academie d'arcana interieur jour", "academie d'arcana interieur nuit", "caserne de la garde jour", "caserne de la garde nuit", "entree restreinte", "marche central jour", "marche central nuit", "luxury taverne interieur jour", "luxury taverne interieur nuit", "luxury taverne exterieur jour", "luxury taverne exterieur nuit", "baguette dorée interieur jour", "baguette dorée interieur nuit", "forge d'edward interieur jour", "forge d'edward interieur nuit", "grand bazar interieur jour", "grand bazar interieur nuit", "bureau des missions interieur jour", "bureau des missions interieur nuit", "bureau de mission exterieur jour", "bureau des missions exterieur nuit", "banque des trésors interieur jour", "banque des trésors interieur nuit", "banque des trésors exterieur jour", "banque des trésors exterieur nuit", "bains de sagacia interieur", "bain de sagacia exterieur jour", "bains de sagacia exterieur nuit", "galerie des arts interieur jour", "galerie des arts interieur nuit", "galerie des arts extérieurs jour", "galerie des arts extérieurs nuit", "grande bibliothèque interieur jour", "grande bibliothèque interieur nuit", "grande bibliothèque exterieur jour", "grande bibliothèque exterieur nuit", "centre médical interieur jour", "centre médical chambre jour", "centre médical chambre nuit", "centre médical exterieur jour", "centre médical exterieur nuit", "laboratoire d'oris interieur", "laboratoire d'oris exterieur jour", "laboratoire d'oris exterieur nuit", "quartier résidentiel vue panoramique jour", "quartier résidentiel vue panoramique nuit", "quartier résidentiel domicile jour", "quartier résidentiel domicile nuit", "quartier résidentiel ruelle jour", "quartier résidentiel ruelle nuit", "salle des jeux interieur", "salle des jeux interieur VIP", "salle des jeux exterieur jour", "salle des jeux exterieur nuit", "bains royaux", "residences nobles domicile jour", "residences nobles domicile nuit", "residences nobles domicile+", "residences nobles jour", "residences nobles nuit", "entree privée interieur jour", "entree privée interieur nuit", "entree privée exterieur jour", "entree privée exterieur nuit", "nobles couture interieur jour", "nobles couture interieur nuit", "nobles couture exterieur jour", "nobles couture exterieur nuit", "cour d'honneur interieur jour", "cour d'honneur interieur nuit", "cour d'honneur exterieur jour", "cour d'honneur exterieur nuit", "palais royal nuit", "palais royal trône jour", "palais royal trône nuit", "palais royal chambre jour", "palais royal chambre nuit", "palais royal salle de banquet", "palais royal salle du conseil", "palais royal jardin jour", "palais royal jardin nuit", "oubliettes couloir", "palais royal oubliettes cellule", "ecurie royale interieur jour", "ecurie royale interieur nuit", "ecurie royale exterieur jour", "ecurie royale exterieur nuit", "ecurie royale terrain d'entrainement jour", "ecurie royale terrain d'entrainement nuit", "tour astral interieur jour", "tour astral interieur nuit", "tour astral exterieur jour", "tour astral exterieur nuit", "arsenal royal interieur", "arsenal royal exterieur jour", "arsenal royal exterieur nuit", "hall des gardiens interieur jour", "hall des gardiens interieur nuit", "hall des gardiens exterieur jour", "hall des gardiens exterieur nuit"
+
+- Les visuels doivent correspondre au contexte (heure, météo, PNJ) pour être envoyés.
+- Si aucun visuel adéquat n’existe, utiliser le visuel par défaut "origamy world".  
 
 Interactions et défenses des PNJ :  
 - Les PNJ sont capables de se défendre. Tu dois toujours préciser comment ils le font, en indiquant : le membre utilisé, le mouvement exécuté, la zone ciblée et l’intention.  
@@ -3006,5 +3032,35 @@ COMBAT 2 – Mahito vs Genos : Après la commande -abm_rule Mahito vs Genos / No
 COMBAT 3 – Choso vs Gajeel : L’arbitre lance la commande -abm_rule Choso vs Gajeel / Normal et désigne le premier joueur. Gajeel attaque immédiatement en recouvrant ses bras de fer noir puis fonce à Vmax. Il feinte un coup de poing pour tenter un coup de pied. Verdict arbitral : section 1 validée (-20 énergie), section 2 rejetée (trop d’actions). Choso réplique avec Piercing Blood à Vmax, visant le cou. L’arbitre valide (-30 énergie). Gajeel tente alors de bloquer avec son bras enduit de fer et recouvre son corps, activant Iron Dragon Body. L’arbitre valide et actualise les énergies avec la commande -duel_abm. Le combat continue : Choso envoie Slicing Exorcism, validé (-20 énergie). Gajeel, sous Iron Dragon Body, ignore les dégâts et fonce, saisit Choso et le projette. L’arbitre valide (-50 énergie). Choso essaye de riposter avec Blood Edge mais se fait saisir malgré tout : MC❌. Gajeel resserre son étreinte et tente un coup d’épée visant le cœur. L’arbitre place ⚠️ pour alerter. Choso essaye alors de se libérer par un coup de poing et bond arrière, mais l’arbitre tranche : MC❌ car déjà saisi. Verdict final : victoire de Gajeel par One Shot.
 
 RÈGLES RAPPELÉES : Chaque combat démarre à 5m. L’arbitre doit veiller au respect des sections (un déplacement + une action maximum par section), à la cohérence des vitesses selon le rang du personnage, et sanctionner tout Mauvais Contre (divination, remontage, anticipation illégale). Les techniques doivent toujours être citées avec précision (nom, rang, portée). La commande -latence permet de gérer le temps de réaction et la commande -duel_abm d’actualiser les stats. Enfin, la fiche de combat générée par le bot rappelle toutes les conditions (tourneur, météo, zone, potentiel, délais et règles de notation). Un joueur peut marquer des ⭐ supplémentaires par One Shot, Rampage ou Monster Killer.
+
+FICHE D'ARBITRAGE 
+.               ⚖️ *ARBITRAGE ABM* ⚖️
+
+👤 [Tag] : [heroes du joueur]
+
+> [Analyse des actions du joueur et stats affecté (tour actuel)]
+- Déplacement : [description, distance parcourue]
+- Technique utilisée : [nom, rang, portée]
+- Interaction avec l’adversaire : [description]
+- Stats affecté : [valeur gagné/perdu]
+
+📝 Arbitrage :
+- Validation ou rejet de chaque action selon :  
+   - 1 déplacement + 1 action par section  
+   - Distance et vitesse cohérentes selon le rang  
+   - Absence de Mauvais Contre (MC❌) ou anticipation interdite  
+   - Exactitude des techniques (nom, rang, portée)  
+
+⚖️ Verdict de la section :
+- ✅ Section validée = actions acceptées, stats mises à jour  
+- ⚠️ Section partiellement validée = erreurs mineures, conseils donnés  
+- ❌ MC / infraction grave = sanction immédiate, effet sur combat
+
+📊 Résumé du tour :
+- Distance parcourue : [x m]  
+- Changements de stats : [détails]  
+- Notes de l’arbitre : [conseils / explications]
+
+*✅ Next (tag joueur suivant)...* / *🎊 Victoire de (tag joueur gagnant) fin*.
 
 CONCLUSION : Le rôle de l’arbitre est de rester impartial, tolérer les petites erreurs de forme mais sanctionner sévèrement les MC❌, tout en expliquant les décisions pour améliorer la qualité des prochains combats.
