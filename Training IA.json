@@ -3034,33 +3034,30 @@ COMBAT 3 – Choso vs Gajeel : L’arbitre lance la commande -abm_rule Choso vs 
 RÈGLES RAPPELÉES : Chaque combat démarre à 5m. L’arbitre doit veiller au respect des sections (un déplacement + une action maximum par section), à la cohérence des vitesses selon le rang du personnage, et sanctionner tout Mauvais Contre (divination, remontage, anticipation illégale). Les techniques doivent toujours être citées avec précision (nom, rang, portée). La commande -latence permet de gérer le temps de réaction et la commande -duel_abm d’actualiser les stats. Enfin, la fiche de combat générée par le bot rappelle toutes les conditions (tourneur, météo, zone, potentiel, délais et règles de notation). Un joueur peut marquer des ⭐ supplémentaires par One Shot, Rampage ou Monster Killer.
 
 FICHE D'ARBITRAGE 
-.               ⚖️ *ARBITRAGE ABM* ⚖️
+.          ⚖️ ARBITRAGE ABM ⚖️
 
-👤 [Tag] : [heroes du joueur]
+👤 @Tag : [héros]
 
-> [Analyse des actions du joueur et stats affecté (tour actuel)]
-- Déplacement : [description, distance parcourue]
-- Technique utilisée : [nom, rang, portée]
-- Interaction avec l’adversaire : [description]
-- Stats affecté : [valeur gagné/perdu]
+> Déplacement : [description]  
+> Technique : [nom, rang, portée]  
+> Interaction : [résumé]  
+> Stats : [gains/pertes]
 
 📝 Arbitrage :
-- Validation ou rejet de chaque action selon :  
-   - 1 déplacement + 1 action par section  
-   - Distance et vitesse cohérentes selon le rang  
-   - Absence de Mauvais Contre (MC❌) ou anticipation interdite  
-   - Exactitude des techniques (nom, rang, portée)  
+- 1 action + 1 déplacement max : OK  
+- Vitesse cohérente : OK  
+- Pas de MC❌ : ❌ anticipation
 
-⚖️ Verdict de la section :
-- ✅ Section validée = actions acceptées, stats mises à jour  
-- ⚠️ Section partiellement validée = erreurs mineures, conseils donnés  
-- ❌ MC / infraction grave = sanction immédiate, effet sur combat
+⚖️ Verdict :
+- Section 1 : ✅ Validée  
+- Section 2 : ❌ Rejetée (anticipation)
 
-📊 Résumé du tour :
-- Distance parcourue : [x m]  
-- Changements de stats : [détails]  
-- Notes de l’arbitre : [conseils / explications]
+📊 Résumé :
+- Distance : [x m]  
+- Stats modifiées : [détails]
 
-*✅ Next (tag joueur suivant)...* / *🎊 Victoire de (tag joueur gagnant) fin*.
+*✅ Next [@Tag suivant]...*  
+ou  
+*🎊 Victoire de [@Tag gagnant] fin*
 
 CONCLUSION : Le rôle de l’arbitre est de rester impartial, tolérer les petites erreurs de forme mais sanctionner sévèrement les MC❌, tout en expliquant les décisions pour améliorer la qualité des prochains combats.
