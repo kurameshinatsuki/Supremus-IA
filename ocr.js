@@ -1,12 +1,42 @@
-// ocr.js - Module OCR pour Tesseract.js
+// ocr.js - Module OCR optimisé pour les images de jeux
 const Tesseract = require('tesseract.js');
 const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
 const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 
-// Dossier temporaire pour le stockage des images (sera créé automatiquement)
+// Dossier temporaire pour le stockage des images
 const TEMP_DIR = path.join(__dirname, 'temp');
+
+/**
+ * Nettoie le texte extrait par OCR
+ */
+function cleanOCRText(text) {
+    if (!text) return '';
+    
+    // Supprimer les caractères isolés et lignes trop courtes
+    const lines = text.split('\n')
+        .filter(line => line.trim().length > 2)
+        .filter(line => !/^[^a-zA-Z0-9]*$/.test(line))
+        .map(line => line.replace(/[^\w\s@\-:()\d%\.]/g, ''))
+        .map(line => line.replace(/\s+/g, ' ').trim())
+        .filter(line => line.length > 0);
+    
+    return lines.join('\n');
+}
+
+/**
+ * Calcule la qualité estimée de l'OCR
+ */
+function calculateOCRQuality(text) {
+    if (!text) return 0;
+    
+    const totalChars = text.length;
+    const validChars = text.replace(/[^a-zA-Z0-9\sàâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ]/g, '').length;
+    const quality = Math.round((validChars / totalChars) * 10);
+    
+    return Math.min(quality, 10);
+}
 
 /**
  * Extrait le texte d'une image en utilisant Tesseract OCR
@@ -17,7 +47,7 @@ async function extractTextFromImage(buffer) {
         
         const { data: { text } } = await Tesseract.recognize(
             buffer,
-            'fra+eng', // Langues: français + anglais
+            'fra+eng',
             { 
                 logger: m => {
                     if (m.status === 'recognizing text') {
@@ -28,7 +58,7 @@ async function extractTextFromImage(buffer) {
         );
         
         console.log('✅ Extraction OCR terminée');
-        return text.trim();
+        return cleanOCRText(text.trim());
     } catch (error) {
         console.error('❌ Erreur OCR:', error);
         return null;
@@ -36,22 +66,21 @@ async function extractTextFromImage(buffer) {
 }
 
 /**
- * Traitement spécial pour les images de jeu (comme Origamy World)
+ * Traitement spécial pour les images de jeu
  */
 async function processGameImage(buffer) {
     try {
         console.log('🎮 Traitement spécial pour image de jeu...');
         
-        // Traitement spécifique pour les images de jeu avec texte clair sur fond sombre
         const processedImage = await sharp(buffer)
             .grayscale()
-            .normalize({ upper: 95 }) // Ajustement du contraste pour texte blanc
-            .sharpen({ sigma: 1.2 })
-            .threshold(128) // Binarisation pour améliorer la reconnaissance
+            .modulate({ brightness: 1.2, contrast: 1.3 })
+            .normalize({ upper: 98 })
+            .sharpen({ sigma: 1.5, m1: 1.0, m2: 0.5 })
+            .threshold(150, { grayscale: true })
             .toBuffer();
             
-        const extractedText = await extractTextFromImage(processedImage);
-        return extractedText;
+        return await extractTextFromImage(processedImage);
     } catch (error) {
         console.error('❌ Erreur traitement image jeu:', error);
         return null;
@@ -59,15 +88,34 @@ async function processGameImage(buffer) {
 }
 
 /**
+ * Détection des images de type jeu
+ */
+async function detectGameTheme(buffer) {
+    try {
+        const metadata = await sharp(buffer).metadata();
+        
+        if (metadata.width && metadata.height) {
+            const aspectRatio = metadata.width / metadata.height;
+            const isCardLike = (aspectRatio >= 0.6 && aspectRatio <= 0.7);
+            const isScreenLike = (aspectRatio >= 1.3 && aspectRatio <= 1.8);
+            const isLargeImage = metadata.width > 500 && metadata.height > 300;
+            
+            return isCardLike || isScreenLike || isLargeImage;
+        }
+        
+        return false;
+    } catch (error) {
+        return false;
+    }
+}
+
+/**
  * Traite un message contenant une image et en extrait le texte
  */
 async function processImageMessage(msg, sock) {
-    // Créer le dossier temp s'il n'existe pas
     if (!fs.existsSync(TEMP_DIR)) {
         fs.mkdirSync(TEMP_DIR);
     }
-    
-    let tempFilePath = null;
     
     try {
         const messageType = Object.keys(msg.message)[0];
@@ -75,7 +123,6 @@ async function processImageMessage(msg, sock) {
         
         console.log('📥 Téléchargement de l\'image...');
         
-        // Télécharger l'image
         const stream = await downloadContentFromMessage(mediaMessage, 'image');
         let buffer = Buffer.from([]);
         
@@ -83,58 +130,30 @@ async function processImageMessage(msg, sock) {
             buffer = Buffer.concat([buffer, chunk]);
         }
         
-        // Détection automatique du type d'image
-        const isLikelyGameImage = await detectGameTheme(buffer);
-        
-        let extractedText;
-        if (isLikelyGameImage) {
-            console.log('🎮 Image de jeu détectée - application du traitement spécial');
-            extractedText = await processGameImage(buffer);
-        } else {
-            console.log('🖼️ Traitement standard d\'image');
-            // Pré-traiter l'image pour améliorer l'OCR
-            const processedImage = await sharp(buffer)
-                .grayscale() // Convertir en niveaux de gris
-                .normalize() // Améliorer le contraste
-                .sharpen() // Accentuer les bords
-                .toBuffer();
-                
-            extractedText = await extractTextFromImage(processedImage);
-        }
+        const isGameImage = await detectGameTheme(buffer);
+        const extractedText = isGameImage 
+            ? await processGameImage(buffer) 
+            : await extractTextFromImage(buffer);
         
         return extractedText;
     } catch (error) {
         console.error('❌ Erreur traitement image:', error);
-        
-        // Nettoyer en cas d'erreur
-        if (tempFilePath && fs.existsSync(tempFilePath)) {
-            try {
-                fs.unlinkSync(tempFilePath);
-            } catch (e) {
-                console.error('Erreur nettoyage fichier temporaire:', e);
-            }
-        }
-        
         return null;
     }
 }
 
 /**
- * Traite un message document (qui peut être une image) et en extrait le texte
+ * Traite un message document et en extrait le texte
  */
 async function processDocumentMessage(msg, sock) {
-    // Créer le dossier temp s'il n'existe pas
     if (!fs.existsSync(TEMP_DIR)) {
         fs.mkdirSync(TEMP_DIR);
     }
-    
-    let tempFilePath = null;
     
     try {
         const messageType = Object.keys(msg.message)[0];
         const mediaMessage = msg.message[messageType];
         
-        // Vérifier si c'est une image dans un document
         if (!mediaMessage.mimetype || !mediaMessage.mimetype.includes('image')) {
             console.log('📄 Document non-image ignoré');
             return null;
@@ -142,7 +161,6 @@ async function processDocumentMessage(msg, sock) {
         
         console.log('📥 Téléchargement du document image...');
         
-        // Télécharger le document
         const stream = await downloadContentFromMessage(mediaMessage, 'document');
         let buffer = Buffer.from([]);
         
@@ -150,56 +168,16 @@ async function processDocumentMessage(msg, sock) {
             buffer = Buffer.concat([buffer, chunk]);
         }
         
-        // Pré-traiter l'image
         const processedImage = await sharp(buffer)
             .grayscale()
             .normalize()
             .sharpen()
             .toBuffer();
             
-        const extractedText = await extractTextFromImage(processedImage);
-        
-        return extractedText;
+        return await extractTextFromImage(processedImage);
     } catch (error) {
         console.error('❌ Erreur traitement document:', error);
-        
-        // Nettoyer en cas d'erreur
-        if (tempFilePath && fs.existsSync(tempFilePath)) {
-            try {
-                fs.unlinkSync(tempFilePath);
-            } catch (e) {
-                console.error('Erreur nettoyage fichier temporaire:', e);
-            }
-        }
-        
         return null;
-    }
-}
-
-/**
- * Détection simple des images de type jeu (comme Origamy World)
- */
-async function detectGameTheme(buffer) {
-    try {
-        // Analyse des métadonnées pour détecter les caractéristiques des images de jeu
-        const metadata = await sharp(buffer).metadata();
-        
-        // Les images de jeu ont souvent des dimensions spécifiques
-        // et une palette de couleurs particulière
-        if (metadata.width && metadata.height) {
-            // Ratio d'aspect commun pour les images de jeu
-            const aspectRatio = metadata.width / metadata.height;
-            
-            // Beaucoup d'images de jeu ont un ratio autour de 1.77 (16:9) ou 1.33 (4:3)
-            if (aspectRatio >= 1.3 && aspectRatio <= 1.8) {
-                return true;
-            }
-        }
-        
-        return false;
-    } catch (error) {
-        console.error('❌ Erreur détection thème jeu:', error);
-        return false;
     }
 }
 
@@ -215,11 +193,10 @@ function cleanupTempFiles() {
             files.forEach(file => {
                 const filePath = path.join(TEMP_DIR, file);
                 try {
-                    // Supprimer les fichiers de plus de 1 heure
                     const stats = fs.statSync(filePath);
                     const age = Date.now() - stats.mtimeMs;
                     
-                    if (age > 3600000) { // 1 heure en millisecondes
+                    if (age > 3600000) {
                         fs.unlinkSync(filePath);
                         deletedCount++;
                     }
@@ -237,15 +214,14 @@ function cleanupTempFiles() {
     }
 }
 
-// Nettoyage automatique au démarrage
+// Nettoyage automatique
 cleanupTempFiles();
-
-// Nettoyage périodique toutes les heures
-setInterval(cleanupTempFiles, 3600000); // 1 heure
+setInterval(cleanupTempFiles, 3600000);
 
 module.exports = {
     extractTextFromImage,
     processImageMessage,
     processDocumentMessage,
-    cleanupTempFiles
+    cleanupTempFiles,
+    calculateOCRQuality
 };
