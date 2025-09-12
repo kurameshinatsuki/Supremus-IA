@@ -1,10 +1,11 @@
-// index.js - Version modifiée avec système de visuels
+// index.js - Version modifiée avec système de visuels et OCR
 
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const sharp = require('sharp');
+const Tesseract = require('tesseract.js');
 const { default: makeWASocket, useMultiFileAuthState, delay, downloadContentFromMessage } = require('@whiskeysockets/baileys');
 const { nazunaReply } = require('./nazunaAI');
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
@@ -13,6 +14,12 @@ const { detecterVisuel } = require('./visuels'); // Import du module visuels
 
 const DEBUG = (process.env.DEBUG === 'false') || true;
 let pair = false;
+
+// Dossier temporaire pour le stockage des images
+const TEMP_DIR = path.join(__dirname, 'temp');
+if (!fs.existsSync(TEMP_DIR)) {
+    fs.mkdirSync(TEMP_DIR);
+}
 
 // Initialisation de la base de données
 syncDatabase().then(() => {
@@ -24,6 +31,162 @@ syncDatabase().then(() => {
 // Système de rate limiting
 const messageLimiter = new Map();
 const lastInteraction = new Map();
+
+// Nettoyage des fichiers temporaires au démarrage
+function cleanupTempFiles() {
+    if (fs.existsSync(TEMP_DIR)) {
+        fs.readdirSync(TEMP_DIR).forEach(file => {
+            const filePath = path.join(TEMP_DIR, file);
+            try {
+                fs.unlinkSync(filePath);
+            } catch (e) {
+                console.error('Erreur suppression fichier temporaire:', e);
+            }
+        });
+        console.log('🧹 Fichiers temporaires nettoyés');
+    }
+}
+cleanupTempFiles();
+
+/**
+ * Extrait le texte d'une image en utilisant Tesseract OCR
+ */
+async function extractTextFromImage(buffer) {
+    try {
+        console.log('🔍 Début de l\'extraction OCR...');
+        
+        const { data: { text } } = await Tesseract.recognize(
+            buffer,
+            'fra+eng', // Langues: français + anglais
+            { 
+                logger: m => {
+                    if (m.status === 'recognizing text') {
+                        console.log(`OCR Progress: ${m.progress * 100}%`);
+                    }
+                }
+            }
+        );
+        
+        console.log('✅ Extraction OCR terminée');
+        return text.trim();
+    } catch (error) {
+        console.error('❌ Erreur OCR:', error);
+        return null;
+    }
+}
+
+/**
+ * Traite un message contenant une image et en extrait le texte
+ */
+async function processImageMessage(msg, sock) {
+    let tempFilePath = null;
+    
+    try {
+        const messageType = Object.keys(msg.message)[0];
+        const mediaMessage = msg.message[messageType];
+        
+        console.log('📥 Téléchargement de l\'image...');
+        
+        // Télécharger l'image
+        const stream = await downloadContentFromMessage(mediaMessage, 'image');
+        let buffer = Buffer.from([]);
+        
+        for await (const chunk of stream) {
+            buffer = Buffer.concat([buffer, chunk]);
+        }
+        
+        // Sauvegarder temporairement pour debug
+        tempFilePath = path.join(TEMP_DIR, `image_${Date.now()}.jpg`);
+        fs.writeFileSync(tempFilePath, buffer);
+        console.log('💾 Image sauvegardée temporairement:', tempFilePath);
+        
+        // Pré-traiter l'image pour améliorer l'OCR
+        console.log('🖼️ Pré-traitement de l\'image...');
+        const processedImage = await sharp(buffer)
+            .grayscale() // Convertir en niveaux de gris
+            .normalize() // Améliorer le contraste
+            .sharpen() // Accentuer les bords
+            .toBuffer();
+            
+        // Extraire le texte
+        const extractedText = await extractTextFromImage(processedImage);
+        
+        // Nettoyer le fichier temporaire
+        if (tempFilePath && fs.existsSync(tempFilePath)) {
+            fs.unlinkSync(tempFilePath);
+        }
+        
+        return extractedText;
+    } catch (error) {
+        console.error('❌ Erreur traitement image:', error);
+        
+        // Nettoyer en cas d'erreur
+        if (tempFilePath && fs.existsSync(tempFilePath)) {
+            fs.unlinkSync(tempFilePath);
+        }
+        
+        return null;
+    }
+}
+
+/**
+ * Traite un message document (qui peut être une image) et en extrait le texte
+ */
+async function processDocumentMessage(msg, sock) {
+    let tempFilePath = null;
+    
+    try {
+        const messageType = Object.keys(msg.message)[0];
+        const mediaMessage = msg.message[messageType];
+        
+        // Vérifier si c'est une image dans un document
+        if (!mediaMessage.mimetype || !mediaMessage.mimetype.includes('image')) {
+            console.log('📄 Document non-image ignoré');
+            return null;
+        }
+        
+        console.log('📥 Téléchargement du document image...');
+        
+        // Télécharger le document
+        const stream = await downloadContentFromMessage(mediaMessage, 'document');
+        let buffer = Buffer.from([]);
+        
+        for await (const chunk of stream) {
+            buffer = Buffer.concat([buffer, chunk]);
+        }
+        
+        // Sauvegarder temporairement pour debug
+        tempFilePath = path.join(TEMP_DIR, `document_${Date.now()}.${mediaMessage.mimetype.split('/')[1] || 'bin'}`);
+        fs.writeFileSync(tempFilePath, buffer);
+        console.log('💾 Document sauvegardé temporairement:', tempFilePath);
+        
+        // Pré-traiter l'image
+        console.log('🖼️ Pré-traitement du document image...');
+        const processedImage = await sharp(buffer)
+            .grayscale()
+            .normalize()
+            .sharpen()
+            .toBuffer();
+            
+        const extractedText = await extractTextFromImage(processedImage);
+        
+        // Nettoyer le fichier temporaire
+        if (tempFilePath && fs.existsSync(tempFilePath)) {
+            fs.unlinkSync(tempFilePath);
+        }
+        
+        return extractedText;
+    } catch (error) {
+        console.error('❌ Erreur traitement document:', error);
+        
+        // Nettoyer en cas d'erreur
+        if (tempFilePath && fs.existsSync(tempFilePath)) {
+            fs.unlinkSync(tempFilePath);
+        }
+        
+        return null;
+    }
+}
 
 /**
  * Vérifie si un utilisateur peut envoyer un message (rate limiting)
@@ -382,18 +545,49 @@ async function startBot(sock, state) {
                 return;
             }
 
-            const text = extractText(msg);
+            let finalText = extractText(msg);
             const remoteJid = msg.key.remoteJid;
             const isGroup = remoteJid.endsWith('@g.us');
             const pushName = msg.pushName || msg.notifyName || null;
+            const messageType = getMessageType(msg);
+
+            // Traiter les images avec OCR si peu ou pas de texte
+            if (messageType === 'imageMessage' && (!finalText || finalText.length < 3)) {
+                console.log('📸 Tentative d\'extraction de texte depuis l\'image...');
+                const ocrText = await processImageMessage(msg, sock);
+                
+                if (ocrText && ocrText.length > 0) {
+                    finalText = ocrText;
+                    console.log('✅ Texte extrait par OCR:', ocrText);
+                    
+                    // Envoyer un message pour indiquer que le texte a été détecté
+                    await sock.sendMessage(remoteJid, { 
+                        text: `📝 J'ai détecté du texte dans cette image :\n"${ocrText.substring(0, 100)}${ocrText.length > 100 ? '...' : ''}"` 
+                    }, { quoted: msg });
+                }
+            }
+
+            // Traiter les documents avec OCR si peu ou pas de texte
+            if (messageType === 'documentMessage' && (!finalText || finalText.length < 3)) {
+                console.log('📄 Tentative d\'extraction de texte depuis le document...');
+                const ocrText = await processDocumentMessage(msg, sock);
+                
+                if (ocrText && ocrText.length > 0) {
+                    finalText = ocrText;
+                    console.log('✅ Texte extrait par OCR:', ocrText);
+                    
+                    // Envoyer un message pour indiquer que le texte a été détecté
+                    await sock.sendMessage(remoteJid, { 
+                        text: `📝 J'ai détecté du texte dans ce document :\n"${ocrText.substring(0, 100)}${ocrText.length > 100 ? '...' : ''}"` 
+                    }, { quoted: msg });
+                }
+            }
 
             // Vérifier si c'est un message avec média mais sans texte
-            if (!text) {
-                // Si c'est un message média sans légende, on ne le traite pas
-                const messageType = getMessageType(msg);
+            if (!finalText) {
                 const isMedia = ['imageMessage', 'videoMessage', 'documentMessage', 'audioMessage'].includes(messageType);
                 if (isMedia) {
-                    console.log('📸 Message média sans légende - ignoré');
+                    console.log('📸 Message média sans texte - ignoré');
                     return;
                 }
             }
@@ -415,11 +609,11 @@ async function startBot(sock, state) {
             const botNumber = '244285576339508'; // Numéro par défaut
             const isMentioned =
                 mentionedJids.some(jid => jid.includes(botNumber)) ||
-                (text && text.includes('@' + botNumber)) ||
-                (text && text.toLowerCase().includes('supremia'));
+                (finalText && finalText.includes('@' + botNumber)) ||
+                (finalText && finalText.toLowerCase().includes('supremia'));
 
             // Commande ?
-            const isCommand = text && text.startsWith('/');
+            const isCommand = finalText && finalText.startsWith('/');
 
             // Décision :
             // - privé => toujours répondre
@@ -437,7 +631,7 @@ async function startBot(sock, state) {
 
                 // 1) commandes
                 if (isCommand) {
-                    const [command, ...args] = text.slice(1).trim().split(/\s+/);
+                    const [command, ...args] = finalText.slice(1).trim().split(/\s+/);
                     reply = await handleCommand(command, args, msg, sock);
                     if (reply) {
                         await sendReplyWithTyping(sock, msg, { text: reply });
@@ -457,7 +651,7 @@ async function startBot(sock, state) {
                 const quotedMessageInfo = quotedTextForAI && quotedSender ? { sender: quotedSender, text: quotedTextForAI } : null;
 
                 const replyObj = await nazunaReply(
-                    text, 
+                    finalText, 
                     senderJid, 
                     remoteJid, 
                     pushName, 
@@ -467,7 +661,7 @@ async function startBot(sock, state) {
 
                 if (replyObj && replyObj.text) {
                     // Détection de visuel
-                    const visuel = /*detecterVisuel(text) ||*/ detecterVisuel(replyObj.text);
+                    const visuel = detecterVisuel(replyObj.text);
                     
                     if (visuel && visuel.urlImage) {
                         // Envoyer l'image avec la réponse en légende
@@ -518,6 +712,12 @@ async function startBot(sock, state) {
  * ========================= */
 async function main() {
     try {
+        // Précharger les langues OCR
+        console.log('🌐 Préchargement des langues OCR...');
+        await Tesseract.createWorker('fra');
+        await Tesseract.createWorker('eng');
+        console.log('✅ Langues OCR chargées');
+
         // Attendre que la base de données soit initialisée
         await syncDatabase();
         console.log('✅ Base de données PostgreSQL prête');
