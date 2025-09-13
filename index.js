@@ -1,4 +1,4 @@
-// index.js - Version modifiée avec système de visuels
+// index.js - Version modifiée avec système de visuels et commande reset
 
 require('dotenv').config();
 const fs = require('fs');
@@ -6,7 +6,7 @@ const path = require('path');
 const readline = require('readline');
 const sharp = require('sharp');
 const { default: makeWASocket, useMultiFileAuthState, delay, downloadContentFromMessage } = require('@whiskeysockets/baileys');
-const { nazunaReply } = require('./nazunaAI');
+const { nazunaReply, resetConversationMemory } = require('./nazunaAI');
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 const { syncDatabase } = require('./models');
 const { detecterVisuel } = require('./visuels'); // Import du module visuels
@@ -62,10 +62,13 @@ async function handleCommand(command, args, msg, sock) {
     switch (commandName) {
         case 'tagall':
             return handleTagAll(msg, sock);
+        case 'reset':
+            return handleReset(msg, sock);
         case 'help':
             return (
                 "📚 Commandes disponibles :\n" +
                 "• /tagall - Mentionne tous les membres du groupe (admin seulement)\n" +
+                "• /reset - Réinitialise l'historique de la conversation\n" +
                 "• /help - Affiche ce message d'aide"
             );
         default:
@@ -128,6 +131,47 @@ async function handleTagAll(msg, sock) {
     } catch (error) {
         console.error('❌ Erreur lors du /tagall:', error);
         return "❌ Une erreur est survenue lors de la mention des membres.";
+    }
+}
+
+/**
+ * /reset - réinitialise l'historique de la conversation
+ */
+async function handleReset(msg, sock) {
+    const jid = msg.key.remoteJid;
+    const sender = msg.key.participant || msg.key.remoteJid;
+    const isGroup = jid.endsWith('@g.us');
+    const botOwner = process.env.BOT_OWNER; // Ajoutez BOT_OWNER=numéro@whatsapp.net dans .env
+
+    // Vérifier si l'utilisateur est le propriétaire du bot (optionnel)
+    if (botOwner && !jidEquals(sender, botOwner)) {
+        return "❌ Seul le propriétaire du bot peut utiliser cette commande.";
+    }
+
+    try {
+        // Pour les groupes, vérifier les permissions admin
+        if (isGroup) {
+            const isAdmin = await isUserAdmin(jid, sender, sock);
+            if (!isAdmin) {
+                return "❌ Seuls les administrateurs peuvent utiliser cette commande.";
+            }
+        }
+
+        // Réinitialiser le cache des messages du bot
+        botMessageCache.delete(jid);
+
+        // Réinitialiser la mémoire dans la base de données
+        const success = await resetConversationMemory(isGroup ? jid : sender, isGroup);
+
+        if (success) {
+            return "✅ Historique de la conversation réinitialisé avec succès !";
+        } else {
+            return "❌ Une erreur est survenue lors de la réinitialisation.";
+        }
+        
+    } catch (error) {
+        console.error('❌ Erreur lors de la réinitialisation:', error);
+        return "❌ Une erreur est survenue lors de la réinitialisation.";
     }
 }
 
@@ -492,7 +536,7 @@ async function startBot(sock, state) {
                 // 3) bonus sticker de temps en temps (seulement 10% de chance)
                 if (!isCommand && Math.random() < 0.1) {
                     const stickerPath = await getRandomSticker();
-                    if (stickerPath) {
+                                            if (stickerPath) {
                         await sock.sendMessage(remoteJid, { sticker: fs.readFileSync(stickerPath) });
                         
                         // Supprimer le fichier temporaire
