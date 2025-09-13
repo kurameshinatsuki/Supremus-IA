@@ -141,9 +141,9 @@ async function handleReset(msg, sock) {
     const jid = msg.key.remoteJid;
     const sender = msg.key.participant || msg.key.remoteJid;
     const isGroup = jid.endsWith('@g.us');
-    const botOwner = process.env.BOT_OWNER; // Ajoutez BOT_OWNER=numéro@whatsapp.net dans .env
+    const botOwner = process.env.BOT_OWNER; // Format attendu: 1234567890@s.whatsapp.net
 
-    // Vérifier si l'utilisateur est le propriétaire du bot (optionnel)
+    // Vérifier si l'utilisateur est le propriétaire du bot
     if (botOwner && !jidEquals(sender, botOwner)) {
         return "❌ Seul le propriétaire du bot peut utiliser cette commande.";
     }
@@ -156,6 +156,24 @@ async function handleReset(msg, sock) {
                 return "❌ Seuls les administrateurs peuvent utiliser cette commande.";
             }
         }
+
+        // Réinitialiser le cache des messages du bot
+        botMessageCache.delete(jid);
+
+        // Réinitialiser la mémoire dans la base de données
+        const success = await resetConversationMemory(isGroup ? jid : sender, isGroup);
+
+        if (success) {
+            return "✅ Historique de la conversation réinitialisé avec succès !";
+        } else {
+            return "❌ Une erreur est survenue lors de la réinitialisation.";
+        }
+
+    } catch (error) {
+        console.error('❌ Erreur lors de la réinitialisation:', error);
+        return "❌ Une erreur est survenue lors de la réinitialisation.";
+    }
+}
 
         // Réinitialiser le cache des messages du bot
         botMessageCache.delete(jid);
