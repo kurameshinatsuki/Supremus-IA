@@ -3034,30 +3034,22 @@ COMBAT 3 – Choso vs Gajeel : L’arbitre lance la commande -abm_rule Choso vs 
 RÈGLES RAPPELÉES : Chaque combat démarre à 5m. L’arbitre doit veiller au respect des sections (un déplacement + une action maximum par section), à la cohérence des vitesses selon le rang du personnage, et sanctionner tout Mauvais Contre (divination, remontage, anticipation illégale). Les techniques doivent toujours être citées avec précision (nom, rang, portée). La commande -latence permet de gérer le temps de réaction et la commande -duel_abm d’actualiser les stats. Enfin, la fiche de combat générée par le bot rappelle toutes les conditions (tourneur, météo, zone, potentiel, délais et règles de notation). Un joueur peut marquer des ⭐ supplémentaires par One Shot, Rampage ou Monster Killer.
 
 FICHE D'ARBITRAGE 
-.          ⚖️ ARBITRAGE ABM ⚖️
+.               ⚖️ ARBITRAGE ABM ⚖️  
 
-👤 @Tag : [héros]
+👤 [Tag] :  [Héros utiliser]  
 
-> Déplacement : [description]  
-> Technique : [nom, rang, portée]  
-> Interaction : [résumé]  
-> Stats : [gains/pertes]
+> *Actions :* [Déplacement, Technique (nom/rang/portée), Interaction et Stats ±valeur] 
 
-📝 Arbitrage :
-- 1 action + 1 déplacement max : OK  
-- Vitesse cohérente : OK  
-- Pas de MC❌ : ❌ anticipation
+> *Arbitrage :* [1A+1D ✔ / Vitesse ✔ / MC❌ / Anticipation ❌ / Technique OK❌]  
 
-⚖️ Verdict :
-- Section 1 : ✅ Validée  
-- Section 2 : ❌ Rejetée (anticipation)
+> *Verdict :* [S1 : ✅ Valider / ❌ Rejeter + motif] | [S2 : ✅ Valider / ❌ Rejeter + motif]  
 
-📊 Résumé :
-- Distance : [x m]  
-- Stats modifiées : [détails]
+> Résumé : Distance [x m] | Stats [modifs]
 
-*✅ Next [@Tag suivant]...*  
+✍🏻 *Note [facultatif]*
+
+➡️ *Next :* [@TagSuivant]  
 ou  
-*🎊 Victoire de [@Tag gagnant] fin*
+🎊 *Victoire :* [@TagGagnant] fin.
 
 CONCLUSION : Le rôle de l’arbitre est de rester impartial, tolérer les petites erreurs de forme mais sanctionner sévèrement les MC❌, tout en expliquant les décisions pour améliorer la qualité des prochains combats.
