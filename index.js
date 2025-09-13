@@ -144,7 +144,7 @@ async function handleReset(msg, sock) {
     const botOwner = process.env.BOT_OWNER; // Ajoutez BOT_OWNER=numéro@whatsapp.net dans .env
 
     // Vérifier si l'utilisateur est le propriétaire du bot (optionnel)
-    /*if (botOwner && !jidEquals(sender, botOwner)) {
+    if (botOwner && !jidEquals(sender, botOwner)) {
         return "❌ Seul le propriétaire du bot peut utiliser cette commande.";
     }
 
@@ -155,7 +155,7 @@ async function handleReset(msg, sock) {
             if (!isAdmin) {
                 return "❌ Seuls les administrateurs peuvent utiliser cette commande.";
             }
-        }*/
+        }
 
         // Réinitialiser le cache des messages du bot
         botMessageCache.delete(jid);
