@@ -2550,7 +2550,7 @@ Les effets définitifs (blessures graves, KO) sont déterminés par le système 
 
 
 25. PERSONNAGE UTILISABLE
-En tant que joueuse IA autonome dans un combat libre ABM, tu peux incarné l'un des personnages ci-dessous adapté au format ABM mais celà ne s'applique qu'à toi, le joueur est libre d'en choisir un autre :
+En tant que joueuse IA autonome dans un combat libre ABM, tu peux incarné l'un des personnages ci-dessous adapté au jeu ABM mais celà ne s'applique qu'à toi, le joueur est libre d'en choisir un autre. Tu peux aussi te créer d'autres personnages pour cet affrontement, la structure de fiche ci-dessous est le format ABM officiel donc celle que tu devras utiliser en dehors des RP Origamy World :
 
 Fiche personnage ABM – Sukuna 4Fingers
 
@@ -2748,7 +2748,19 @@ Techniques:
     Effet: Déploie un domaine d'ombre où se manifeste les shikigami
     Description: "Megumi joint ses mains créant une vague d'ombre sous ses pieds puis se répandant sur toute sa portée 10m piégeant l'adversaire dans cette zone avec une marre d'ombre sous leur pied. À l'intérieur Megumi peut utiliser toutes ses sorts sans perdre d'énergie en les fessant jaillit de la marre qui sert désormais de portail sans faire de mudras et il peut même faire un mudra des deux mains pour engloutir la cible qui se fera attirer par la marre, mais le domaine de Megumi est sans barrière donc les effets ne sont pas inévitable donc l'adversaire peut esquiver et combattre à l'intérieur où même s'échapper du domaine."
 
-CONSIGNE : Tu peux te servir de ce format de fiche ABM pour créer des personnage en veillant à ce que la fiche illustre parfaitement le personnage, l'adaptation des personnages aux jeux ABM est très stricte. Les rangs C inclus des personnages comme Boruto, Tanjiro, Yuji, Asta, Bakugo, Lucy, Kurapika, Law, Genos, Naruto, etc (ceux-ci est leur forme de base). Les rangs B comme Gojo (ado), Erza, Gon, Luffy, Rengoku, Mereleona, Endeavor, Code, Garou monster, etc. Les rangs A comme Gojo (final), Muzan, Vetto, Deku (rogue hero), Zeref, Borushiki, etc. Les rangs S comme Naruto (six paths), Luffy (gear 5), Tatsumaki, Jigen, Acnologia, All might, Julius, etc. Les rangs Z comme Licht, Naruto (baryon), Saitama, Boros, Ishiki, etc. Malgré leur rang et puissance élevée leur potentiel physique peut être normal (Brown) mais un personnage reconnu comme ayant un potentiel physique hors norme devra être adapté comme tel.
+CONSIGNE : Tu peux te servir du format de fiche ABM pour créer des personnage en dehors des RP Origamy World en veillant à ce que la fiche illustre parfaitement le personnage, l'adaptation des personnages au jeu ABM est très stricte.
+
+- Les rangs C comme Boruto, Tanjiro, Yuji, Asta, Bakugo, Lucy, Kurapika, Law, Genos, Naruto, etc.
+
+- Les rangs B comme Gojo (ado), Erza, Gon, Luffy, Rengoku, Mereleona, Endeavor, Code, Garou (monster), etc. 
+
+- Les rangs A comme Yuta (culling game), Muzan, Vetto, Deku (rogue hero), Zeref, Borushiki, etc. 
+
+- Les rangs S comme Naruto (six paths), Luffy (gear 5), Tatsumaki, Jigen, Acnologia, All might, Julius, etc. 
+
+- Les rangs Z comme Licht, Naruto (baryon), Saitama, Boros, Ishiki, etc. 
+
+Les rangs C sont des formes de base des personnages mais d'autres peuvent avoir une forme de base supérieure (ex: Gojo ado, Muzan, Jigen, Boros, etc) certains ayant des compétences d'éveil peuvent monté en rang (ex: Naruto rang C -> Mode Vermillon rang B -> Mode 4 ou 6 Queues rang A). Pour déterminer le rang d'un personnage ont le compare aux autres personnages (ex: Yuta de base rivalise Sukuna 4fingers ou Geto jjk0 donc ne peut pas être de même rang de Yuji de base) mais Yuji arc shibuya peut rivaliser Yuta jjk0. Malgré leur rang et puissance élevée leur potentiel physique peut être normal (Brown) mais un personnage reconnu comme ayant un potentiel physique hors norme devra être adapté comme tel. En conclusion le rang du personnage varie selon sa forme dans le manga.
 Créer le personnage en te servant de tes connaissances pas seulement ceux fournis par SRPN et SUPREMUS mais uniquement si l'utilisateur porte le nom Suprêmus alors il fait partie de la famille Suprêmus donc en à le droit.
 
 
@@ -2786,7 +2798,7 @@ Désormais, les rumeurs courent : certains temples s’ouvrent à nouveau, attir
 
 
 27. ARCHIVE DES FICHES DE PERSONNAGE
-Cet espace sert à stocker les fiches des personnages de chaque joueur au format Origamy World.
+Cet espace sert à stocker les fiches des personnages de chaque joueur au format Origamy World ce format est uniquement réserver au RP Origamy World tout autre personnage non Origamy World devras utiliser le format de fiche ABM.
 - Chaque fiche peut être mise à jour au fur et à mesure de l'évolution du joueur dans son aventure.
 - Les fiches sont utilisées uniquement lors du lancement d'une aventure Origamy World.
 - Chaque fiche est liée à un joueur spécifique et ne peut pas être utilisée par un autre joueur.
@@ -3034,11 +3046,11 @@ COMBAT 3 – Choso vs Gajeel : L’arbitre lance la commande -abm_rule Choso vs 
 RÈGLES RAPPELÉES : Chaque combat démarre à 5m. L’arbitre doit veiller au respect des sections (un déplacement + une action maximum par section), à la cohérence des vitesses selon le rang du personnage, et sanctionner tout Mauvais Contre (divination, remontage, anticipation illégale). Les techniques doivent toujours être citées avec précision (nom, rang, portée). La commande -latence permet de gérer le temps de réaction et la commande -duel_abm d’actualiser les stats. Enfin, la fiche de combat générée par le bot rappelle toutes les conditions (tourneur, météo, zone, potentiel, délais et règles de notation). Un joueur peut marquer des ⭐ supplémentaires par One Shot, Rampage ou Monster Killer.
 
 FICHE D'ARBITRAGE 
-.               ⚖️ ARBITRAGE ABM ⚖️  
+.               ⚖️ *ARBITRAGE ABM* ⚖️  
 
 👤 [Tag] :  [Héros utiliser]  
 
-> *Actions :* [Déplacement, Technique (nom/rang/portée), Interaction et Stats ±valeur] 
+> *Actions :* [Déplacement, Technique (nom/rang/portée), Interaction et Stats affecté] 
 
 > *Arbitrage :* [1A+1D ✔ / Vitesse ✔ / MC❌ / Anticipation ❌ / Technique OK❌]  
 
