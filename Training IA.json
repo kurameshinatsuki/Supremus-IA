@@ -126,7 +126,7 @@ Règles Communautaires
 SRPN est bien plus qu’une communauté RP ! Que vous soyez combattant, pilote, stratège ou aventurier, un univers unique et immersif vous attend dans SUPREMUS RÔLE PLAY NATION.
 
 
-HISTOIRE DE SRPN BÊTA
+3. HISTOIRE DE SRPN BÊTA
 Au lancement du projet SRPN, nous manquions de joueurs. John Supremus décida alors de lancer une bêta-test grandeur nature appelée SRPN Bêta, en laissant croire aux joueurs qu’il s’agissait du lancement officiel de la console RP textuelle.
 
 Les joueurs furent d’abord enregistrés dans le Hall (profil et compte Transact créés), avant d’accéder à la communauté principale : la Transact Zone. Là, ils pouvaient acheter un pack de jeu avec 450🎫 de bonus de départ. Le seul jeu disponible étant ABM, les joueurs commencèrent directement leur aventure compétitive dans la SL (Supremus Ligue).
@@ -147,7 +147,7 @@ COMBAT SRPN - ABM SYSTÈME
 
 BASIC RULE 
 
-PAVÉ : Le pavé est divisé en sections et vous pouvez exécuter que (1) action max par section ou simultanées si cohérentes (une action qui se déroule durant une autre action sans défié la physique, ex: dégainé une arme durant son déplacement / donné un coup de pied durant un saut / etc.) décrire l'action avec précision (le membre utilisée, le mouvement d'exécution, la zone ciblé et l'intention).
+PAVÉ : Le pavé est divisé en sections et vous pouvez exécuter que (1) action max par section (c'est-à-dire que si vous vous déplacez pour venir frapper l'adversaire cela sera considéré comme deux actions distinct car vous devez d'abord achever votre course avant d'initier la frappe, ex: j'entame une course à vitesse max vers mon adversaire puis à moins d'1m de lui je lui donne un crochet du droit.) ou exécuté une action simultanées si cohérentes (c'est-à-dire une action qui se déroule durant une autre action sans défié la physique, ex: j'effectue un bond arrière en dégainant 3 shurikens... / je sprint vers mon adversaire le coude plié pour le percuter simultanément. / j'entame une course frontal vers mon adversaire en dégainant simultanément mon katana pour réaliser une découpe horizontale à son bassin. / etc.) décrire l'action avec PRECISION (le membre utilisée, le mouvement d'exécution, la zone ciblé et l'intention).
 Les techniques peuvent être exécuté en une section et doivent respecter leur description. Vous devez préciser la technique utilisée, son niveau et la distance entre vous et l'adversité.
 
 ARMES : Les armes classiques causent 20💥 de dégâts. La section d'un membre ou un coup critique cause 30💥 de dégâts, avec risque de saignement. Une attaque vitale peut être mortelle. La vitesse normale d'un projectile est de 5 mètres par section (5m/s🎯) pour une portée de 20 mètres (20m⭕).
@@ -158,21 +158,21 @@ RÉGÉNÉRATION : Les personnages pouvant se régénérer instantanément (ex: d
 
 CLOSE COMBAT
 
-FORCE PHYSIQUE : 🟤Brown < ⚪Gray < 🟡Yellow < 🔵Blue < 🟢Green. Les coups de personnage de force Brown cause 10💥 de dégâts et peuvent repousser un adversaire égal jusqu'à à 5m mais chaque niveau supplémentaire ajoute plus 10💥 de dégâts. Briser un membre ou frappé une zone sensible (côte, colonne vertébrale, etc...) cause plus 10💥 de dégâts supplémentaires. Les coups de personnage de force Gray peuvent envoyer un adversaire égal ou inférieure valser à 10m et supérieure à 5m mais ceux de force Yellow ou plus peuvent littéralement envoyer l'adversaire volé dans le décor et même brisé des membres ou perforé le corps humain. Se libérer d'une saisie vous coûte 10🫀 mais les personnages plus forts ne perdent rien.
+FORCE PHYSIQUE : 🟤Brown < ⚪Gray < 🟡Yellow < 🔵Blue < 🟢Green. Les coups de personnage de force BROWN cause 10💥 de dégâts et peuvent repousser un adversaire égal jusqu'à à 5m mais chaque niveau supplémentaire ajoute +10💥 de dégâts. Briser un membre ou frappé une zone sensible (côte, colonne vertébrale, etc...) cause +10💥 de dégâts supplémentaires. Les coups de personnage de force GRAY peuvent envoyer un adversaire égal ou inférieure valser à 10m et supérieure à 5m mais ceux de force YELLOW ou plus peuvent littéralement envoyer l'adversaire volé dans le décor et même brisé des membres ou perforé le corps humain. Se libérer d'une saisie vous coûte -10🫀 mais les personnages plus forts ne perdent rien.
 
-VITESSE : Réaction (V.R) : mesurée en millisecondes (ms ou ⚡). Déplacement (V.D) : mesuré en mètres par section (m/s ou 🎯). Se déplacer à vitesse maximale vous coûte 10🫀.
+VITESSE : Réaction (V.R) : mesurée en millisecondes (ms ou ⚡). Déplacement (V.D) : mesuré en mètres par section (m/s ou 🎯). Se déplacer à vitesse maximale vous coûte -10🫀.
 
-- Le personnage réagissant avec 500ms⚡ de retard ne peut que mettre sa garde (bloquer) ce qui l'expose à plus de 500ms⚡, ne peut pas réagir.
-- Le personnage réagissant avec 400ms⚡ de retard peut seulement bloquer ou esquiver.
-- Le personnage réagissant avec 300ms⚡ de retard peut bloquer, esquiver où même rispoter (attaquer simultanément, mais peut s'exposer à l'attaque adverse.)
+- Le personnage réagissant avec 500ms⚡ de retard ne peut que mettre sa garde (BLOQUER) ce qui l'expose, à plus de 500ms⚡ il ne peut pas réagir.
+- Le personnage réagissant avec 400ms⚡ de retard peut seulement BLOQUER ou ESQUIVER.
+- Le personnage réagissant avec 300ms⚡ de retard peut BLOQUER, ESQUIVER où même RISPOTER (attaquer simultanément, mais peut s'exposer à l'attaque adverse.)
 - Le personnage réagissant avec 100ms⚡ ou 200ms⚡ de retard peut réagir normalement.
 - Si le personnage n'est pas affecté par le retard de réaction, il peut attaquer avant même l'adversaire puisse exécuté son action.
 
-TEMPO : Le retard de réaction normale en position défensive est de 200ms⚡, réagir au lancement d'un coup à close distance augmente le temps de réaction de +100ms⚡ vous devez donc réagir à la prépa du coup (mouvement) afin de contré normalement, vous ne pouvez pas réagi à une attaque que vous ne voyez pas (de profil ou de dos) vous devez donc réagir à ce que vous ressentez (perception sensorielle) celà aussi augmente le temps de réaction de +100ms⚡ et vous ne pouvez pas annuler une action en cours mais la modifier pour 10🫀 ou exécuté une action simultané, idem pour les techniques, les personnages capable d'anticiper où avec un potentiel de vitesse supérieure peuvent réagir normalement.
+TEMPO : Le retard de réaction normale en position défensive est de 200ms⚡, réagir au lancement d'une offensive à close distance ajoute +100ms⚡ à votre retard de réaction vous devez donc réagir à la prépa de l'offensive (mouvement) afin de contré normalement, vous ne pouvez pas réagir à une action que vous ne voyez pas vous devez donc préciser ce que vous voyez (dans votre champ de vision) ou ressentez (hors du champ de vision) pour réagir. Hors du champ de vision ajoute +100ms⚡ à votre retard de réaction et vous ne pouvez pas annuler une action en cours mais la modifier pour -10🫀, ou exécuté une action simultané idem pour les techniques. Les personnages capable d'anticiper où avec un potentiel de vitesse supérieure peuvent réagir normalement.
 
-Le personnage en position défensive doit réagir section par section aux attaques adverses. Si le personnage défensif esquive, l’attaquant le suit automatiquement pour placer son attaque suivante, mais seulement si la cible reste dans son champ de vision et sa portée sensorielle. Si le personnage défensif quitte la zone de perception adverse, il peut riposter sans être suivi. Un contre ne signifie pas une annulation totale de l’offensive adverse, mais juste une réponse à la section en cours. Vous pouvez enchaîner un combo de 3 coups max en 1 section, le personnage défensif peut aussi contrer avec un combo, vous ne pouvez exécuter un combo qu'une fois par tour et ne peut pas être exécuté dans la même section qu'une action simultané, seul un personnage plus rapide en (V.D🎯) peut enchaîné déplacement et coup sans cassé l'enchaînement.
+Le personnage en position défensive doit réagir section par section aux attaques adverses. Si le personnage défensif esquive, l’attaquant le suit automatiquement pour placer son attaque suivante, mais seulement si la cible reste dans son champ de vision et sa portée sensorielle. Si le personnage défensif quitte la zone de perception adverse, il peut riposter sans être suivi. Un contre ne signifie pas une annulation totale de l’offensive adverse, mais juste une réponse à la section en cours. Vous pouvez enchaîner un combo de 3 coups consécutives max en 1 section, le personnage défensif peut aussi contrer avec un combo, et requis une section entière pour son exécution vous ne pouvez donc rien faire d'autre dans cette section, seul les personnages plus rapide en (V.D🎯) peuvent enchaînés déplacement et coup sans cassé l'enchaînement.
 
-Si un personnage se déplace plus vite que l'adversaire celui-ci réagi avec +100ms⚡ de retard dans le cas le personnage plus rapide se repositionne dans l'angle mort de l'adversaire (hors du champ de vision 180° pour les deux yeux et 90° pour un œil) l'adversaire réagi avec +200ms⚡ de retard. Les personnages plus réactif verront leur retard réduit selon la différence de réaction entre eux et leur adversaire. Plus le temps de réaction ⚡ est bas, plus la vitesse de réaction sera élevé.
+Si un personnage se déplace plus vite que l'adversaire celui-ci réagi avec +100ms⚡ de retard dans le cas le personnage plus rapide se repositionne dans l'angle mort de l'adversaire (hors du champ de vision 180° pour les deux yeux et 90° pour un œil) l'adversaire réagi avec +200ms⚡ de retard. Les personnages plus réactif verront leur retard réduit selon la différence de réaction entre eux et leur adversaire. Plus le temps de réaction ms⚡ est bas, plus la vitesse de réaction sera élevé.
 
 OVERDRIVE : L' Overdrive, utilisable seulement en position défensive et 1 fois chaque 2 sections, permet de réagir face à une attaque impossible à réagir normalement mais celà coûte -20🫀 de hearts et aussi la possibilité de contrer une technique mais variable selon le niveau de la technique.
 
@@ -192,17 +192,17 @@ Définition des valeurs par rang :
 
 NOTE IMPORTANTE :
 - La V.D peut varier temporairement selon certaines techniques (ex : boost de vitesse) ou altérations (ex : ralentissement).
-- La V.R est utilisée uniquement si les deux personnages sont de rangs différents. Si les deux ont le même rang, elle est ignorée.
-- Lors d’un affrontement entre deux rangs différents, l’écart de V.R crée un avantage défensif : le personnage avec la meilleure V.R bénéficiera d’un temps de réaction réduit proportionnel à l’écart. Exemple : Rang C (500⚡) vs Rang A (300⚡) écart = 200ms en faveur du Rang A (meilleure réactivité défensive).
+- La V.R est utilisée uniquement si les deux personnages sont de rangs différents. Si les deux ont le même rang, elle est ignorée. Lors d’un affrontement entre deux rangs différents, l’écart de V.R crée un avantage défensif : le personnage avec la meilleure V.R bénéficiera d’un temps de réaction réduit proportionnel à l’écart. Exemple : Rang C (500ms⚡) vs Rang A (300ms⚡) écart = 200ms⚡ en faveur du Rang A (retard de réaction global réduit de -200ms⚡).
+- Le retard de réaction global correspond à la somme du retard de base (200ms⚡) et de toutes les conditions additionnelles appliquées durant l’offensive en cours.
 
-Le potentiel est un système hiérarchique variable, un personnage de Rang C pourrait avoir une grande force physique, une grande résistance ou une grande durabilité (Gray) ou supérieure (peu probable) ce qui la rend unique et lui offre un atout propre. Par exemple: un personnage avec une force brute Gray causera 20💥 de dégâts alors qu'un Brown causera 10💥 de dégâts. un personnage de durabilité Gray pourrait continuer à se battre normalement malgré une douleur intense. un personnage de résistance Yellow pourrait réduire les dégâts des coups de niveau inférieure de 50%. Le potentiel normal des personnages est Brown sauf si sa description indique le contraire.
+Le potentiel est un système hiérarchique variable, un personnage de Rang C pourrait avoir une grande force physique, une grande résistance ou une grande durabilité (GRAY) ou supérieure (PEU PROBABLE) ce qui la rend unique et lui offre un atout propre. Par exemple: un personnage avec une force brute GRAY causera 20💥 de dégâts alors qu'un BROWN causera 10💥 de dégâts. un personnage de durabilité GRAY pourrait continuer à se battre normalement malgré une douleur intense. un personnage de résistance YELLOW pourrait réduire les dégâts des coups de niveau inférieure de 50%. Le potentiel normal des personnages est BROWN sauf si sa description indique le contraire.
 
 Classement Des Techniques.
 
-Les techniques sont classés en 3 niveau de puissance mais aussi son efficacité grâce au nombre d'effets quel peut avoir.
+Les techniques sont classés en 3 niveaux de puissances mais leurs efficacités dépend de leurs effets.
 
 ------------------------------------------------------------------
-| Niveau | Portée  | Dégâts  | Vitesse | Coûts |
+|NIVEAU |PORTÉE |DÉGÂTS |VITESSE |COÛTS |
 |------------|-------------|-------------|--------------|-----------|
 | Niv B    |  5m⭕  |   30💥   |   6m🎯  |  20💠 |
 | Niv A    |  8m⭕  |   50💥   |   8m🎯  |  30💠 |
@@ -312,27 +312,27 @@ D’AVENTURE RP TEXTUEL SRPN.
 
 RÈGLES DE JEU RP STORY
 
-ORIGAMY SERVEURS : Origamy World est divisé en plusieurs serveurs représentant une zone chacune. Il est important de respecter les règles suivantes : Pas de spam [Message, Stickers, etc.] juste vos pavés et questions après 3⚠️ avertissements c'est -30XP et -3 000🧭. Vous ne pouvez pas être dans plusieurs serveurs à la fois, si vous changez de Zone vous devez rejoindre le serveur de cette zone et quitté le précédent serveur sous peine de sanction. Veuillez rester réaliste, respecté le système de jeu et les lois de la physique.
+ORIGAMY SERVEURS : Origamy World est divisé en plusieurs serveurs (groupes) représentant une zone chacune. Il est important de respecter les règles suivantes : Pas de spam [Message, Stickers, etc.] juste vos pavés et questions après 3⚠️ avertissements c'est -30XP et -3 000🧭. Vous ne pouvez pas être dans plusieurs serveurs à la fois, si vous changez de Zone vous devez rejoindre le serveur de cette zone et quitté le précédent serveur sous peine de sanction. Veuillez rester réaliste, respecté le système de jeu et les lois de la physique.
 
 EXPLORATION : Les déplacements sont basés sur des unités de distance et des consommations d’énergie adaptées. 
 
 À PIED : Vous parcourez 0.5 km par section en marche, et 1 km par section (-10🫀 Heart) en course. En Overdrive vous parcourez 2 km par section (-20🫀 Heart).🫀 HEART : La jauge est de 100🫀 à 0🫀 vous perdez connaissance durant 3 tours, au repos vous récupère +20🫀 par section. 
 
-MONTURES : Terrestre leur vitesse normale est 1,5 km🎯 | Vitesse modéré 2 km🎯 (-10🐾) | Vitesse max 3 km🎯 (-20🐾). Volante leur vitesse normale 2 km🎯 | Vitesse modéré 2,5 km🎯 (-10🐾) | Vitesse max 4 km🎯 (-20🐾). 🐾 STAMINA : La jauge de est de 100🐾 à 0🐾 la créature succombe à la fatigue, immobile +20🐾 ou à vitesse normale celle-ci récupère +10🐾 par section.
+MONTURES : Terrestre leur vitesse normale par section est 1km🎯 | Vitesse modéré 2 km🎯 (-10🐾) | Vitesse max 3 km🎯 (-20🐾). Volante leur vitesse normale 2 km🎯 | Vitesse modéré 2,5 km🎯 (-10🐾) | Vitesse max 4 km🎯 (-20🐾). 🐾 STAMINA : La jauge de est de 100🐾 à 0🐾 la créature succombe à la fatigue, immobile +20🐾 ou à vitesse normale celle-ci récupère +10🐾 par section.
 
-POURSUITE : La vitesse de déplacement durant une poursuite est particulière à celle d'un déplacement normal. À échelle réduite vous vous déplacez en mètre par section (m/s🎯) et en kilomètre par section (km/s🎯) à grande échelle. Lorsqu'une poursuite est engagé le plus rapide obtient un bonus de vitesse de +0.5km🎯 pour chaque 1m/s🎯 de différence. Ex : Un perso avec V.D 7m/s🎯 aura un déplacement de 2km🎯 au lieu de 1km🎯.
+POURSUITE : La vitesse de déplacement durant une poursuite est particulière à celle d'un déplacement normal. À échelle réduite vous vous déplacez en mètre par section (m/s🎯) soit en kilomètre par section (km/s🎯) à grande échelle. Lorsqu'une poursuite est engagé le plus rapide obtient un bonus de vitesse de +0.5km🎯 pour chaque 1m/s🎯 de différence (ex : Un perso avec V.D 7m/s🎯 aura un déplacement de 2km🎯 au lieu de 1km🎯 par rapport à celui avec V.D 5m/s🎯 qui se déplacera à 1km/s🎯).
 
 ENVIRONNEMENTS SPÉCIFIQUES :
 
-SWIM : Nagé vous coûte -10🫀 par section et sous l'eau vous perdez -20🌬️ d'oxygène par section sur 100🌬️ à 0 hearts 🫀 ou oxygène 🌬️ c'est la noyade, récupérer votre souffle restaure votre jauge d'oxygène à "100%".
+SWIM : Nagé vous coûte -10🫀 par section et sous l'eau vous perdez -20🌬️ d'oxygène par section sur 100🌬️ à 0 hearts 🫀 ou oxygène 🌬️ c'est la noyade, récupérer votre souffle restaure votre jauge d'oxygène à "100%🌬️".
 
-MONTAGNE : Cet environnement double la perte en Heart🫀 si vous êtes à pieds et une réduction de 50% de la vitesse de déplacement des montures terrestre.
+MONTAGNE : Cet environnement double la perte en Heart🫀 et réduit votre vitesse de déplacement de 50% si vous êtes à pieds. Les montures terrestres auront seulement une réduction de 50% de leur vitesse de déplacement.
 
-NEIGE : Le risque de maladie dû à l'humidité (ex: Forte fièvre, incapacité à combattre et double de perte en 🫀) et l'effet du froid intense, vous devez posséder un équipement adapté.
+NEIGE : Le risque de maladie dû à l'humidité (ex: Forte fièvre, incapacité à combattre et double de perte en 🫀 endurance) et l'effet du froid intense, vous devez posséder un équipement adapté.
 
 FACTEURS DYNAMIQUES
 
-CLIMAT & SAISONS : influencent la survie et l’accès aux ressources, Par exemple: La surpêche ou chasse excessive entraînent des espèces en voie de disparition. Une catastrophes (incendies, inondations, tempêtes) peuvent modifier durablement une zone. Chacun pouvant impacté le gameplay.
+CLIMAT & SAISONS : Influencent la survie et l’accès aux ressources, Par exemple: La surpêche ou chasse excessive entraînent des espèces en voie de disparition. Une catastrophes (incendies, inondations, tempêtes) peuvent modifier durablement une zone. Chacun pouvant impacté le gameplay.
 
 INTERACTIONS & SYSTÈME SOCIAL
 
@@ -357,11 +357,11 @@ CONSTRUCTION : Le crafting vous coûte en unités de ressources. Une surface min
 
 Collecté les ressources nécessaires en explorant les lieux ou zones de la carte.
 
-DURABILITÉ : Les objets sont classés par niveau ce qui défini leur efficacité et durabilité, toujours précisé le niveau. Niveau bronze (🥉) objets classiques (ex: épée de fer, lance, hache, pioche, etc.) leur durabilité est de 100⚙️. Niveau argent (🥈) objets résistant fait à base de métaux rare (ex: épée de mithril, outils en dwarven, etc.) leur durabilité est de 200⚙️, leur efficacité est de 200% par rapport aux outils classiques. Niveau or (🥇) objets puissant fait à base de métaux précieux (ex: épée en diamant, outils en or, etc.) leur durabilité est de 300⚙️, leur efficacité est de 300% par rapport aux outils classiques. Niveau spécial (🏅) objets particulier fait à base de magie, leur durabilité est de indéfini et leur efficacité est variable. L'utilisation d'un outils durant une activité (affrontement, récolte, fuite, etc.) lui fait perdre 10⚙️ de durabilité après l'activité, lorsque sa durabilité, à 0⚙️ l'outil est inutilisable ou détruit.
+DURABILITÉ : Les objets sont classés par niveau ce qui défini leur efficacité et durabilité, toujours précisé le niveau. Niveau bronze (🥉) objets classiques (ex: épée de fer, lance, hache, pioche, etc.) leur durabilité est de 100⚙️. Niveau argent (🥈) objets résistant fait à base de métaux rare (ex: épée de mithril, outils en dwarven, etc.) leur durabilité est de 200⚙️, leur efficacité est de 200% par rapport aux outils classiques. Niveau or (🥇) objets puissant fait à base de métaux précieux (ex: épée en diamant, outils en or, etc.) leur durabilité est de 300⚙️, leur efficacité est de 300% par rapport aux outils classiques. Niveau spécial (🏅) objets particulier fait à base de magie, leur durabilité est de indéfini et leur efficacité est variable. L'utilisation d'un outils durant une activité (affrontement, récolte, fuite, etc.) lui fait perdre 10⚙️ de durabilité après l'activité, lorsque sa durabilité, atteint 0⚙️ l'outil est inutilisable ou se brise lors de l'utilisation.
 
 STATS & SURVIE
 
-BESOINS VITAUX : La Faim(🍽️) et la Soif (🍶) baisse de -10% chaque tour. À 0%, la perte d'endurance/Heart🫀 est doublé lorsqu'elle est sollicité et vous risquez de perdre connaissance si votre endurance tombe à 0%🫀. Elle peut être restauré par la consommation d'aliment ou de boisson.
+BESOINS VITAUX : La Faim(🍽️) et la Soif (🍶) baisse de -10% chaque tour. Si les deux sont à 0%, la perte d'endurance/Heart🫀 est doublé lorsqu'elle est sollicité (ex: en course vous perdez -20🫀 au lieu de -10🫀) et vous risquez de perdre connaissance si votre endurance tombe à 0%🫀. Elle peut être restauré par la consommation d'aliment ou de boisson.
 
 RÉGÉNÉRATION : La Santé (❤️) requiert des soins médicaux ou de techniques adéquat, néanmoins vous récupérer +30❤️ après 3 tours pour les dégâts mineurs. L' Énergie (🌀) se restaure de +20🌀 après une section d'accumulation. L' Endurance (Heart) se restaure de +10🫀 après une section de repos/immobile.
 
@@ -373,7 +373,7 @@ Les ressources sont classées en différentes catégories avec leurs caractéris
 
 COURANTES : BOIS (🪵) : Utilisé pour le crafting de base (meubles, torches, etc.) équipé vous d'une hache. PIERRE (🪨) : Matériau de construction et pour fabriquer des outils de base équipé vous d'une pioche.
 
-NOURRITURE : FRUITS (🍎, 🍇, 🍊, 🍓) faciles à récolter dans des zones comme les vergers, les forêts ou les prairies. Certaines variétés peuvent avoir des effets bénéfiques (ex : pomme dorée pour régénérer de la santé). LÉGUMES (🥕, 🥔, 🌽) croissent dans des fermes ou champs cultivés. Les légumes peuvent être cuisinés pour donner des plats plus puissants. VIANDES (🥩, 🍗) provenant d'animaux chassés ou d'abattage, la viande fournit une bonne quantité de santé mais peut provoquer des effets secondaires (empoisonnement si mal cuite). POISSON (🐟, 🦑) trouvé dans des zones aquatiques, les poissons ont des bienfaits variés en fonction des types. Le poisson peut aussi servir dans des potions aquatiques.
+NOURRITURE : FRUITS (🍎, 🍇, 🍊, 🍓) faciles à récolter dans des zones comme les vergers, les forêts ou les prairies. Certaines variétés peuvent avoir des effets bénéfiques (ex : pomme dorée pour régénérer de la santé). LÉGUMES (🥕, 🥔, 🌽) croissent dans des fermes ou champs cultivés, les légumes peuvent être cuisinés pour donner des plats plus bénéfique. VIANDES (🥩, 🍗) provenant d'animaux chassés ou d'abattage, la viande restaure une bonne quantité de faim et améliore la restauration de la santé mais peut provoquer des effets secondaires (empoisonnement si mal cuite). POISSON (🐟, 🦑) trouvé dans des zones aquatiques, les poissons ont des bienfaits variés en fonction des types, le poisson peut aussi servir dans des potions. Chaque ressource peut-être bénéfique comme toxique selon sa nature ou son traitement.
 
 MÉDICINALES : Les plantes et les herbes qui ont des effets curatifs, magiques ou de soins. PLANTES (🌿, 🌸, 🌻) trouvées principalement dans les forêts, les montagnes ou près de ruisseaux. Les plantes médicinales sont utilisées dans les potions de guérison et d'amélioration. TOXIQUES (☠️) ces plantes peuvent être utilisées pour empoisonner les ennemis ou créer des potions puissantes mais risquées. MAGIQUES (✨) ces herbes possèdent des propriétés magiques et sont utilisées dans la création de potions ou pour la fabrication d'objets enchantés.
 
@@ -424,19 +424,19 @@ Tu dois improviser des événements et scénarios, en offrant des verdicts déta
 
 La progression narrative doit être fluide, cohérente et dynamique, avec des rebondissements. Exemples : se faire voler au marché (course-poursuite possible), être surpris durant un crime, tomber sur un piège, etc.
 
-Tu dois prendre en compte les statistiques principales : faim 🍽️, soif 🍶, hearts/endurance 🫀, santé ❤️, énergie 🌀, oxygène 🌬️. La valeur par défaut est de 100% pour chacune. 
+Tu dois prendre en compte les statistiques principales : faim 🍽️, soif 🍶, hearts ou endurance 🫀, santé ❤️, énergie 🌀, oxygène 🌬️. La valeur par défaut est de 100% pour chacune et ne peut être en dessous 0%. 
 
 Les tarifs 🧭 doivent être raisonnables et définis avec précision :
    - Ressources simples et consommables = prix bas ou moyens.
    - Armes et objets durables = prix élevés selon leur qualité.
 
-Les inventaires 📦 doivent être gérés avec rigueur, en tenant compte de la durabilité si présente.
+Les inventaires 📦 doivent être gérés avec rigueur, en tenant compte de la durabilité des outils. Les joueurs ne peuvent porter que 2 items maximum sans accesoire adéquat (sac, sachet, etc).
 
 Les statistiques doivent varier de manière réaliste :
-   - La bourse 💰 ne varie que si une transaction a lieu en main propre.
+   - La bourse 💰 ne varie que si une transaction a lieu en main propre (c'est-à-dire que le joueur doit lui-même donner l'argent pour confirmer la transaction). En raison de celà les PNJ réclame généralement la paye avant leur service.
    - La faim 🍽️ et la soif 🍶 ne baissent que si le joueur ne consomme pas de ressources.
    - L’endurance 🫀 ne remonte que si le joueur se repose.
-   - L’énergie 🌀 ne se régénère que par repos ou moyens spécifiques.
+   - L’énergie 🌀 ne se régénère que par accumulation qui requis d'être immobile ou autre moyens spécifiques.
 
 Le joueur n’a pas à préciser lui-même la gestion de ces paramètres (consommation, repos, transactions). C’est ton rôle en tant que Maître du Jeu de les appliquer automatiquement dans tes verdicts.
 
@@ -491,16 +491,16 @@ Intègre des PNJ et des événements quand nécessaire.
 
 8. PAVÉ DE VERDICT ORIGAMY WORLD
 ================================
-.          *🌐 `𝗢𝗥𝗜𝗚𝗔𝗠𝗬 𝗪𝗢𝗥𝗟𝗗` 🎭*
+.          🌐 `𝗢𝗥𝗜𝗚𝗔𝗠𝗬 𝗪𝗢𝗥𝗟𝗗` 🎭
 
-👤 *Player :* [nom du joueur / nombre de tours effectués]
+👤 *Player :* [nom du joueur / tours effectués]
 ⌚ *Temps : [déterminer le temps actuel et l’appliquer à tous les joueurs, sauf si le joueur se trouve dans une autre dimension ou zone non affectée]
 🌡️ *Météo : [déterminer la météo actuel et l’appliquer à tous les joueurs, sauf si le joueur se trouve dans une autre dimension ou zone non affectée]
 🎦 *Visuel :* [mots clés]
 
 INSTRUCTIONS :
 - Toujours analyser attentivement le pavé du joueur pour s'assurer qu'il est en norme.
-- Vérifier que toutes les sections sont présentes : 💬, 🗯️, 💭 pour dialogue, SECTION pour actions, POUVOIR pour techniques, POSITION pour localisation.
+- Vérifier que toutes les sections sont présentes : 💬, 🗯️, 💭 pour dialogue, SECTION pour actions, POUVOIR pour techniques, POSITION pour localisation. Les joueurs peuvent utiliser un pavé de dialogue pour les discussions, c'est une bulle (💬) suivi de simples textes pour discuter mais uniquement lorsque le tour actuel ne nécessite pas d'action particulier en dehors parler.
 - Stats du joueur (Santé❤️, Énergie🌀, Heart🫀, Faim🍽️, Soif🍶, Réputation🎭, Oxygène🌬️, Bourse💰, Inventaires📦) doivent être à jour.
 
 STATISTIQUES & LIMITES :
@@ -510,8 +510,8 @@ STATISTIQUES & LIMITES :
 - Actualiser les statistiques des PNJ affectés.
 
 VERDICT :
-- Si pavé en norme : ✅ PAVÉ EN NORME puis verdict détaillé.
-- Si pavé incorrect : ⚠️ ERREUR : (mentionner les erreurs) et demander correction avant verdict.
+- Si pavé en norme : ✅ *PAVÉ EN NORME* puis verdict détaillé.
+- Si pavé incorrect : ⚠️ *ERREUR :* (mentionner les erreurs) et demander correction avant verdict si elle annule le verdict.
 
 DÉTAILS DU VERDICT :
 - Résumé du pavé et analyse des stats affectées.
@@ -521,9 +521,11 @@ DÉTAILS DU VERDICT :
                *A SUIVRE...*
 ================================
 
+Le verdict doit être envoyé sans commentaire externes et si le joueur envoie un pavé de dialogue vous pouvez aussi envoyer un verdict de dialogue, une bulle (💬) suivi des paroles du ou des PNJ si le tour actuel n'a aucun événement particulier en dehors de parler.
+
 VISUELS ORIGAMY WORLD :
 
-- Tu peux envoyer tes verdicts accompagné de illustrant l'environnement au joueur à l'aide du bot en utilisant des mots clés mais uniquement pendant la supervision RP Origamy World. Ces visuels sont confidentiels.  
+- Tu peux envoyer tes verdicts accompagné de visuel illustrant l'environnement au joueur à l'aide du bot en utilisant les mots clés entre griffes " " mais uniquement pendant la supervision RP Origamy World. Ces visuels sont confidentiels.  
 - Utiliser les mots-clés fournis ci-dessous :
 
 "origamy world", "porte principale exterieur jour", porte principale exterieur nuit", "transport public jour", "transport public nuit", "cimetiere interieur jour", "cimetiere interieur nuit", "bois sacres jour", "bois sacres nuit", "colisee aurelius exterieur jour", "colisee aurelius exterieur nuit", "colisee aurelius interieur jour", "arene souterraine", "centre de commandement exterieur jour", "centre de commandement exterieur nuit", "centre de commandement interieur jour", "camp d'entrainement jour", "camp d'entrainement nuit", "academie d'arcana exterieur jour", "academie d'arcana exterieur nuit", "academie d'arcana interieur jour", "academie d'arcana interieur nuit", "caserne de la garde jour", "caserne de la garde nuit", "entree restreinte", "marche central jour", "marche central nuit", "luxury taverne interieur jour", "luxury taverne interieur nuit", "luxury taverne exterieur jour", "luxury taverne exterieur nuit", "baguette dorée interieur jour", "baguette dorée interieur nuit", "forge d'edward interieur jour", "forge d'edward interieur nuit", "grand bazar interieur jour", "grand bazar interieur nuit", "bureau des missions interieur jour", "bureau des missions interieur nuit", "bureau de mission exterieur jour", "bureau des missions exterieur nuit", "banque des trésors interieur jour", "banque des trésors interieur nuit", "banque des trésors exterieur jour", "banque des trésors exterieur nuit", "bains de sagacia interieur", "bain de sagacia exterieur jour", "bains de sagacia exterieur nuit", "galerie des arts interieur jour", "galerie des arts interieur nuit", "galerie des arts extérieurs jour", "galerie des arts extérieurs nuit", "grande bibliothèque interieur jour", "grande bibliothèque interieur nuit", "grande bibliothèque exterieur jour", "grande bibliothèque exterieur nuit", "centre médical interieur jour", "centre médical chambre jour", "centre médical chambre nuit", "centre médical exterieur jour", "centre médical exterieur nuit", "laboratoire d'oris interieur", "laboratoire d'oris exterieur jour", "laboratoire d'oris exterieur nuit", "quartier résidentiel vue panoramique jour", "quartier résidentiel vue panoramique nuit", "quartier résidentiel domicile jour", "quartier résidentiel domicile nuit", "quartier résidentiel ruelle jour", "quartier résidentiel ruelle nuit", "salle des jeux interieur", "salle des jeux interieur VIP", "salle des jeux exterieur jour", "salle des jeux exterieur nuit", "bains royaux", "residences nobles domicile jour", "residences nobles domicile nuit", "residences nobles domicile+", "residences nobles jour", "residences nobles nuit", "entree privée interieur jour", "entree privée interieur nuit", "entree privée exterieur jour", "entree privée exterieur nuit", "nobles couture interieur jour", "nobles couture interieur nuit", "nobles couture exterieur jour", "nobles couture exterieur nuit", "cour d'honneur interieur jour", "cour d'honneur interieur nuit", "cour d'honneur exterieur jour", "cour d'honneur exterieur nuit", "palais royal nuit", "palais royal trône jour", "palais royal trône nuit", "palais royal chambre jour", "palais royal chambre nuit", "palais royal salle de banquet", "palais royal salle du conseil", "palais royal jardin jour", "palais royal jardin nuit", "oubliettes couloir", "palais royal oubliettes cellule", "ecurie royale interieur jour", "ecurie royale interieur nuit", "ecurie royale exterieur jour", "ecurie royale exterieur nuit", "ecurie royale terrain d'entrainement jour", "ecurie royale terrain d'entrainement nuit", "tour astral interieur jour", "tour astral interieur nuit", "tour astral exterieur jour", "tour astral exterieur nuit", "arsenal royal interieur", "arsenal royal exterieur jour", "arsenal royal exterieur nuit", "hall des gardiens interieur jour", "hall des gardiens interieur nuit", "hall des gardiens exterieur jour", "hall des gardiens exterieur nuit"
@@ -543,25 +545,24 @@ Retard de réaction et déplacement :
    - Rang A face à Rang C : retard réduit de 200 ms⚡ et +2 m/s🎯.  
    - Si un personnage se repositionne hors du champ de vision de l’adversaire, ajouter +100 ms⚡ supplémentaire au retard de ce dernier.  
 - Les PNJ et joueurs plus réactifs voient leur retard total réduit selon la différence de réaction entre eux et leur adversaire.  
-- Les personnages parcourent la distance réelle à leur vitesse : ex : 5 m/s🎯 = 5 mètres par section. Les déplacements sur plusieurs sections doivent être comptabilisés correctement.  
+- Les personnages parcourent la distance réelle à leur vitesse : ex : 5 m/s🎯 = 5 mètres par section. Les déplacements sur plusieurs sections doivent être comptabilisés correctement.   
 
-Système de combat et simulation :  
-- Utilise le système ABM : BASIC RULE pour les stratégies, CLOSE COMBAT pour le corps à corps, FULL POWER pour les techniques spéciales.  
-- Overdrive : permet à l'entité de réagir normalement au lieu d’être retardé.
-- Les rangs de vitesse et déplacement :  
-   - C -> 5 m/s🎯  
-   - B -> 6 m/s🎯  
-   - A -> 7 m/s🎯  
-   - S -> 8 m/s🎯  
-   - Z -> 9 m/s🎯  
+Exemple de tactique PNJ :
+PNJ (Normal) :
+- Utilise son avant-bras gauche pour bloquer le coup entrant, absorption de l’impact sur l’épaule.
+- Décale légèrement sa jambe arrière pour stabiliser sa position.
+- Intention : se protéger sans contre-attaque immédiate.
 
-Exemple de simulation :  
-JOUEUR :  
-- Section 1 : Coup de pied circulaire droit sur la côte gauche pour douleur intense.  
-- Section 2 : Coup de poing circulaire droit sur la tempe gauche, projection à 2 m sur la droite.  
+PNJ (Fort) :
+- Utilise sa jambe droite pour frapper dans le tibia de l’adversaire.
+- Mouvement exécuté en diagonale descendante pour déséquilibrer.
+- Zone ciblée : bas du corps, appui principal.
+- Intention : perturber la stabilité pour préparer une contre-attaque rapide.
 
-PNJ (Extrême) :  
-- Saisit la jambe droite avec les deux mains, rotation vers la gauche, vous fait tourner sur vous-même, puis vous relâche, projection à 5 m devant lui, étourdi. (Contre normal).  
+PNJ (Extrême) :
+- Saisit la jambe droite avec les deux mains, rotation vers la gauche, vous fait tourner sur vous-même, puis vous relâche.
+- Projection à 5 m devant lui, cible étourdie à l’atterrissage.
+- Intention : neutraliser immédiatement et créer une ouverture décisive.
 
 Fiches de verdict :  
 - Chaque action ou réaction doit être accompagnée d’une fiche de verdict détaillant : membre utilisé, mouvement exécuté, zone ciblée, intention, dégâts éventuels, effet sur statistiques (faim, soif, hearts, énergie, santé, etc.) et position finale.  
@@ -589,8 +590,9 @@ Exemples de comportements interdits pour les joueurs :
 - Montrer une bague au roi pour recevoir un serment immédiat de fidélité.  
 
 Règle clé :  
-- Les joueurs peuvent *influencer* la scène ou tenter des actions, mais *ne peuvent pas manipuler directement l’événement, l’issue ou la réaction des PNJ* celà est à la charge du MJ.  
-- Toute validation ou résultat d’action doit être décidée par le MJ ou le système du jeu.
+- Les joueurs peuvent INFLUENCER la scène ou tenter des actions, mais JAMAIS manipuler directement l’événement, l’issue ou la réaction des PNJ celà est à la charge du MJ.  
+- Toute validation ou résultat d’action doit être décidée par le MJ selon le système du jeu.
+
 
 5. DÉPLACEMENT & RISQUE ENVIRONNEMENTAL
 
@@ -608,13 +610,16 @@ Les PNJ de niveau normal ont des tactiques basiques et peuvent se défendre, mai
 
 Caractéristiques :  
 - Peuvent utiliser des compétences de Niveau B maximum.  
-- Peuvent contrer les attaques et frapper avec des coups ou lancer des techniques de base.  
-- Ne peuvent pas réagir avec un retard de réaction supplémentaire de +200ms⚡ ou plus au regard de réaction normal. Ils doivent toujours réagir à la préparation de l’action adverse.  
+- Peuvent contrer les attaques et frapper avec des coups ou lancer des techniques de base.
+- Ils ne peuvent pas réagir avec un retard de réaction global de 400ms⚡. Ils doivent toujours réagir à la préparation de l’action adverse.  
 
 Exemple de combat :  
-- Vous entamez une course vers lui, tentant une découpe horizontale de gauche à droite, alors qu’il recule d’un pas de 50cm, laissant votre lame trancher dans le vide.  
-- Vous posez votre main gauche au sol, étendant une sphère d’ombre, alors qu’il effectue un bond arrière de 3m et 1m de hauteur pour quitter la zone d’ombre.  
+- Vous entamez une course vers lui, tentant une découpe horizontale de gauche à droite, alors qu’il recule simultanément d’un pas de 50cm, laissant votre lame trancher dans le vide.  
+
+- Vous posez votre main gauche au sol, étendant une sphère d’ombre de 3m de rayon, alors qu’il effectue simultanément un bond arrière de 4m et 1m de hauteur pour quitter la zone d’ombre.  
+
 - Vous concentrez de l’énergie dans votre main droite tendue vers lui, alors qu’il effectue un bond de 5m sur sa droite, laissant votre attaque frapper dans le vide. Sa main droite tendue manifeste un portail à ses côtés d’où jaillit un dragon d’eau fonçant sur vous pour vous engloutir.
+
 
 7. SURVIE EN ENVIRONNEMENT HOSTILE
 
@@ -654,15 +659,15 @@ Caractéristiques :
 - Peuvent être pris de vitesse mais pas par des attaques trop prévisibles.  
 
 Exemples de combat :  
-- Vous engagez une course à une vitesse impressionnante (-10🫀), votre corps se déplaçant avec une agilité féline. Vous foncez sur le garde situé à votre gauche, déterminé à le neutraliser avant qu’il ne puisse réagir. Alors que vous tentez votre découpe horizontale de la gauche vers la droite avec votre épée dans la main droite, visant le cou du garde, celui-ci se baisse, laissant passer votre découpe dans le vide. Dans le même élan, il dégaine son épée et fend l’air d’un mouvement oblique ascendant de la main droite, vous tranchant de la côte gauche à l’épaule droite. Votre temps de réaction grimpe à 300ms⚡ (contre et riposte extrême).  
+- Vous engagez une course à vitesse maximale (-10🫀), votre corps se déplaçant avec une agilité féline. Vous foncez sur le garde situé à votre gauche, déterminé à le neutraliser avant qu’il ne puisse réagir. Alors que vous tentez votre découpe horizontale de la gauche vers la droite avec votre épée dans la main droite, visant le cou du garde, celui-ci se baisse, laissant passer votre découpe dans le vide. Dans le même élan, il dégaine son épée et fend l’air d’un mouvement oblique ascendant de la main droite, visant à vous tranché de la côte gauche à l’épaule droite. (contre et riposte extrême).  
 
-- Vous vous tenez face aux loups qui vous observent en grognant. Celui de droite vous fonce dessus subitement en zigzag, ajoutant +100ms⚡ à votre temps de réaction, ce qui vous fait réagir avec 300ms⚡ de retard. Le loup bondit à 1m de vous sur votre droite et vous mord au bras droit (attaque stratégique).  
+- Vous vous tenez face aux loups qui vous observent en grognant. Celui de droite vous fonce dessus subitement en zigzag, ajoutant +100ms⚡ à votre retard de réaction, le loup bondit à 1m de vous sur votre droite visant à vous mordre au bras droit +100ms⚡ supplémentaire (attaque stratégique).  
 
 - Alors que vous vous baissez, votre avant-bras droit en mouvement attire son attention. Il perçoit du coin de l’œil votre poing droit fonçant vers sa hanche gauche. D’un réflexe précis, il place sa main droite au niveau de sa hanche et saisit votre poing dans sa paume. Dans le même temps, il enchaîne avec un coup de pied gauche circulaire dans votre côte droite, vous projetant à 3m sur la gauche.  
 
 - Vous tentez une frappe verticale avec votre lame, visant sa clavicule. Il dévie votre arme en pivotant légèrement son buste, puis avance rapidement d’un pas pour placer sa main gauche sur votre poignet et vous désarmer. Profitant de l’ouverture, il avance son genou droit dans votre abdomen, vous coupant le souffle et vous forçant à reculer.  
 
-- Vous concentrez votre énergie pour déclencher une onde d’impact au sol. Le PNJ, anticipant l’attaque, effectue un bond arrière de 4m et d’1m50 de hauteur, évitant la zone touchée. Dans son mouvement aérien, il projette une lame d’énergie oblique vers vous, vous forçant à lever votre arme pour la bloquer, au prix d’un recul brutal.  
+- Vous concentrez votre énergie pour déclencher une onde d’impact au sol (pouvoir pouvoir adéquat). Le PNJ, anticipant l’attaque, effectue un bond arrière de 4m et d’1m50 de hauteur, évitant la zone touchée. Dans son mouvement aérien, il projette une lame d’énergie oblique vers vous (requis pouvoir adéquat), vous forçant à lever votre arme pour la bloquer, au prix d’un recul brutal.  
 
 - Alors que vous avancez d’un pas rapide pour lancer une combinaison de coups, il se met légèrement en retrait et observe vos mouvements. À la troisième frappe, il intercepte votre poing gauche avec sa main droite, pivote sur son axe et vous projette violemment au sol en utilisant la force de votre propre élan.
 
@@ -673,17 +678,17 @@ Les techniques et compétences propres influencent les affrontements mais aussi 
 Exemples :  
 - Vous recouvrez votre main droite d’énergie, la posant sur votre blessure qui commence à se refermer. "CARE Niv B : -20🌀" (soins).  
 
-- Votre corps dégage des étincelles, se recouvrant entièrement de foudre. Votre vitesse est décuplée. "THUNDER SPEED Niv A : -30🌀". Étant de rang C avec une vitesse normale de 5m/s🎯, votre vitesse de déplacement devient 7m/s🎯 à petite échelle et 2km🎯 à grande échelle (+1m/s🎯 = +0.5km🎯).  
+- Votre corps dégage des étincelles, se recouvrant entièrement de foudre. Votre vitesse est décuplée. "THUNDER SPEED Niv A : -30🌀". Étant de rang C avec une vitesse normale de 5m/s🎯, votre vitesse de déplacement grimpe à 7m/s🎯 à échelle réduit et 2km🎯 à grande échelle (+1m/s🎯 = +0.5km🎯).  
 
 - Vous visualisez le Marché Central puis vous vous y téléportez instantanément. Les marchands crient leurs produits et les voyageurs traversent les routes. "TELEPORT Niv B : -20🌀" (téléportation).  
 
-- Vous étendez vos deux bras vers l’avant, une colonne de flammes surgit et engloutit vos adversaires dans un rayon de 5m. "FIRE PILLAR Niv A : -35🌀" (attaque de zone).  
+- Vous étendez vos deux bras vers l’avant, une colonne de flammes surgit et engloutissant vos adversaires dans un rayon de 5m. "FIRE PILLAR Niv A : -30🌀" (attaque de zone).  
 
-- Vous fermez les yeux et murmurez une incantation. Un voile invisible recouvre votre corps, rendant vos mouvements plus difficiles à percevoir. "VEIL OF SHADOW Niv B : -25🌀" (furtivité).  
+- Vous fermez les yeux et murmurez une incantation. Un voile invisible recouvre votre corps, rendant vos mouvements plus difficiles à percevoir. "VEIL OF SHADOW Niv B : -20🌀" (furtivité).  
 
 - Vous levez votre main gauche, un mur translucide se dresse devant vous, absorbant le choc de l’attaque ennemie. "MAGIC SHIELD Niv B : -20🌀" (défense).  
 
-- Vos yeux brillent d’une lueur dorée tandis que vous projetez une vague psychique. Tous les PNJ proches ressentent une pression mentale intense, certains tombant à genoux. "MIND CRUSH Niv A : -30🌀" (altération mentale).
+- Vos yeux brillent d’une lueur dorée tandis que vous projetez une vague psychique. Toutes les entités proches ressentent une pression mentale intense, certains tombant à genoux. "MIND CRUSH Niv A : -30🌀" (altération mentale).
 
 12. POURSUITE & SPEED TRAVEL
 
@@ -694,7 +699,7 @@ La vitesse est exprimée en mètres par section (m/s🎯) à échelle réduite p
 Règle : un bonus de vitesse de +0.5km🎯 est appliqué pour chaque +1m/s🎯 de différence.
 
 Exemple :  
-- Si P1 a une vitesse de déplacement de 7m/s🎯 et poursuit P2 qui se déplace à 5m/s🎯, P1 avancera de 2km🎯 par section tandis que P2 ne parcourra que 1km🎯.  
+- Si P1 a une vitesse de déplacement de 7m/s🎯 et poursuit P2 qui se déplace à 5m/s🎯, P1 avancera de 2km🎯 par section tandis que P2 ne parcourra que 1km🎯. P1 pourra donc rattraper P2 s'ils maintiennent le rythme.
 
 - Si un joueur active une technique comme "THUNDER SPEED Niv A : -30🌀" (+2m/s🎯), sa vitesse passe de 5m/s🎯 à 7m/s🎯, ce qui équivaut à 2km🎯 par section à grande échelle.  
 
@@ -710,13 +715,13 @@ Caractéristiques :
 - Ils surprennent souvent par leur imprévisibilité et leur intelligence tactique.  
 
 Exemples :  
-- Il ressent votre coup de pied droit venir sur la base de sa colonne vertébrale, vous tenant dans son angle mort. Votre coup déjà lancé ajoute +200ms⚡ le fessant réagir avec un total de 400ms ⚡ de retard, ainsi sa main droite tenant son épée se replie vers l’arrière au-dessus de son épaule droite, plaçant le plat de sa lame contre sa colonne pour amortir l’impact sans dégâts (contre astucieux).  
+- Il ressent votre coup de pied droit venir sur la base de sa colonne vertébrale, vous tenant dans son angle mort. Votre coup déjà lancé ajoute +200ms⚡ à son retard de réaction normale le fessant réagir avec un total de 400ms⚡ de retard, ainsi sa main droite tenant son épée se replie vers l’arrière au-dessus de son épaule droite, plaçant le plat de sa lame contre sa colonne pour amortir l’impact sans dégâts (contre astucieux).  
 
-- Votre lame en main gauche est en mouvement oblique ascendant visant sa côte droite (+100ms⚡). D’un pivot rapide de 90° sur sa gauche, il contourne votre attaque et surgit face à votre profil droit (+100ms⚡). Son épée tendue horizontalement transperce votre flanc gauche pour sectionner du bassin à la hanche (+100ms⚡), vous forçant à réagir avec 500ms⚡ de retard (contre-attaque extrême).  
+- Votre lame en main gauche est en mouvement oblique ascendant visant sa côte droite (+100ms⚡) le fessant réagir avec un retard global de 300ms⚡. D’un pivot rapide de 90° sur sa gauche, il contourne votre attaque et surgit face à votre profil droit (+100ms⚡). Son épée tendue horizontalement transperce votre flanc gauche pour sectionner du bassin à la hanche (+100ms⚡), (+100ms⚡ pour votre action en cours) vous forçant à réagir avec un retard de réaction global de 500ms⚡ de retard (contre-attaque extrême).  
 
-- Il ressent votre lame se rapprocher et lève son épée de la main droite devant son bassin, croisant les lames pour bloquer. De sa main gauche, il saisit votre cou et serre violemment, vous étouffant sur place (contre passif).  
+- Il ressent votre lame se rapprocher et lève son épée de la main droite devant son bassin, croisant les lames pour bloquer. De sa main gauche, il saisit votre cou et serre violemment, vous étouffant sur place (requis force Gray).  
 
-- Alors que vous bondissez en l’air pour frapper du talon, il effectue un pas circulaire de 1m autour de vous (+100ms⚡ pour vous) vers la gauche et vous cueille à mi-course d’un coup de coude gauche brutal dans le dos, vous projetant au sol devant.  
+- Alors que vous bondissez en l’air pour frapper du talon, il effectue un pas circulaire de 1m autour de vous (+100ms⚡ pour vous) vers la gauche et vous cueille à mi-course d’un coup de coude gauche brutal dans le dos, vous projetant au sol devant lui (requis V.D supérieure).  
 
 - Vous projetez une sphère de feu vers lui, mais il concentre son énergie et déclenche "AQUA WALL Niv B : -20🌀". L’eau jaillit en spirale autour de son corps, éteignant instantanément les flammes avant de contre-attaquer en lançant une vague pressurisée vers vous.  
 
@@ -1234,9 +1239,30 @@ Louisa, serveuse pétillante aux airs innocents mais aux yeux curieux, accueilla
 > - *🎎 Grand Bazar :* Immense échoppe vendant une multitude d'items d’origine exotique. Vous y trouverez Roland un homme opportuniste, charmeur et un brin menteur. Les tarifs sont variés en raison des multiples items.
 > 
 > *🏤 Bureau des Missions :* (X: -1.5, Y: 0)
-> Un majestueux palais aux toits bleus, dressé au cœur d’une verdure luxuriante, s’ouvre sur un large parvis pavé où se rassemblent aventuriers et érudits venus chercher quêtes et contrats. À l'intérieur trois grand tableau affiche les annonces actuelle. Afin d’être éligible vous devez vous inscrire en fournissant votre nom et pour des raisons de sécurité vous ne recevez que des missions à la hauteur de vos compétences. Vous y trouverez Lyra, une dame au cheveux bruns et vêtu d'une robe violette, elle est très intelligente et observatrice toujours derrière son comptoir en charge de l'attribution des missions et des inscriptions : 
+> Un majestueux bâtiment façade en pierre claire avec enseigne représentant un parchemin et une plume. Sur le perron, une affiche de nouveaux contrats. À l'intérieur une grande salle organisée avec un vaste tableau d’annonces couvert de parchemins et de contrats. Afin d’être éligible aux missions, chaque membre doit fournir les informations suivantes. L’inscription est obligatoire et conditionne l’attribution des missions (débutant toujours au rang D). Les promotions vers les grades supérieurs se feront en fonction de l’expérience et de la réussite des missions. Après validation de votre inscription, vous pourrez consulter le tableau d’annonces et accepter vos premières missions. Vous y trouverez Lyra, une dame au cheveux bruns et vêtu d'une robe violette, très intelligente et observatrice toujours derrière son comptoir en charge de l'attribution des missions et des inscriptions : 
 
-# Rangs des missions
+- Pour l'inscription vous recevrez une brochure détaillant les règles de la guilde et conditions d'inscription, si vous approuvé vous recevrez ensuite le formulaire d'inscription puis un badge avec votre grade actuel une fois le formulaire rempli pour confirmer votre statut.
+
+# Informations requises :
+
+1. Nom complet :  
+   - Prénom et nom de famille.  
+2. Origine  :  
+   - Ville, village ou région d’origine.  
+3. Domicile actuel :  
+   - Adresse ou localisation précise (quartier, ville).  
+4. Profession ou spécialité :  
+   - Compétences utiles pour les missions (combat, magie, artisanat, diplomatie…).  
+5. Capacités particulières :  
+   - Pouvoirs surnaturels, techniques de combat, talents spécifiques.  
+6. Motivations et objectifs :  
+   - Pourquoi le membre souhaite rejoindre la guilde, quelles missions l’intéressent.  
+8. Références ou recommandations (facultatif mais apprécié) :  
+   - Personnes ou organisations attestant de la fiabilité du candidat.  
+
+⚠️ TOUT MENSONGE POURRAIT MENER A UNE INTRIGUE NARRATIF ET RÉALISTE.
+
+# Rangs des missions :
 
  - Rang D — Recrue : Généralement des missions locales, aide aux habitants, commissions, surveillances, etc. Récompense entre 1000🧭 à 3000🧭.
  - Rang C — Apprenti : Des missions d'escorte, de protections, de commissions et de chasses avec un niveau de dangerosité plus ou moins risqué. Récompense entre 4000🧭 à 7000🧭.
@@ -1244,18 +1270,20 @@ Louisa, serveuse pétillante aux airs innocents mais aux yeux curieux, accueilla
  - Rang A — Expert : Des missions spéciales dites grises espionnage, assassinat, infiltration, etc avec un niveau de dangerosité très élevé. Récompense entre 12000🧭 à 14000🧭.
  - Rang S — Élite : Des missions spéciales rare avec un niveau de dangerosité extrême. Récompense entre 15000🧭 à 20000🧭.
  - Rang Z — Légende : Un exploit qui vous fera entré dans la légende, extrêmement rare et presque impossible à réaliser. Récompense variable mais au dessus de 25000🧭.
+ 
 ⚠️ LES DIFFICULTÉS ET DANGEROSITÉS DES MISSIONS PEUVENT ÉVOLUER EN RAISON DES REBONDISSEMENTS SCÉNARISTIQUE, PAR EXEMPLE : LA PRINCESSE D'UN VILLAGE VICTIME D'UN COUP D'ÉTAT SE MÊLE À UN GROUPE DE MARCHAND ELLE ET S'EST GARDES SE FESSANT PASSÉ POUR DES MARCHANDS AFIN DE FUIR SE RETROUVANT POURSUIVIE PAR DES MERCENAIRES. CELÀ POURRAIT FAIRE PASSÉ UNE SIMPLE MISSION D'ESCORTE DE RANG C EN UNE MISSION DE PROTECTION DE RANG B. LES RÉCOMPENSES SONT RÉCUPÉRER À LA GUILDE APRÈS LE RAPPORT ET RÉUSSITE DE LA MISSION.
 
-# Conditions d'inscription (Voir Brochure)
+# Conditions d'inscription (Voir Brochure) ;
 
-1. Respect des auteurs de mission : Il est strictement interdit de menacer, arnaquer ou racketter les personnes venant poster une mission, quelle que soit sa difficulté ou sa récompense.
-2. Engagement à respecter les contrats : Une mission acceptée doit être menée jusqu’au bout avec sérieux. Tout abandon injustifié pourra entraîner une sanction ou une exclusion du bureau.
-3. Confidentialité des informations : Certains contrats peuvent contenir des données sensibles. Les membres doivent respecter la confidentialité des missions et ne pas divulguer les détails à des tiers.
-4. Comportement professionnel : Les membres doivent faire preuve de respect envers les clients, les autres membres et le personnel du bureau. Aucune insulte ou comportement toxique ne sera toléré.
-5. Interdiction de missions illégales sans autorisation spéciale : Certaines missions dites “grises” (espionnage, assassinat, infiltration) peuvent être soumises à validation par le bureau avant d’être acceptées.
-6. Reddition de compte obligatoire : Un rapport doit être fourni après chaque mission (succès ou échec) afin d'assurer le suivi et la transparence.
-7. Équipement personnel requis : Le membre doit être capable de mener des missions avec son propre équipement. Aucune demande excessive de matériel au bureau ne sera acceptée.
-8. Respect du classement des rangs : Les membres doivent s’en tenir aux missions de leur niveau, sauf autorisation exceptionnelle. Accepter une mission hors de portée peut être risqué pour l’équipe et le client.
+- Respect des auteurs de mission, aucune menace ou arnaque.  
+- Une mission acceptée doit être menée à terme.  
+- Confidentialité obligatoire sur les informations sensibles.  
+- Respect du personnel, des clients et des autres membres.  
+- Les missions illégales nécessitent validation spéciale.  
+- Un rapport doit être rendu après chaque mission.  
+- Chaque membre doit utiliser son propre équipement.  
+- Les missions doivent correspondre à votre rang.
+
 ⚠️ TOUTES VIOLATION À CES RÈGLES POURRAIS OCCASIONNÉ UNE SUSPENSION TEMPORAIRE OU DÉFINITIVE DE LA GUILDE.
 > - *🏦 Banque des Trésors :* Gardienne des richesses du royaume, cette banque stocke objets rares et pièces d’or. Vous y trouverez toutes sortes d’artefacts et objets magiques, elle est fortement gardé. Ont y trouve Louise, un homme âgée mais futé et malin, il y occupe le poste de banquier, il y a aussi 2 gardes asurans à l'extérieur et 2 autres à l'intérieur, ils sont de Rang A avec un niveau de combativité Fort, ils sont équipées d'une armure recouvrant l'intégralité de leur corps ayant une résistance 🟡Yellow avec leur épée de niveau 🥈 et de résistance 🟡Yellow ce qui fait qu'ils sont insensible aux attaques de puissance inférieure.
 > 
@@ -1447,9 +1475,9 @@ Un abri sommaire pour les voyageurs piégés par les blizzards.
 *▓▓▓▓▓▓[À SUIVRE...]▓▓▓▓▓▓*
 ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
 
-Système De Voyage — Origamy World
+SYSTÈME DE VOYAGE — Origamy World
 
-Le déplacement dans Origamy World repose sur un système de coordonnées, un calcul de distances et des ajustements selon le terrain, la météo et les obstacles.
+Le DÉPLACEMENT dans Origamy World repose sur un système de coordonnées, un calcul de distances et des ajustements selon le terrain, la météo et les obstacles.
 
 Carte et Coordonnées
 
@@ -2083,7 +2111,7 @@ Un joueur désorienté = trajectoire instable (-Vitesse ou risque de dérapage).
 > *MJ :* Roulement de dés pour un dernier événement divin (bonus, malus ou changement soudain dans le classement).
 
 -----------------------------------------------------
-CONSEILS GÉNÉRAUX POUR LE MJ — SPEED RUSH
+GUIDE POUR LE MJ — SPEED RUSH
 
 Le MJ est responsable du suivi des courses, de la gestion des véhicules et de l’immersion narrative. 
 Voici les règles et étapes de gestion d’un tour.
@@ -2126,6 +2154,28 @@ La distance jusqu’à la Section Ensablée est de 1,5 km.
 Comme il parcourt 2 km par tour, il atteindra la Section Ensablée au prochain tour.
 Le MJ met alors à jour sa position et applique les effets de la Section Ensablée (réduction de vitesse, etc.).
 
+PAVE DE VERDICT SPEED RUSH
+================================
+         🏁 `𝗦𝗣𝗘𝗘𝗗 𝗥𝗨𝗦𝗛` 🏁
+
+🎙️ *Narration* :
+> [Décris ici les événements vus par le MJ : dépassements, collisions, obstacles déclenchés, ambiance de la piste...]
+
+📊 Statistiques mises à jour :
+- 🚗 Pilote : [Nom du joueur]
+- ⛽ Carburant : [xx/100]
+- 🛢️ Turbo : [xx/100]
+- 🚘 Résistance : [xx/100]
+- 🎯 Position : [Section actuelle]
+
+⚠️ *Effets appliqués* :
+- [Obstacle, perte de vitesse, bonus, gadget utilisé...]
+
+🏁 Situation actuelle :
+- [Résumé rapide de la situation du pilote face aux autres : avance, retard, crash, dépassement réussi...]
+
+           *FIN DU VERDICT*
+================================
 
 21. DESCRIPTION DES SERVEURS SRPN
 Voici les différentes descriptions des serveurs de la communauté SRPN.
@@ -2895,8 +2945,7 @@ MÉMO RAPIDE — QUAND UTILISER QUOI
 
 MODÈLES OFFICIELS À UTILISER
 
-[1] ORIGAMY STORY (PAVÉ STORY)
-
+[1] ORIGAMY STORY (PAVÉ JOUEUR)
 ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
 *▓▓▓▓[ORIGAMY STORY]▓▓▓▓*
 ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
@@ -2914,18 +2963,29 @@ RÈGLES SPÉCIFIQUES STORY
 - Toujours garder au moins 2 sections max.
 - POUVOIR/POSITION : laisser "..." si inconnu.
 
-[2] FICHE SPEED RUSH (VERDICT MJ/MASTER)
+[2] SPEED RUSH MJ (VERDICT)
 
-▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
-▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-*.......| 🏁 SPEED RUSH 🏁 |......*
+================================
+         🏁 `𝗦𝗣𝗘𝗘𝗗 𝗥𝗨𝗦𝗛` 🏁
 
-> ▪️*[Pilote 1]* ...
+🎙️ *Narration* :
+> [Décris ici les événements vus par le MJ : dépassements, collisions, obstacles déclenchés, ambiance de la piste...]
 
-> ▪️*[Pilote 2]* ...
+📊 Statistiques mises à jour :
+- 🚗 Pilote : [Nom du joueur]
+- ⛽ Carburant : [xx/100]
+- 🛢️ Turbo : [xx/100]
+- 🚘 Résistance : [xx/100]
+- 🎯 Position : [Section actuelle]
 
-▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+⚠️ *Effets appliqués* :
+- [Obstacle, perte de vitesse, bonus, gadget utilisé...]
+
+🏁 Situation actuelle :
+- [Résumé rapide de la situation du pilote face aux autres : avance, retard, crash, dépassement réussi...]
+
+           *FIN DU VERDICT*
+================================
 
 RÈGLES SPÉCIFIQUES VERDICT SPEED RUSH
 - Ajouter ou retirer des lignes "> ▪️*[Pilote X]* ..." selon le nombre de participants.
@@ -2956,9 +3016,6 @@ RÈGLES SPÉCIFIQUES PAVÉ PILOTE
 
 [4] PAVÉ ABM (COMBAT JOUEURS)
 
-> *📌 Distance initiale :* 5m
-> *🌍 Environnement :* (voir arène)
-
 ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
 *▓▓▓▓▓▓[PAVÉ ABM]▓▓▓▓▓▓*
 ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
@@ -2984,17 +3041,20 @@ RÈGLES SPÉCIFIQUES ABM
 > *❌ Sans Visuel :* -1⭐
 > *❌ Pavé Lassant :* -2⭐
 > *❌ Contredit Verdict :* -2⭐
+
 *DIFFICULTÉ et SCORE :*
-> *🥇 Easy: 3:* Victoire facile.
-> *🥈 Medium: 2:* dépensé +30%🫀 en défense
-> *🥉 Hard: 1:* en-dessous 70%❤️ ou 50%🫀
-> *🏅 Perfect: 5:* Stats inchangé.
+> *🥇 Easy: 3 :* Victoire facile.
+> *🥈 Medium: 2 :* dépensé +30%🫀 en défense
+> *🥉 Hard: 1 :* en-dessous 70%❤️ ou 50%🫀
+> *🏅 Perfect: 5 :* Stats inchangé.
+
 > *⚠️ Si vous achevez l'adversaire d'un seul coup, c'est un "ONE SHOT" +2⭐. Si vous l'achevez en full power, c'est "RAMPAGE" +2⭐. Et si vous gagnez contre un personnage de rang supérieur, c'est "MONSTER KILLER" +4⭐.*
+
 > *⏱️ DELAY:* Si vous ne parvenez pas à battre l'adversaire avant la fin du compteur entre 5 et 7 tours, la victoire revient au joueur en meilleure posture *(stats ou domination).*
 
 ━ ✦〔📢 *ANNONCE OFFICIELLE*〕✦ ━
 
-🎤 *_[Annonceur] :_* [Résumé & Commentaire]
+🎤 *_Annonceur :_* [Résumé & Commentaire]
 
 🎊 *Gagnant :* [Joueur]
    🧠 *Maîtrise :* [---]
@@ -3035,7 +3095,33 @@ CONSIGNES DE ROBUSTESSE (ANTI-ERREURS)
 29. GUIDE D’ARBITRAGE ABM 
 EXEMPLES DE COMBATS
 
-Lors d’un combat ABM, l’arbitre lance toujours la commande -abm_rule [Nom vs Nom / Potentiel] afin de générer la fiche de statut et les conditions de duel. Le joueur affiché en premier devient le « Tourneur », c’est lui qui doit rédiger le premier pavé. La distance initiale est fixée à 5 mètres et doit toujours être rappelée. L’arbitre suit chaque action, valide ou rejette selon le respect des règles (limites de sections, distance, logique des techniques, anticipation interdite, etc.), puis annonce le tour suivant. Si une erreur minime est commise, l’arbitre peut tolérer mais doit le préciser. En cas de Mauvais Contre (MC❌), la sanction est appliquée immédiatement et l’adversaire peut l’emporter.
+Tu es un arbitre impartial. Tu n’as pas le droit d’aider les joueurs, ni de leur donner d’astuces stratégiques. Tu dois uniquement contrôler le respect des règles et rendre des verdicts neutres.
+
+DEROULEMENT D’UN COMBAT :
+1. Annonce du combat :
+- Les joueurs doivent te taguer pour demander un arbitrage.
+- Chaque joueur annonce le nom et le rang de son personnage.
+- Tu peux leur demander d’utiliser la commande -heroes pour afficher leurs personnages, et -abm_rule pour initier le combat.
+
+2. Ordre des tours :
+- Le joueur désigné "Tourneur 1" (par la fiche -abm_rule) rédige le premier pavé d’action.
+- Le joueur "Tourneur 2" peut ensuite démarrer la latence avec la commande -latence ou -minuteur.
+
+3. Interaction avec l’IA :
+- Les joueurs doivent toujours te taguer pour :
+  > Poser une question de règlement.
+  > Demander ton verdict.
+- Tu ne dois JAMAIS donner d’aide stratégique ou tactique ni tenté de contrer les actions du joueur.
+
+4. Arbitrage :
+- Vérifie que chaque action est conforme aux capacités du héros (nom, rang, description).
+- Vérifie que le joueur respecte les limites d’action par section.
+- Vérifie la cohérence des vitesses, distances et réactions.
+- Si un joueur dépasse les limites de sa carte ou du règlement, l’autre joueur peut te le signaler.
+- Rends toujours ton verdict de manière claire, concise et neutre.
+
+REGLE STRICTE :
+Tu es uniquement arbitre. Pas de conseils, pas d’explications stratégiques, pas de favoritisme. Ton rôle se limite à juger la conformité et annoncer un verdict.
 
 COMBAT 1 – Mahito vs Gaara : L’arbitre ouvre le duel avec la commande -abm_rule Mahito vs Gaara / Normal et rappelle la distance initiale de 5m. Le joueur Gaara commence en façonnant un nuage de sable sous ses pieds pour s’élever à 5m de hauteur, puis déclenche une rafale de projectiles de sable pour gêner les mouvements adverses. L’arbitre corrige l’oubli d’indication sur le sol mais valide, car l’erreur est mineure. Au tour suivant, le joueur Mahito tente de courir à vitesse maximale pour réduire la distance et esquiver la rafale, affirmant agir en simultané, puis active ses transformations (ailes et lames). Il s’élance ensuite pour frapper Gaara d’un coup oblique. Cependant, l’arbitre signale MC❌ pour divination : le joueur a décrit une réaction avant la résolution de l’attaque adverse, ce qui est interdit sans anticipation ou divination explicite. Mahito est transpercé, mettant fin au combat.
 
@@ -3064,4 +3150,4 @@ FICHE D'ARBITRAGE
 ou  
 🎊 *Victoire :* [@TagGagnant] fin.
 
-CONCLUSION : Le rôle de l’arbitre est de rester impartial, tolérer les petites erreurs de forme mais sanctionner sévèrement les MC❌, tout en expliquant les décisions pour améliorer la qualité des prochains combats.
+CONSIGNE : Le rôle de l’arbitre est de rester impartial, tolérer les petites erreurs de forme mais sanctionner sévèrement les MC❌, tout en expliquant les décisions pour améliorer la qualité des prochains combats.
