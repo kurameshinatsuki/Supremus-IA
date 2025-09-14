@@ -456,11 +456,13 @@ async function startBot(sock, state) {
 
             // Mention du bot (via @numéro ou via liste mentions)
             const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
-            const botNumber = '244285576339508'; // Numéro par défaut
-            const isMentioned =
-                mentionedJids.some(jid => jid.includes(botNumber)) ||
-                (text && text.includes('@' + botNumber)) ||
-                (text && text.toLowerCase().includes('supremia'));
+            const botNumbers = ['244285576339508', '177958127927437']; // Tous les numéros possibles
+const keywords = ['supremia', 'makima'];
+
+const isMentioned =
+    mentionedJids.some(jid => botNumbers.some(num => jid.includes(num))) ||
+    (text && botNumbers.some(num => text.includes('@' + num))) ||
+    (text && keywords.some(word => text.toLowerCase().includes(word)));
 
             // Commande ?
             const isCommand = text && text.startsWith('/');
