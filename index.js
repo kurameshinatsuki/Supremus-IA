@@ -145,16 +145,15 @@ async function handleReset(msg, sock) {
 
     // Vérifier si l'utilisateur est le propriétaire du bot (optionnel)
     function isBotOwner(sender) {
-    const botOwner = process.env.BOT_OWNER;
-    if (!botOwner) return false;
-    return sender.replace('@s.whatsapp.net', '') === botOwner.replace('@s.whatsapp.net', '');
-}
+    const botOwners = process.env.BOT_OWNER
+        ? process.env.BOT_OWNER.split(',').map(o => o.trim())
+        : [];
 
-console.log("Sender:", sender);
-console.log("BOT_OWNER:", process.env.BOT_OWNER);
-
-if (botOwner && !isBotOwner(sender)) {
-    return "❌ Seul le propriétaire du bot peut utiliser cette commande.";
+    return botOwners.some(owner => {
+        const cleanSender = sender.split('@')[0];
+        const cleanOwner = owner.split('@')[0];
+        return cleanSender === cleanOwner;
+    });
 }
 
     try {
