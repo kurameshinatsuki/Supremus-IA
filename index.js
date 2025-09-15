@@ -144,9 +144,15 @@ async function handleReset(msg, sock) {
     const botOwner = process.env.BOT_OWNER; // Ajoutez BOT_OWNER=numéro@whatsapp.net dans .env
 
     // Vérifier si l'utilisateur est le propriétaire du bot (optionnel)
-    if (botOwner && !jidEquals(sender, botOwner)) {
-        return "❌ Seul le propriétaire du bot peut utiliser cette commande.";
-    }
+    function isBotOwner(sender) {
+    const botOwner = process.env.BOT_OWNER;
+    if (!botOwner) return false;
+    return sender.replace('@s.whatsapp.net', '') === botOwner.replace('@s.whatsapp.net', '');
+}
+
+if (botOwner && !isBotOwner(sender)) {
+    return "❌ Seul le propriétaire du bot peut utiliser cette commande.";
+}
 
     try {
         // Pour les groupes, vérifier les permissions admin
