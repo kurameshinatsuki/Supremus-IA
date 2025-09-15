@@ -393,7 +393,7 @@ async function sendReplyWithTyping(sock, msg, contentObj, optionsExtra = {}) {
     const opts = { quoted: msg, ...optionsExtra };
 
     // Délai aléatoire entre 2 et 5 secondes pour paraître plus humain
-    const randomDelay = Math.floor(Math.random() * 6000) + 2000;
+    const randomDelay = Math.floor(Math.random() * 3000) + 2000;
 
     // Activer l'indicateur "en train d'écrire"
     await sock.sendPresenceUpdate('composing', jid);
