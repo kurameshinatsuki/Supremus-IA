@@ -150,6 +150,9 @@ async function handleReset(msg, sock) {
     return sender.replace('@s.whatsapp.net', '') === botOwner.replace('@s.whatsapp.net', '');
 }
 
+console.log("Sender:", sender);
+console.log("BOT_OWNER:", process.env.BOT_OWNER);
+
 if (botOwner && !isBotOwner(sender)) {
     return "❌ Seul le propriétaire du bot peut utiliser cette commande.";
 }
