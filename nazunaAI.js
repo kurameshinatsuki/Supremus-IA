@@ -3,7 +3,7 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenerativeAI } = require('@google/genai');
 const { User, Group, Conversation, syncDatabase } = require('./models');
 const { detecterVisuel } = require('./visuels'); // Import du module visuels
 
