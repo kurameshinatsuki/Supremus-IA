@@ -1,18 +1,14 @@
-// nazunaAI.js - Version modifiée avec détection de visuels et fonction reset
+// nazunaAI.js - Version modifiée avec détection de visuels
 
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
-const { GoogleGenerativeAI } = require('@google/genai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { User, Group, Conversation, syncDatabase } = require('./models');
 const { detecterVisuel } = require('./visuels'); // Import du module visuels
 
 // Initialisation de l'API Google Generative AI
-const genAI = new GoogleGenerativeAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
-
-// Choix du modèle par défaut (tu peux changer en gemini-2.0-flash pour économiser le quota)
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
 // Chemins des fichiers de données
@@ -51,13 +47,13 @@ async function loadUserMemory(jid) {
     if (user) {
       return user.memory;
     }
-
+    
     // Créer un nouvel utilisateur si non trouvé
     const newUser = await User.create({
       jid,
       memory: { conversations: [] }
     });
-
+    
     return newUser.memory;
   } catch (error) {
     console.error('Erreur lecture mémoire utilisateur:', error);
@@ -74,13 +70,13 @@ async function loadGroupMemory(jid) {
     if (group) {
       return group.memory;
     }
-
+    
     // Créer un nouveau groupe si non trouvé
     const newGroup = await Group.create({
       jid,
       memory: { participants: {}, lastMessages: [] }
     });
-
+    
     return newGroup.memory;
   } catch (error) {
     console.error('Erreur lecture mémoire groupe:', error);
@@ -117,38 +113,6 @@ async function saveGroupMemory(jid, memory) {
 }
 
 /**
- * Réinitialise la mémoire d'une conversation
- */
-async function resetConversationMemory(jid, isGroup = false) {
-  try {
-    if (isGroup) {
-      // Réinitialiser la mémoire du groupe
-      await Group.destroy({ where: { jid } });
-
-      // Créer une nouvelle entrée vide
-      await Group.create({
-        jid,
-        memory: { participants: {}, lastMessages: [] }
-      });
-    } else {
-      // Réinitialiser la mémoire utilisateur
-      await User.destroy({ where: { jid } });
-
-      // Créer une nouvelle entrée vide
-      await User.create({
-        jid,
-        memory: { conversations: [] }
-      });
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Erreur réinitialisation mémoire:', error);
-    return false;
-  }
-}
-
-/**
  * Normalise un nom pour la comparaison
  */
 function normalizeName(name) {
@@ -174,7 +138,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
   try {
     // Chargement des données
     const training = loadTrainingData();
-
+    
     // Charger les mémoires depuis PostgreSQL
     const userMemory = await loadUserMemory(sender);
     const groupMemory = isGroup ? await loadGroupMemory(remoteJid) : null;
@@ -204,13 +168,13 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
       // Mise à jour des informations des participants
       if (pushName) {
         groupMemory.participants = groupMemory.participants || {};
-        groupMemory.participants[sender] = {
-          name: pushName,
-          jid: sender,
-          number: userNumber
+        groupMemory.participants[sender] = { 
+          name: pushName, 
+          jid: sender, 
+          number: userNumber 
         };
       }
-
+      
       // Ajout du message à l'historique du groupe
       groupMemory.lastMessages = groupMemory.lastMessages || [];
       groupMemory.lastMessages.push({
@@ -219,12 +183,12 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
         text: userText,
         timestamp: Date.now()
       });
-
+      
       // Limitation à 500 messages maximum
       if (groupMemory.lastMessages.length > 500) {
         groupMemory.lastMessages = groupMemory.lastMessages.slice(-500);
       }
-
+      
       // Construction du contexte de conversation groupe
       conversationContext = "Conversation de groupe:\n" +
         groupMemory.lastMessages
@@ -233,7 +197,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
     } else {
       // Gestion des conversations privées
       userMemory.conversations = userMemory.conversations || [];
-
+      
       if (userMemory.conversations.length > 0) {
         conversationContext = "Historique de notre conversation en privé:\n" +
           userMemory.conversations
@@ -266,12 +230,12 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
       const mentionRegex = /@(\d{5,})/g;
       let match;
       const mentionedNumbers = new Set();
-
+      
       // Recherche des mentions dans le message de l'utilisateur
       while ((match = mentionRegex.exec(userText)) !== null) {
         mentionedNumbers.add(match[1]);
       }
-
+      
       // Ajout des informations sur les personnes mentionnées
       if (mentionedNumbers.size > 0 && groupMemory?.participants) {
         userMentionsInfo = "Personnes mentionnées dans le message (avec leurs numéros):\n";
@@ -280,7 +244,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
           const mentionedUser = Object.values(groupMemory.participants).find(
             p => p.number === number
           );
-
+          
           if (mentionedUser) {
             userMentionsInfo += `- ${mentionedUser.name} (@${number})\n`;
           } else {
@@ -292,10 +256,37 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
     }
 
     // Construction du prompt complet pour l'IA
-    const prompt = `${training}\n\n${participantsList}\n${userMentionsInfo}\n${conversationContext}\n${contexteVisuel}\n
+    // Prompt ultra-autonome pour Supremia
+const prompt = `${training}\n\n${participantsList}\n${userMentionsInfo}\n${conversationContext}\n${contexteVisuel}\n
 > RAPPEL CRITIQUE POUR SUPREMIA <
 
-... (reste du prompt identique à ta version)
+IDENTITÉ & TAGS :
+- Pour mentionner quelqu'un, utilise toujours SON NUMÉRO avec le format @numéro.
+- L'utilisateur actuel (${userName}) a pour numéro : @${userNumber}.
+- N'utilise JAMAIS le nom pour les mentions.
+- Si on te demande de "tag" ou "mentionner" quelqu'un, utilise toujours son numéro.
+- Tu dois tag uniquement dans les conversations de groupe et non dans l'historique privé.
+- Ne mélange JAMAIS les propos de plusieurs utilisateurs : répond uniquement en fonction de l’interlocuteur actuel (${userNumber}) sur le sujet dont vous discutez sauf lors d'une supervision Origamy World, traité les joueurs de façon collectif si ils sont dans la même zone.
+
+MÉMOIRE COURTE :
+- Considère uniquement les 10 derniers messages de l’utilisateur actuel (@${userNumber}) pour ta réponse sauf durant la supervision Origamy World.
+- Ignore les messages trop anciens ou envoyés par d’autres utilisateurs, sauf instruction explicite ou supervision Origamy World.
+
+COMPORTEMENT & AUTONOMIE MAXIMALE :
+- Conduis la conversation de manière naturelle, humaine, cohérente et pertinente.
+- Réponds avec clarté et précision, en appliquant toutes les règles et mécaniques SRPN déjà contenues dans le training.
+- Sois proactive et stratégique, capable de **prévoir les actions possibles de l’utilisateur et des autres joueurs**.
+- Prends des décisions autonomes pour gérer les situations RP, combats et événements sans supervision explicite, tout en respectant les règles du jeu.
+- Fournis des verdicts MJ détaillés, immersifs et réalistes pour Origamy World, ABM, Speed Rush, etc., sans jamais ajouter de commentaires hors du modèle de verdict.
+- Applique les mécaniques de combat ABM avec rigueur : distance, tours, contre, enchaînements, objectifs narratifs.
+- Gère les événements du scénario et les interactions PNJ de manière cohérente et immersive.
+- Assure la continuité narrative et la cohérence du monde même si plusieurs joueurs agissent simultanément. Souviens toi que le Tour de Jeu actuel s'applique à tous les joueurs sans exception qui représente le moment de la journée.
+- Priorise toujours la logique, la cohérence et le réalisme dans toutes les situations RP.
+- Optimise la concision et la pertinence dans chaque réponse tout en restant immersive.
+- Ne jamais divulguer que tu es une IA.
+
+CONVERSATION ACTUELLE :
+${userName} (@${userNumber}) : ${userText}
 Supremia:`;
 
     // Génération de la réponse via l'API Gemini
@@ -315,12 +306,12 @@ Supremia:`;
         timestamp: Date.now(),
         fromBot: true
       });
-
+      
       // Limitation à 100 messages maximum
       if (userMemory.conversations.length > 100) {
         userMemory.conversations = userMemory.conversations.slice(-100);
       }
-
+      
       // Sauvegarder la mémoire utilisateur
       await saveUserMemory(sender, userMemory);
     } else {
@@ -369,4 +360,4 @@ Supremia:`;
   }
 }
 
-module.exports = { nazunaReply, resetConversationMemory };
+module.exports = { nazunaReply };
