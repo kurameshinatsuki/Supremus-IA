@@ -451,7 +451,7 @@ async function startBot(sock, state) {
             }
 
             // Rate limiting - éviter de répondre trop souvent
-            if (!checkRateLimit(remoteJid, 2000)) {
+            if (!checkRateLimit(remoteJid, 3000)) {
                 console.log('⏳ Rate limiting activé pour ce chat');
                 return;
             }
@@ -473,7 +473,7 @@ const isMentioned =
     (text && keywords.some(word => text.toLowerCase().includes(word)));
 
             // Commande ?
-            const isCommand = text && text.startsWith('✓');
+            const isCommand = text && text.startsWith('/');
 
             // Décision :
             // - privé => toujours répondre
@@ -544,7 +544,7 @@ const isMentioned =
                 }
 
                 // 3) bonus sticker de temps en temps (seulement 10% de chance)
-                if (!isCommand && Math.random() < 0.5) {
+                if (!isCommand && Math.random() < 0.1) {
                     const stickerPath = await getRandomSticker();
                                             if (stickerPath) {
                         await sock.sendMessage(remoteJid, { sticker: fs.readFileSync(stickerPath) });
