@@ -28,7 +28,7 @@ const lastInteraction = new Map();
 /**
  * Vérifie si un utilisateur peut envoyer un message (rate limiting)
  */
-function checkRateLimit(jid, cooldown = 3000) {
+function checkRateLimit(jid, cooldown = 2000) {
     const now = Date.now();
     const lastMessage = messageLimiter.get(jid) || 0;
 
@@ -295,7 +295,7 @@ function stripLeadingNonAlnum(s = '') {
 }
 
 /**
- * Stickers aléatoires avec signature Suprêmus/Makima
+ * Stickers aléatoires avec signature Makima/Suprêmus
  */
 async function getRandomSticker() {
     try {
@@ -451,7 +451,7 @@ async function startBot(sock, state) {
             }
 
             // Rate limiting - éviter de répondre trop souvent
-            if (!checkRateLimit(remoteJid, 3000)) {
+            if (!checkRateLimit(remoteJid, 2000)) {
                 console.log('⏳ Rate limiting activé pour ce chat');
                 return;
             }
@@ -543,8 +543,8 @@ const isMentioned =
                     }
                 }
 
-                // 3) bonus sticker de temps en temps (seulement 10% de chance)
-                if (!isCommand && Math.random() < 0.1) {
+                // 3) bonus sticker de temps en temps (seulement 50% de chance)
+                if (!isCommand && Math.random() < 0.5) {
                     const stickerPath = await getRandomSticker();
                                             if (stickerPath) {
                         await sock.sendMessage(remoteJid, { sticker: fs.readFileSync(stickerPath) });
