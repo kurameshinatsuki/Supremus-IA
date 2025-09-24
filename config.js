@@ -12,7 +12,7 @@ const config = {
   ai: {
     provider: process.env.AI_PROVIDER || 'gemini',
     model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
-    apiKey: process.env.GEMINI_API_KEY || 'AIzaSyAOgSPj1NU_XGE7VkVkCXSfksI5wo7C_co',
+    apiKey: process.env.GEMINI_API_KEY || 'AIzaSyC_u21HRTqh-Ue6_FhEbHhxwRtCLfQKRAw',
     persona: process.env.PERSONA || 'serious',
     temperature: Number(process.env.AI_TEMPERATURE || 0.4),
     maxOutputTokens: Number(process.env.AI_MAX_TOKENS || 512),
