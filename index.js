@@ -1,4 +1,4 @@
-// index.js - Version modifiée avec système de visuels et commande reset
+// index.js - Version modifiée avec système de commandes et vision
 
 require('dotenv').config();
 const fs = require('fs');
@@ -9,7 +9,8 @@ const { default: makeWASocket, useMultiFileAuthState, delay, downloadContentFrom
 const { nazunaReply, resetConversationMemory } = require('./nazunaAI');
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 const { syncDatabase } = require('./models');
-const { detecterVisuel } = require('./visuels'); // Import du module visuels
+const { detecterVisuel } = require('./visuels');
+const { loadCommands, getCommand } = require('./commandes'); // Nouveau: import des commandes
 
 const DEBUG = (process.env.DEBUG === 'false') || true;
 let pair = false;
@@ -20,6 +21,10 @@ syncDatabase().then(() => {
 }).catch(err => {
   console.error('❌ Erreur initialisation base de données:', err);
 });
+
+// Charger les commandes
+loadCommands();
+console.log('✅ Commandes chargées');
 
 // Système de rate limiting
 const messageLimiter = new Map();
@@ -58,22 +63,13 @@ function ask(questionText) {
  * ========================= */
 async function handleCommand(command, args, msg, sock) {
     const commandName = (command || '').toLowerCase();
-
-    switch (commandName) {
-        case 'tagall':
-            return handleTagAll(msg, sock);
-        case 'reset':
-            return handleReset(msg, sock);
-        case 'help':
-            return (
-                "📚 Commandes disponibles :\n" +
-                "• /tagall - Mentionne tous les membres du groupe (admin seulement)\n" +
-                "• /reset - Réinitialise l'historique de la conversation\n" +
-                "• /help - Affiche ce message d'aide"
-            );
-        default:
-            return null;
+    const commandModule = getCommand(commandName);
+    
+    if (commandModule) {
+        return await commandModule.execute(args, msg, sock);
     }
+    
+    return `❌ Commande inconnue: /${command}\nTapez /help pour voir les commandes disponibles.`;
 }
 
 /**
@@ -87,99 +83,6 @@ async function isUserAdmin(jid, participant, sock) {
     } catch (error) {
         console.error('Erreur vérification admin:', error);
         return false;
-    }
-}
-
-/**
- * /tagall - mentionne tout le monde (groupes seulement, admin seulement)
- */
-async function handleTagAll(msg, sock) {
-    const jid = msg.key.remoteJid;
-    const sender = msg.key.participant || msg.key.remoteJid;
-
-    if (!jid.endsWith('@g.us')) {
-        return "❌ Cette commande n'est disponible que dans les groupes.";
-    }
-
-    // Vérifier si l'utilisateur est admin
-    const isAdmin = await isUserAdmin(jid, sender, sock);
-    if (!isAdmin) {
-        return "❌ Seuls les administrateurs peuvent utiliser cette commande.";
-    }
-
-    try {
-        const groupMetadata = await sock.groupMetadata(jid);
-        const participants = groupMetadata.participants || [];
-
-        const mentions = [];
-        let mentionText = '';
-
-        participants.forEach(p => {
-            if (p.id !== sock.user.id) {
-                mentions.push(p.id);
-                mentionText += `@${String(p.id).split('@')[0]} `;
-            }
-        });
-
-        await sock.sendMessage(
-            jid,
-            { text: `📢 Mention de tous les membres :\n${mentionText}`, mentions },
-            { quoted: msg }
-        );
-
-        return null;
-    } catch (error) {
-        console.error('❌ Erreur lors du /tagall:', error);
-        return "❌ Une erreur est survenue lors de la mention des membres.";
-    }
-}
-
-/**
- * /reset - réinitialise l'historique de la conversation
- */
-async function handleReset(msg, sock) {
-    const jid = msg.key.remoteJid;
-    const sender = msg.key.participant || msg.key.remoteJid;
-    const isGroup = jid.endsWith('@g.us');
-    const botOwner = process.env.BOT_OWNER; // Ajoutez BOT_OWNER=numéro@whatsapp.net dans .env
-
-    // Vérifier si l'utilisateur est le propriétaire du bot (optionnel)
-    function isBotOwner(sender) {
-    const botOwners = process.env.BOT_OWNER
-        ? process.env.BOT_OWNER.split(',').map(o => o.trim())
-        : [];
-
-    return botOwners.some(owner => {
-        const cleanSender = sender.split('@')[0];
-        const cleanOwner = owner.split('@')[0];
-        return cleanSender === cleanOwner;
-    });
-}
-
-    try {
-        // Pour les groupes, vérifier les permissions admin
-        if (isGroup) {
-            const isAdmin = await isUserAdmin(jid, sender, sock);
-            if (!isAdmin) {
-                return "❌ Seuls les administrateurs peuvent utiliser cette commande.";
-            }
-        }
-
-        // Réinitialiser le cache des messages du bot
-        botMessageCache.delete(jid);
-
-        // Réinitialiser la mémoire dans la base de données
-        const success = await resetConversationMemory(isGroup ? jid : sender, isGroup);
-
-        if (success) {
-            return "✅ Historique de la conversation réinitialisé avec succès !";
-        } else {
-            return "❌ Une erreur est survenue lors de la réinitialisation.";
-        }
-
-    } catch (error) {
-        console.error('❌ Erreur lors de la réinitialisation:', error);
-        return "❌ Une erreur est survenue lors de la réinitialisation.";
     }
 }
 
@@ -408,6 +311,23 @@ async function sendReplyWithTyping(sock, msg, contentObj, optionsExtra = {}) {
     return sock.sendMessage(jid, contentObj, opts);
 }
 
+/**
+ * Télécharge le contenu d'un message média
+ */
+async function downloadMediaContent(msg, messageType) {
+    try {
+        const stream = await downloadContentFromMessage(msg.message[messageType], messageType.replace('Message', ''));
+        const chunks = [];
+        for await (const chunk of stream) {
+            chunks.push(chunk);
+        }
+        return Buffer.concat(chunks);
+    } catch (error) {
+        console.error('❌ Erreur téléchargement média:', error);
+        return null;
+    }
+}
+
 /* =========================
  *  HANDLER PRINCIPAL
  * ========================= */
@@ -438,11 +358,22 @@ async function startBot(sock, state) {
             const remoteJid = msg.key.remoteJid;
             const isGroup = remoteJid.endsWith('@g.us');
             const pushName = msg.pushName || msg.notifyName || null;
+            const messageType = getMessageType(msg);
+
+            // Vérifier si c'est un message avec média
+            let imageBuffer = null;
+            let imageMimeType = null;
+
+            if (messageType === 'imageMessage') {
+                // Télécharger l'image pour analyse
+                imageBuffer = await downloadMediaContent(msg, 'imageMessage');
+                imageMimeType = msg.message.imageMessage.mimetype;
+                console.log('📸 Image détectée, taille:', imageBuffer?.length || 0, 'bytes');
+            }
 
             // Vérifier si c'est un message avec média mais sans texte
-            if (!text) {
+            if (!text && !imageBuffer) {
                 // Si c'est un message média sans légende, on ne le traite pas
-                const messageType = getMessageType(msg);
                 const isMedia = ['imageMessage', 'videoMessage', 'documentMessage', 'audioMessage'].includes(messageType);
                 if (isMedia) {
                     console.log('📸 Message média sans légende - ignoré');
@@ -465,12 +396,12 @@ async function startBot(sock, state) {
             // Mention du bot (via @numéro ou via liste mentions)
             const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
             const botNumbers = ['244285576339508', '177958127927437']; // Tous les numéros possibles
-const keywords = ['supremia', 'makima'];
+            const keywords = ['supremia', 'makima'];
 
-const isMentioned =
-    mentionedJids.some(jid => botNumbers.some(num => jid.includes(num))) ||
-    (text && botNumbers.some(num => text.includes('@' + num))) ||
-    (text && keywords.some(word => text.toLowerCase().includes(word)));
+            const isMentioned =
+                mentionedJids.some(jid => botNumbers.some(num => jid.includes(num))) ||
+                (text && botNumbers.some(num => text.includes('@' + num))) ||
+                (text && keywords.some(word => text.toLowerCase().includes(word)));
 
             // Commande ?
             const isCommand = text && text.startsWith('/');
@@ -478,10 +409,10 @@ const isMentioned =
             // Décision :
             // - privé => toujours répondre
             // - groupe => répondre si commande, mention, ou reply-to-bot
-            const shouldReply = !isGroup || isCommand || isReplyToBot || isMentioned;
+            const shouldReply = !isGroup || isCommand || isReplyToBot || isMentioned || imageBuffer;
 
             console.log(
-                `📌 Decision: shouldReply=${shouldReply} | isGroup=${isGroup} | isCommand=${isCommand} | isReplyToBot=${isReplyToBot} | isMentioned=${isMentioned}`
+                `📌 Decision: shouldReply=${shouldReply} | isGroup=${isGroup} | isCommand=${isCommand} | isReplyToBot=${isReplyToBot} | isMentioned=${isMentioned} | hasImage=${!!imageBuffer}`
             );
 
             if (!shouldReply) return;
@@ -500,7 +431,7 @@ const isMentioned =
                     }
                 }
 
-                // 2) IA (mention / reply / privé)
+                // 2) IA (mention / reply / privé / image)
                 const senderJid = msg.key.participant || remoteJid;
                 console.log(`🤖 IA: génération de réponse pour ${senderJid} dans ${remoteJid}`);
 
@@ -516,12 +447,14 @@ const isMentioned =
                     remoteJid, 
                     pushName, 
                     isGroup,
-                    quotedMessageInfo
+                    quotedMessageInfo,
+                    imageBuffer, // Nouveau: passer l'image buffer
+                    imageMimeType // Nouveau: passer le type MIME
                 );
 
                 if (replyObj && replyObj.text) {
                     // Détection de visuel
-                    const visuel = /*detecterVisuel(text) ||*/ detecterVisuel(replyObj.text);
+                    const visuel = detecterVisuel(text) || detecterVisuel(replyObj.text);
 
                     if (visuel && visuel.urlImage) {
                         // Envoyer l'image avec la réponse en légende
@@ -546,7 +479,7 @@ const isMentioned =
                 // 3) bonus sticker de temps en temps (seulement 50% de chance)
                 if (!isCommand && Math.random() < 0.5) {
                     const stickerPath = await getRandomSticker();
-                                            if (stickerPath) {
+                    if (stickerPath) {
                         await sock.sendMessage(remoteJid, { sticker: fs.readFileSync(stickerPath) });
 
                         // Supprimer le fichier temporaire
@@ -603,3 +536,12 @@ main().catch(err => {
     console.error('💥 Erreur fatale:', err?.stack || err);
     process.exit(1);
 });
+
+// Export des fonctions pour les commandes
+module.exports = {
+    isUserAdmin,
+    botMessageCache,
+    extractText,
+    getMessageType,
+    downloadMediaContent
+};
