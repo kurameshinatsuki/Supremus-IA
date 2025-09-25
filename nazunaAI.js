@@ -1,15 +1,17 @@
-// nazunaAI.js - Version modifiée avec détection de visuels et fonction reset
+// nazunaAI.js - Version modifiée avec détection de visuels, fonction reset et vision
 
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { User, Group, Conversation, syncDatabase } = require('./models');
-const { detecterVisuel } = require('./visuels'); // Import du module visuels
+const { detecterVisuel } = require('./visuels');
+const { analyzeImage } = require('./commandes/vision'); // Import de la fonction vision
 
 // Initialisation de l'API Google Generative AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+const visionModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Nouveau modèle vision
 
 // Chemins des fichiers de données
 const trainingPath = path.join(__dirname, 'Training IA.json');
@@ -164,9 +166,53 @@ function extractNumberFromJid(jid) {
 }
 
 /**
+ * Analyse une image avec Google Vision
+ */
+async function analyzeImageWithVision(imageBuffer, imageMimeType) {
+    try {
+        if (!imageBuffer || !imageMimeType) {
+            return null;
+        }
+
+        // Convertir l'image en base64 pour l'API Gemini
+        const base64Image = imageBuffer.toString('base64');
+        
+        const prompt = `
+        Analyse cette image de manière détaillée et précise. Décris :
+        
+        1. **ÉLÉMENTS PRINCIPAUX** : Ce qui est visible au premier plan
+        2. **CONTEXTE** : L'arrière-plan et l'environnement
+        3. **COULEURS** : La palette de couleurs dominante
+        4. **AMBiance** : L'atmosphère générale
+        5. **DÉTAILS REMARQUABLES** : Éléments spécifiques intéressants
+        6. **TEXTES VISIBLES** : Tout texte lisible
+        7. **INTENTION/ACTION** : Ce qui semble se passer
+        
+        Sois objectif et factuel dans ton analyse.
+        `;
+
+        const result = await visionModel.generateContent([
+            prompt,
+            {
+                inlineData: {
+                    data: base64Image,
+                    mimeType: imageMimeType
+                }
+            }
+        ]);
+
+        const response = await result.response;
+        return response.text();
+    } catch (error) {
+        console.error('❌ Erreur analyse image avec vision:', error);
+        return null;
+    }
+}
+
+/**
  * Fonction principale de génération de réponse de l'IA Nazuna
  */
-async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup = false, quotedMessage = null) {
+async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup = false, quotedMessage = null, imageBuffer = null, imageMimeType = null) {
     try {
         // Chargement des données
         const training = loadTrainingData();
@@ -187,6 +233,16 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
 
         let conversationContext = "";
         let mentionJids = [];
+        let imageAnalysis = "";
+
+        // Analyser l'image si fournie
+        if (imageBuffer && imageMimeType) {
+            console.log('🔍 Analyse de l\'image en cours...');
+            imageAnalysis = await analyzeImageWithVision(imageBuffer, imageMimeType);
+            if (imageAnalysis) {
+                console.log('✅ Analyse d\'image terminée');
+            }
+        }
 
         // Détection de visuel pour le contexte
         const visuel = detecterVisuel(userText);
@@ -213,7 +269,8 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
                 sender: sender,
                 name: userName,
                 text: userText,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                hasImage: !!imageBuffer
             });
             
             // Limitation à 500 messages maximum
@@ -224,7 +281,8 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
             // Construction du contexte de conversation groupe
             conversationContext = "Conversation de groupe:\n" +
                 groupMemory.lastMessages
-                    .map(m => `${m.name}: ${m.text}`)
+                    .slice(-20) // Limiter aux 20 derniers messages pour le contexte
+                    .map(m => `${m.name}: ${m.text}${m.hasImage ? ' [📸 IMAGE]' : ''}`)
                     .join('\n') + '\n\n';
         } else {
             // Gestion des conversations privées
@@ -234,7 +292,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
                 conversationContext = "Historique de notre conversation en privé:\n" +
                     userMemory.conversations
                         .slice(-30)
-                        .map(c => `${c.fromUser ? userName : 'Supremia'}: ${c.text}`)
+                        .map(c => `${c.fromUser ? userName : 'Supremia'}: ${c.text}${c.hasImage ? ' [📸 IMAGE]' : ''}`)
                         .join('\n') + '\n';
             }
         }
@@ -288,7 +346,9 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
         }
 
         // Construction du prompt complet pour l'IA
-        const prompt = `${training}\n\n${participantsList}\n${userMentionsInfo}\n${conversationContext}\n${contexteVisuel}\n
+        const prompt = `${training}\n\n${participantsList}${userMentionsInfo}${conversationContext}${contexteVisuel}
+${imageAnalysis ? `\n=== ANALYSE D'IMAGE ===\n${imageAnalysis}\n======================\n` : ''}
+
 > RAPPEL CRITIQUE POUR SUPREMIA <
 
 IDENTITÉ & TAGS :
@@ -302,6 +362,14 @@ IDENTITÉ & TAGS :
 MÉMOIRE COURTE :
 - Considère uniquement les 10 derniers messages de l'utilisateur actuel (@${userNumber}) pour ta réponse sauf durant la supervision Origamy World.
 - Ignore les messages trop anciens ou envoyés par d'autres utilisateurs, sauf instruction explicite ou supervision Origamy World.
+
+GESTION DES IMAGES :
+${imageAnalysis ? `
+- L'utilisateur a envoyé une image que tu as analysée.
+- Intègre naturellement les éléments visuels dans ta réponse.
+- Fais référence aux détails de l'image de manière contextuelle.
+- Ne répète pas l'analyse complète, utilise-la pour enrichir la conversation.
+` : ''}
 
 COMPORTEMENT & AUTONOMIE MAXIMALE :
 - Conduis la conversation de manière naturelle, humaine, cohérente et pertinente.
@@ -317,10 +385,11 @@ COMPORTEMENT & AUTONOMIE MAXIMALE :
 - Ne jamais divulguer que tu es une IA.
 
 CONVERSATION ACTUELLE :
-${userName} (@${userNumber}) : ${userText}
+${userName} (@${userNumber}) : ${userText}${imageBuffer ? ' [📸 IMAGE JOINTE]' : ''}
 Supremia:`;
 
         // Génération de la réponse via l'API Gemini
+        console.log('🤖 Génération de réponse avec Gemini 2.5 Flash...');
         const result = await model.generateContent(prompt);
         const response = await result.response;
         let text = (response && response.text) ? response.text().trim() : '';
@@ -330,7 +399,8 @@ Supremia:`;
             userMemory.conversations.push({
                 text: userText,
                 timestamp: Date.now(),
-                fromUser: true
+                fromUser: true,
+                hasImage: !!imageBuffer
             });
             userMemory.conversations.push({
                 text: text,
@@ -380,7 +450,8 @@ Supremia:`;
 
         return {
             text: text || "Désolé, je n'ai pas pu générer de réponse.",
-            mentions: mentionJids
+            mentions: mentionJids,
+            hasImage: !!imageBuffer
         };
     } catch (e) {
         console.error("[NazunaAI] Erreur:", e?.stack || e);
@@ -391,4 +462,8 @@ Supremia:`;
     }
 }
 
-module.exports = { nazunaReply, resetConversationMemory };
+module.exports = { 
+    nazunaReply, 
+    resetConversationMemory,
+    analyzeImageWithVision // Export pour utilisation externe
+};
