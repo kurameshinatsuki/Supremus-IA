@@ -12,7 +12,7 @@ const config = {
   ai: {
     provider: process.env.AI_PROVIDER || 'gemini',
     model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
-    visionModel: process.env.VISION_MODEL || 'gemini-1.5-flash', // Nouveau
+    visionModel: process.env.VISION_MODEL || 'gemini-2.0-flash', // Nouveau
     apiKey: process.env.GEMINI_API_KEY || 'AIzaSyCg82pyVtW2Qap0jma2KEmf6R1RAd5cHaA',
     persona: process.env.PERSONA || 'serious',
     temperature: Number(process.env.AI_TEMPERATURE || 0.4),
