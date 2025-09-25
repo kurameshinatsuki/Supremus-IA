@@ -11,7 +11,7 @@ const { analyzeImage } = require('./commandes/vision'); // Import de la fonction
 // Initialisation de l'API Google Generative AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-const visionModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Nouveau modèle vision
+const visionModel = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }); // Nouveau modèle vision
 
 // Chemins des fichiers de données
 const trainingPath = path.join(__dirname, 'Training IA.json');
