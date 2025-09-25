@@ -12,7 +12,7 @@ const { syncDatabase } = require('./models');
 const { detecterVisuel } = require('./visuels');
 const { loadCommands, getCommand } = require('./commandes'); // Nouveau: import des commandes
 
-const DEBUG = (process.env.DEBUG === 'false') || true;
+const DEBUG = (process.env.DEBUG === 'false') || false;
 let pair = false;
 
 // Initialisation de la base de données
