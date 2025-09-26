@@ -1,5 +1,15 @@
-const { isUserAdmin } = require('../index');
 const { resetConversationMemory } = require('../nazunaAI');
+
+async function isUserAdmin(jid, participant, sock) {
+    try {
+        const metadata = await sock.groupMetadata(jid);
+        const admins = metadata.participants.filter(p => p.admin !== null).map(p => p.id);
+        return admins.includes(participant);
+    } catch (error) {
+        console.error('Erreur vérification admin:', error);
+        return false;
+    }
+}
 
 function isBotOwner(sender) {
     const botOwners = process.env.BOT_OWNER
