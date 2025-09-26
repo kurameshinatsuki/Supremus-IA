@@ -166,6 +166,21 @@ function extractNumberFromJid(jid) {
 }
 
 /**
+ * Récupère le nom du groupe depuis l'objet socket
+ */
+async function getGroupName(sock, remoteJid) {
+    try {
+        if (!remoteJid.endsWith('@g.us')) return null;
+        
+        const metadata = await sock.groupMetadata(remoteJid);
+        return metadata.subject || null;
+    } catch (error) {
+        console.error('❌ Erreur récupération nom du groupe:', error);
+        return null;
+    }
+}
+
+/**
  * Analyse une image avec Google Vision
  */
 async function analyzeImageWithVision(imageBuffer, imageMimeType) {
@@ -212,7 +227,7 @@ async function analyzeImageWithVision(imageBuffer, imageMimeType) {
 /**
  * Fonction principale de génération de réponse de l'IA Nazuna
  */
-async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup = false, quotedMessage = null, imageBuffer = null, imageMimeType = null) {
+async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup = false, quotedMessage = null, imageBuffer = null, imageMimeType = null, sock = null) {
     try {
         // Chargement des données
         const training = loadTrainingData();
@@ -220,6 +235,12 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
         // Charger les mémoires depuis PostgreSQL
         const userMemory = await loadUserMemory(sender);
         const groupMemory = isGroup ? await loadGroupMemory(remoteJid) : null;
+
+        // Récupérer le nom du groupe si c'est une conversation de groupe
+        let groupName = null;
+        if (isGroup && sock) {
+            groupName = await getGroupName(sock, remoteJid);
+        }
 
         // Identification de l'utilisateur
         const userName = pushName || userMemory.name || sender.split('@')[0];
@@ -279,7 +300,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
             }
             
             // Construction du contexte de conversation groupe
-            conversationContext = "Conversation de groupe:\n" +
+            conversationContext = `Conversation dans le groupe "${groupName || 'Sans nom'}":\n` +
                 groupMemory.lastMessages
                     .slice(-20) // Limiter aux 20 derniers messages pour le contexte
                     .map(m => `${m.name}: ${m.text}${m.hasImage ? ' [📸 IMAGE]' : ''}`)
@@ -289,7 +310,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
             userMemory.conversations = userMemory.conversations || [];
             
             if (userMemory.conversations.length > 0) {
-                conversationContext = "Historique de notre conversation en privé:\n" +
+                conversationContext = `Historique de notre conversation privée avec ${userName}:\n` +
                     userMemory.conversations
                         .slice(-30)
                         .map(c => `${c.fromUser ? userName : 'Supremia'}: ${c.text}${c.hasImage ? ' [📸 IMAGE]' : ''}`)
@@ -307,7 +328,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
         // Construction de la liste des participants pour les groupes
         let participantsList = "";
         if (isGroup && groupMemory?.participants) {
-            participantsList = "Participants du groupe (avec leurs numéros):\n";
+            participantsList = `Participants du groupe "${groupName || 'Sans nom'}" (avec leurs numéros):\n`;
             for (const [jid, info] of Object.entries(groupMemory.participants)) {
                 participantsList += `- ${info.name} (@${info.number})\n`;
             }
@@ -352,12 +373,17 @@ ${imageAnalysis ? `\n=== ANALYSE D'IMAGE ===\n${imageAnalysis}\n================
 > RAPPEL CRITIQUE POUR SUPREMIA <
 
 IDENTITÉ & TAGS :
+- Tu te trouves actuellement dans ${isGroup ? `le groupe "${groupName || 'Sans nom'}"` : `une conversation privée avec ${userName}`}.
 - Pour mentionner quelqu'un, utilise toujours SON NUMÉRO avec le format @numéro.
 - L'utilisateur actuel (${userName}) a pour numéro : @${userNumber}.
 - N'utilise JAMAIS le nom pour les mentions.
 - Si on te demande de "tag" ou "mentionner" quelqu'un, utilise toujours son numéro.
 - Tu dois tag uniquement dans les conversations de groupe mais seulement si nécéssaire et non dans l'historique privé.
 - Ne mélange JAMAIS les propos de plusieurs utilisateurs : répond uniquement en fonction de l'interlocuteur actuel (${userNumber}) sur le sujet dont vous discutez sauf lors d'une supervision Origamy World, traité les joueurs de façon collectif si ils sont dans la même zone.
+
+CONTEXTE DE DISCUSSION :
+- Conversation actuelle : ${isGroup ? `Groupe "${groupName || 'Sans nom'}"` : `Privé avec ${userName}`}
+- Utilisateur : ${userName} (@${userNumber})
 
 MÉMOIRE COURTE :
 - Considère uniquement les 10 derniers messages de l'utilisateur actuel (@${userNumber}) pour ta réponse sauf durant la supervision Origamy World.
@@ -451,7 +477,13 @@ Supremia:`;
         return {
             text: text || "Désolé, je n'ai pas pu générer de réponse.",
             mentions: mentionJids,
-            hasImage: !!imageBuffer
+            hasImage: !!imageBuffer,
+            contextInfo: {
+                isGroup,
+                groupName,
+                userName,
+                userNumber
+            }
         };
     } catch (e) {
         console.error("[NazunaAI] Erreur:", e?.stack || e);
@@ -465,5 +497,6 @@ Supremia:`;
 module.exports = { 
     nazunaReply, 
     resetConversationMemory,
-    analyzeImageWithVision // Export pour utilisation externe
+    analyzeImageWithVision,
+    getGroupName
 };
