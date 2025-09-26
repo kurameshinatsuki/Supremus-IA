@@ -191,16 +191,16 @@ async function analyzeImageWithVision(imageBuffer, imageMimeType) {
 
         // Convertir l'image en base64 pour l'API Gemini
         const base64Image = imageBuffer.toString('base64');
-        
+
         const prompt = `
         Analyse cette image de manière détaillée et précise. Décris :
-        
-        1. **ÉLÉMENTS PRINCIPAUX** : Ce qui est visible au premier plan
-        2. **CONTEXTE** : L'arrière-plan et l'environnement
-        3. **COULEURS** : La palette de couleurs dominante
-        4. **AMBiance** : L'atmosphère générale
-        5. **DÉTAILS REMARQUABLES** : Éléments spécifiques intéressants
-        6. **TEXTES VISIBLES** : Tout texte lisible
+       
+        1. **EXTRAIT TEXTES VISIBLES** : Décris absolument tout le texte présent sur l'image (titre, sous-titre, description, etc)
+        2. **ÉLÉMENTS PRINCIPAUX** : Ce qui est visible au premier plan
+        3. **CONTEXTE** : L'arrière-plan et l'environnement
+        4. **COULEURS** : La palette de couleurs dominante
+        5. **AMBIANCE** : L'atmosphère générale
+        6. **DÉTAILS REMARQUABLES** : Éléments spécifiques intéressants
         7. **INTENTION/ACTION** : Ce qui semble se passer
         
         Sois objectif et factuel dans ton analyse.
