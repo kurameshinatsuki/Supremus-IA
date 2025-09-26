@@ -36,7 +36,7 @@ const config = {
 
   logging: {
     level: process.env.LOG_LEVEL || 'debug',
-    pretty: (process.env.LOG_PRETTY || 'true').toLowerCase() === 'true',
+    pretty: (process.env.LOG_PRETTY || 'false').toLowerCase() === 'false',
   },
 };
 
