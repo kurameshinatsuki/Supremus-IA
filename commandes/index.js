@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { isUserAdmin, isBotOwner } = require('./index');
 
 const commands = new Map();
 
@@ -32,6 +33,8 @@ function getAllCommands() {
 }
 
 module.exports = {
+    isUserAdmin,
+    isBotOwner,
     loadCommands,
     getCommand,
     getAllCommands,
