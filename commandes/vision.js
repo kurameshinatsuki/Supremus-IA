@@ -4,17 +4,11 @@ const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const visionModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-aasync function analyzeImageWithVision(imageBuffer, imageMimeType) {
+async function analyzeImage(imageBuffer, imageMimeType) {
     try {
-        if (!imageBuffer || !imageMimeType) {
-            return null;
-        }
-
-        // Convertir l'image en base64 pour l'API Gemini
         const base64Image = imageBuffer.toString('base64');
-
-        const prompt = `
-        Analyse cette image de manière détaillée et précise. Décris :
+        
+        const prompt = `**Analyse cette image de manière détaillée et précise. Décris :**
        
         1. **EXTRAIT TEXTES VISIBLES** : Décris absolument tout le texte présent sur l'image (titre, sous-titre, description, etc)
         2. **ÉLÉMENTS PRINCIPAUX** : Ce qui est visible au premier plan
@@ -24,8 +18,7 @@ aasync function analyzeImageWithVision(imageBuffer, imageMimeType) {
         6. **DÉTAILS REMARQUABLES** : Éléments spécifiques intéressants
         7. **INTENTION/ACTION** : Ce qui semble se passer
         
-        Sois objectif et factuel dans ton analyse.
-        `;
+        Sois objectif et factuel dans ton analyse.`;
 
         const result = await visionModel.generateContent([
             prompt,
@@ -40,8 +33,8 @@ aasync function analyzeImageWithVision(imageBuffer, imageMimeType) {
         const response = await result.response;
         return response.text();
     } catch (error) {
-        console.error('❌ Erreur analyse image avec vision:', error);
-        return null;
+        console.error('❌ Erreur analyse image:', error);
+        return "Je n'ai pas pu analyser cette image.";
     }
 }
 
