@@ -30,6 +30,9 @@ console.log('✅ Commandes chargées');
 const messageLimiter = new Map();
 const lastInteraction = new Map();
 
+// Cache des noms de groupe
+const groupNameCache = new Map();
+
 /**
  * Vérifie si un utilisateur peut envoyer un message (rate limiting)
  */
@@ -43,6 +46,31 @@ function checkRateLimit(jid, cooldown = 2000) {
 
     messageLimiter.set(jid, now);
     return true;
+}
+
+/**
+ * Récupère le nom du groupe avec cache
+ */
+async function getCachedGroupName(sock, remoteJid) {
+    if (!remoteJid.endsWith('@g.us')) return null;
+    
+    if (groupNameCache.has(remoteJid)) {
+        return groupNameCache.get(remoteJid);
+    }
+    
+    try {
+        const metadata = await sock.groupMetadata(remoteJid);
+        const groupName = metadata.subject || null;
+        
+        // Mettre en cache pour 5 minutes
+        groupNameCache.set(remoteJid, groupName);
+        setTimeout(() => groupNameCache.delete(remoteJid), 5 * 60 * 1000);
+        
+        return groupName;
+    } catch (error) {
+        console.error('❌ Erreur récupération nom du groupe:', error);
+        return null;
+    }
 }
 
 /**
@@ -435,6 +463,13 @@ async function startBot(sock, state) {
                 const senderJid = msg.key.participant || remoteJid;
                 console.log(`🤖 IA: génération de réponse pour ${senderJid} dans ${remoteJid}`);
 
+                // Récupérer le nom du groupe pour le log
+                let groupName = null;
+                if (isGroup) {
+                    groupName = await getCachedGroupName(sock, remoteJid);
+                    console.log(`🏷️  Groupe: "${groupName || 'Sans nom'}"`);
+                }
+
                 // Préparer les informations de citation pour l'IA
                 const contextInfo = msg.message?.extendedTextMessage?.contextInfo;
                 const quotedTextForAI = contextInfo?.quotedMessage ? extractTextFromQuoted(contextInfo) : null;
@@ -448,8 +483,9 @@ async function startBot(sock, state) {
                     pushName, 
                     isGroup,
                     quotedMessageInfo,
-                    imageBuffer, // Nouveau: passer l'image buffer
-                    imageMimeType // Nouveau: passer le type MIME
+                    imageBuffer,
+                    imageMimeType,
+                    sock // Nouveau: passer l'objet sock pour récupérer le nom du groupe
                 );
 
                 if (replyObj && replyObj.text) {
@@ -543,5 +579,6 @@ module.exports = {
     botMessageCache,
     extractText,
     getMessageType,
-    downloadMediaContent
+    downloadMediaContent,
+    getCachedGroupName
 };
