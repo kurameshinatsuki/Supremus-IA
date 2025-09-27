@@ -193,18 +193,11 @@ async function analyzeImageWithVision(imageBuffer, imageMimeType) {
         const base64Image = imageBuffer.toString('base64');
 
         const prompt = `
-        Analyse cette image de manière détaillée et précise. Décris :
-       
-        1. **EXTRAIT TEXTES VISIBLES** : Décris absolument tout le texte présent sur l'image (titre, sous-titre, description, etc)
-        2. **ÉLÉMENTS PRINCIPAUX** : Ce qui est visible au premier plan
-        3. **CONTEXTE** : L'arrière-plan et l'environnement
-        4. **COULEURS** : La palette de couleurs dominante
-        5. **AMBIANCE** : L'atmosphère générale
-        6. **DÉTAILS REMARQUABLES** : Éléments spécifiques intéressants
-        7. **INTENTION/ACTION** : Ce qui semble se passer
-        
-        Sois objectif et factuel dans ton analyse.
-        `;
+Analyse cette image de manière factuelle et précise :
+
+1. **TEXTES VISIBLES** : retranscris absolument tout le texte présent (titres, sous-titres, descriptions, etc.)
+2. **CONTENU VISUEL** : décris l’ensemble du reste (éléments, contexte, couleurs, ambiance, détails et actions)
+`;
 
         const result = await visionModel.generateContent([
             prompt,
