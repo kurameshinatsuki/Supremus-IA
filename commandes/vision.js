@@ -12,7 +12,7 @@ async function analyzeImage(imageBuffer, imageMimeType) {
 Analyse cette image de manière factuelle et précise :
 
 1. **TEXTES VISIBLES** : retranscris absolument tout le texte présent (titres, sous-titres, descriptions, etc.)
-2. **CONTENU VISUEL** : décris l’ensemble du reste (éléments, contexte, couleurs, ambiance, détails et actions)
+2. **CONTENU VISUEL** : décris de façon brève et précise l’ensemble du reste (éléments, contexte, couleurs, ambiance, détails et actions)
 `;
 
         const result = await visionModel.generateContent([
