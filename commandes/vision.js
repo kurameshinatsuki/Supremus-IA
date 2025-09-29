@@ -8,11 +8,14 @@ async function analyzeImage(imageBuffer, imageMimeType) {
     try {
         const base64Image = imageBuffer.toString('base64');
         
-        const prompt = `
-Analyse cette image de manière factuelle et précise :
+                const prompt = `
+Analyse l’image et réponds uniquement sous ce format :
 
-1. **TEXTES VISIBLES** : retranscris absolument tout le texte présent (titres, sous-titres, descriptions, etc.)
-2. **CONTENU VISUEL** : décris de façon brève et précise l’ensemble du reste (éléments, contexte, couleurs, ambiance, détails et actions)
+**TEXTES :**
+[retranscris tout le texte visible]
+
+**VISUEL :**
+[description brève et factuelle en quelques mots]
 `;
 
         const result = await visionModel.generateContent([
