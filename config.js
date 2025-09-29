@@ -13,7 +13,7 @@ const config = {
     provider: process.env.AI_PROVIDER || 'gemini',
     model: process.env.GEMINI_MODEL || 'gemini-2.5-pro',
     visionModel: process.env.VISION_MODEL || 'gemini-2.5-flash', // Nouveau
-    apiKey: process.env.GEMINI_API_KEY || 'AIzaSyC_u21HRTqh-Ue6_FhEbHhxwRtCLfQKRAw',
+    apiKey: process.env.GEMINI_API_KEY || 'AIzaSyC6HH9Ghnrpjosgra2ihDaWcVZjREpo2B8',
     persona: process.env.PERSONA || 'serious',
     temperature: Number(process.env.AI_TEMPERATURE || 0.4),
     maxOutputTokens: Number(process.env.AI_MAX_TOKENS || 512),
