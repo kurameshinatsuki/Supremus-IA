@@ -3,16 +3,18 @@ const fs = require('fs');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Modèle le plus récent pour la génération d'images
+// Utilisation du modèle Imagen 4.0
 const imageModel = genAI.getGenerativeModel({ model: "imagen-4.0-generate-001" });
 
 async function generateImage(prompt) {
     try {
         console.log('🎨 Génération image...');
-        const result = await imageModel.generateImage(prompt);
+        const result = await imageModel.generateContent({
+            contents: [{ role: "user", parts: [{ text: prompt }] }]
+        });
 
-        // Récupérer l'image (format base64)
-        const base64Image = result.images[0].imageData;
+        // Récupérer les données de l’image
+        const base64Image = result.response.candidates[0].content.parts[0].inlineData.data;
         const buffer = Buffer.from(base64Image, "base64");
 
         return buffer;
@@ -31,17 +33,15 @@ async function execute(args, msg, sock) {
             return `🎨 *Création IA :*\n\nPour générer une image :\n• ✍️ Tapez "/image [description]"`;
         }
 
-        // Générer l'image
         const imageBuffer = await generateImage(prompt);
 
         if (!imageBuffer) {
             return "❌ Désolé, je n'ai pas pu générer cette image.";
         }
 
-        // Envoyer l'image générée
         await sock.sendMessage(jid, {
             image: imageBuffer,
-            caption: `🖼️ *IMAGE GÉNÉRÉE :*\n\n"${prompt}"`
+            caption: `🖼️ *IMAGE GÉNÉRÉE :*\n"${prompt}"`
         }, { quoted: msg });
 
     } catch (error) {
