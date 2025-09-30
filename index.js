@@ -668,7 +668,7 @@ async function main() {
             browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
             getMessage: async key => {
                 console.log('⚠️ Message non déchiffré, retry demandé:', key);
-                return { conversation: '🔄 Réessaye d\\'envoyer ton message' }; // Correction de l'erreur de syntaxe
+                return { conversation: "🔄 Réessaye d'envoyer ton message" }; // Correction de l'erreur de syntaxe
             }
         });
 
