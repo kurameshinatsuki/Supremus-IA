@@ -1,4 +1,4 @@
-// index.js - Version modifiée avec système de commandes, vision et mémoire des images envoyées
+// index.js - Version corrigée avec commande on/off et sans erreur de syntaxe
 
 require('dotenv').config();
 const fs = require('fs');
@@ -36,6 +36,9 @@ const groupNameCache = new Map();
 // Mémoire des images envoyées par le bot (stocke l'analyse vision)
 const botSentImages = new Map();
 
+// Système d'activation/désactivation de l'IA par discussion
+const aiStatus = new Map(); // true = activé, false = désactivé
+
 /**
  * Vérifie si un utilisateur peut envoyer un message (rate limiting)
  */
@@ -49,6 +52,36 @@ function checkRateLimit(jid, cooldown = 2000) {
 
     messageLimiter.set(jid, now);
     return true;
+}
+
+/**
+ * Vérifie si l'utilisateur est propriétaire du bot
+ */
+function isBotOwner(sender) {
+    const botOwners = process.env.BOT_OWNER
+        ? process.env.BOT_OWNER.split(',').map(o => o.trim())
+        : [];
+
+    return botOwners.some(owner => {
+        const cleanSender = sender.split('@')[0];
+        const cleanOwner = owner.split('@')[0];
+        return cleanSender === cleanOwner;
+    });
+}
+
+/**
+ * Active ou désactive l'IA pour une discussion
+ */
+function setAIStatus(jid, status) {
+    aiStatus.set(jid, status);
+    console.log(`🔧 IA ${status ? 'activée' : 'désactivée'} pour ${jid}`);
+}
+
+/**
+ * Vérifie si l'IA est activée pour une discussion
+ */
+function isAIActive(jid) {
+    return aiStatus.get(jid) !== false; // Par défaut activé
 }
 
 /**
@@ -74,18 +107,6 @@ async function getCachedGroupName(sock, remoteJid) {
         console.error('❌ Erreur récupération nom du groupe:', error);
         return null;
     }
-}
-
-/**
- * Vérifie si l'utilisateur est le propriétaire du bot
- */
-function isOwner(jid) {
-    const ownerJid = process.env.OWNER_JID; // Format: 123456789@s.whatsapp.net
-    if (!ownerJid) {
-        console.error('❌ OWNER_JID non configuré dans .env');
-        return false;
-    }
-    return jid === ownerJid || jid.includes(ownerJid.split('@')[0]);
 }
 
 /**
@@ -450,6 +471,7 @@ async function startBot(sock, state) {
             const isGroup = remoteJid.endsWith('@g.us');
             const pushName = msg.pushName || msg.notifyName || null;
             const messageType = getMessageType(msg);
+            const senderJid = msg.key.participant || remoteJid;
 
             // Vérifier si c'est un message avec média
             let imageBuffer = null;
@@ -497,13 +519,19 @@ async function startBot(sock, state) {
             // Commande ?
             const isCommand = text && text.startsWith('/');
 
+            // Vérifier si l'IA est désactivée pour cette discussion
+            if (!isAIActive(remoteJid) && !isCommand) {
+                console.log('🔕 IA désactivée pour cette discussion - ignoré');
+                return;
+            }
+
             // Décision :
             // - privé => toujours répondre
             // - groupe => répondre si commande, mention, ou reply-to-bot
             const shouldReply = !isGroup || isCommand || isReplyToBot || isMentioned || imageBuffer;
 
             console.log(
-                `📌 Decision: shouldReply=${shouldReply} | isGroup=${isGroup} | isCommand=${isCommand} | isReplyToBot=${isReplyToBot} | isMentioned=${isMentioned} | hasImage=${!!imageBuffer}`
+                `📌 Decision: shouldReply=${shouldReply} | isGroup=${isGroup} | isCommand=${isCommand} | isReplyToBot=${isReplyToBot} | isMentioned=${isMentioned} | hasImage=${!!imageBuffer} | AIActive=${isAIActive(remoteJid)}`
             );
 
             if (!shouldReply) return;
@@ -514,7 +542,23 @@ async function startBot(sock, state) {
                 // 1) commandes
                 if (isCommand) {
                     const [command, ...args] = text.slice(1).trim().split(/\s+/);
-                    reply = await handleCommand(command, args, msg, sock);
+                    
+                    // Commande réservée au propriétaire : /ai on/off
+                    if (command === 'ai' && isBotOwner(senderJid)) {
+                        const action = args[0]?.toLowerCase();
+                        if (action === 'on') {
+                            setAIStatus(remoteJid, true);
+                            reply = '✅ IA activée pour cette discussion';
+                        } else if (action === 'off') {
+                            setAIStatus(remoteJid, false);
+                            reply = '🔕 IA désactivée pour cette discussion';
+                        } else {
+                            reply = '❌ Usage: /ai on ou /ai off';
+                        }
+                    } else {
+                        reply = await handleCommand(command, args, msg, sock);
+                    }
+                    
                     if (reply) {
                         await sendReplyWithTyping(sock, msg, { text: reply });
                         cacheBotReply(remoteJid, reply);
@@ -523,7 +567,6 @@ async function startBot(sock, state) {
                 }
 
                 // 2) IA (mention / reply / privé / image)
-                const senderJid = msg.key.participant || remoteJid;
                 console.log(`🤖 IA: génération de réponse pour ${senderJid} dans ${remoteJid}`);
 
                 // Récupérer l'analyse de la dernière image envoyée par le bot (si existe)
@@ -554,8 +597,8 @@ async function startBot(sock, state) {
                     quotedMessageInfo,
                     imageBuffer,
                     imageMimeType,
-                    sock, // Nouveau: passer l'objet sock pour récupérer le nom du groupe
-                    lastBotImageAnalysis // Nouveau: passer l'analyse de l'image précédente
+                    sock,
+                    lastBotImageAnalysis
                 );
 
                 if (replyObj && replyObj.text) {
@@ -621,17 +664,16 @@ async function main() {
         const { state, saveCreds } = await useMultiFileAuthState('./auth');
         const sock = makeWASocket({
             auth: state,
-            printQRInTerminal: true, // Utiliser QR code au lieu du pairing code
+            printQRInTerminal: true,
             browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
             getMessage: async key => {
                 console.log('⚠️ Message non déchiffré, retry demandé:', key);
-                return { conversation: '🔄 Réessaye d'envoyer ton message' };
+                return { conversation: '🔄 Réessaye d\\'envoyer ton message' }; // Correction de l'erreur de syntaxe
             }
         });
 
         sock.ev.on('creds.update', saveCreds);
 
-        // Désactiver le pairing code automatisé pour plus de sécurité
         console.log('📱 Scannez le QR code affiché pour connecter votre compte');
 
         await startBot(sock, state);
@@ -649,12 +691,14 @@ main().catch(err => {
 // Export des fonctions pour les commandes
 module.exports = {
     isUserAdmin,
-    isOwner,
+    isBotOwner,
     botMessageCache,
     extractText,
     getMessageType,
     downloadMediaContent,
     getCachedGroupName,
     analyzeAndStoreBotImage,
-    getLastBotImageAnalysis
+    getLastBotImageAnalysis,
+    setAIStatus,
+    isAIActive
 };
