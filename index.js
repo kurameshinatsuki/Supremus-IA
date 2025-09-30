@@ -1,4 +1,4 @@
-// index.js - Version modifiée avec système de commandes et vision
+// index.js - Version modifiée avec système de commandes, vision et mémoire des images envoyées
 
 require('dotenv').config();
 const fs = require('fs');
@@ -6,11 +6,11 @@ const path = require('path');
 const readline = require('readline');
 const sharp = require('sharp');
 const { default: makeWASocket, useMultiFileAuthState, delay, downloadContentFromMessage } = require('@whiskeysockets/baileys');
-const { nazunaReply, resetConversationMemory } = require('./nazunaAI');
+const { nazunaReply, resetConversationMemory, analyzeImageWithVision } = require('./nazunaAI');
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 const { syncDatabase } = require('./models');
 const { detecterVisuel } = require('./visuels');
-const { loadCommands, getCommand } = require('./commandes'); // Nouveau: import des commandes
+const { loadCommands, getCommand } = require('./commandes');
 
 const DEBUG = (process.env.DEBUG === 'false') || false;
 let pair = false;
@@ -32,6 +32,9 @@ const lastInteraction = new Map();
 
 // Cache des noms de groupe
 const groupNameCache = new Map();
+
+// Mémoire des images envoyées par le bot (stocke l'analyse vision)
+const botSentImages = new Map();
 
 /**
  * Vérifie si un utilisateur peut envoyer un message (rate limiting)
@@ -71,6 +74,66 @@ async function getCachedGroupName(sock, remoteJid) {
         console.error('❌ Erreur récupération nom du groupe:', error);
         return null;
     }
+}
+
+/**
+ * Vérifie si l'utilisateur est le propriétaire du bot
+ */
+function isOwner(jid) {
+    const ownerJid = process.env.OWNER_JID; // Format: 123456789@s.whatsapp.net
+    if (!ownerJid) {
+        console.error('❌ OWNER_JID non configuré dans .env');
+        return false;
+    }
+    return jid === ownerJid || jid.includes(ownerJid.split('@')[0]);
+}
+
+/**
+ * Analyse et stocke une image envoyée par le bot
+ */
+async function analyzeAndStoreBotImage(imageUrl, remoteJid) {
+    try {
+        console.log('🔍 Analyse de l\'image envoyée par le bot...');
+        
+        // Télécharger l'image depuis l'URL
+        const response = await fetch(imageUrl);
+        const imageBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(imageBuffer);
+        
+        // Analyser avec vision
+        const analysis = await analyzeImageWithVision(buffer, 'image/jpeg');
+        
+        if (analysis) {
+            // Stocker l'analyse pour ce chat
+            botSentImages.set(remoteJid, {
+                analysis: analysis,
+                timestamp: Date.now()
+            });
+            
+            // Nettoyer après 10 minutes
+            setTimeout(() => {
+                botSentImages.delete(remoteJid);
+            }, 10 * 60 * 1000);
+            
+            console.log('✅ Analyse vision stockée pour le prochain message');
+            return analysis;
+        }
+    } catch (error) {
+        console.error('❌ Erreur analyse image bot:', error);
+    }
+    return null;
+}
+
+/**
+ * Récupère l'analyse de la dernière image envoyée par le bot
+ */
+function getLastBotImageAnalysis(remoteJid) {
+    const data = botSentImages.get(remoteJid);
+    if (data && (Date.now() - data.timestamp < 10 * 60 * 1000)) { // 10 minutes
+        return data.analysis;
+    }
+    botSentImages.delete(remoteJid);
+    return null;
 }
 
 /**
@@ -463,6 +526,12 @@ async function startBot(sock, state) {
                 const senderJid = msg.key.participant || remoteJid;
                 console.log(`🤖 IA: génération de réponse pour ${senderJid} dans ${remoteJid}`);
 
+                // Récupérer l'analyse de la dernière image envoyée par le bot (si existe)
+                const lastBotImageAnalysis = getLastBotImageAnalysis(remoteJid);
+                if (lastBotImageAnalysis) {
+                    console.log('🖼️  Analyse vision précédente disponible pour référence');
+                }
+
                 // Récupérer le nom du groupe pour le log
                 let groupName = null;
                 if (isGroup) {
@@ -485,7 +554,8 @@ async function startBot(sock, state) {
                     quotedMessageInfo,
                     imageBuffer,
                     imageMimeType,
-                    sock // Nouveau: passer l'objet sock pour récupérer le nom du groupe
+                    sock, // Nouveau: passer l'objet sock pour récupérer le nom du groupe
+                    lastBotImageAnalysis // Nouveau: passer l'analyse de l'image précédente
                 );
 
                 if (replyObj && replyObj.text) {
@@ -500,6 +570,9 @@ async function startBot(sock, state) {
                             mentions: replyObj.mentions || []
                         }, { quoted: msg });
 
+                        // Analyser et stocker l'image envoyée pour le prochain message
+                        await analyzeAndStoreBotImage(visuel.urlImage, remoteJid);
+                        
                         cacheBotReply(remoteJid, replyObj.text);
                     } else {
                         // Envoi normal si pas de visuel détecté
@@ -552,7 +625,7 @@ async function main() {
             browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
             getMessage: async key => {
                 console.log('⚠️ Message non déchiffré, retry demandé:', key);
-                return { conversation: '🔄 Réessaye d\'envoyer ton message' };
+                return { conversation: '🔄 Réessaye d'envoyer ton message' };
             }
         });
 
@@ -576,9 +649,12 @@ main().catch(err => {
 // Export des fonctions pour les commandes
 module.exports = {
     isUserAdmin,
+    isOwner,
     botMessageCache,
     extractText,
     getMessageType,
     downloadMediaContent,
-    getCachedGroupName
+    getCachedGroupName,
+    analyzeAndStoreBotImage,
+    getLastBotImageAnalysis
 };
