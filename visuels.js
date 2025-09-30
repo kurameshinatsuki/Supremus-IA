@@ -1,9 +1,7 @@
 // visuels.js - Gestion des visuels avec détection de mots-clés avancés
 
 const visuels = {
-
-  'origamy world' : 'https://i.ibb.co/cKGZRtXX/20250911-193010.jpg',
-
+  
   // Zone Sud
   'porte principale exterieur jour': 'https://i.ibb.co/tPbXH82x/Image-2025-09-11-15-24-21-0.jpg',
   'porte principale exterieur nuit': 'https://i.ibb.co/JwkzW3LY/Image-2025-09-11-15-24-21-1.jpg',
@@ -127,6 +125,9 @@ const visuels = {
   'hall des gardiens interieur nuit': 'https://i.ibb.co/5hTTGqhC/Image-2025-09-11-15-24-22-124.jpg',
   'hall des gardiens exterieur jour': 'https://i.ibb.co/SDn9c2fj/Image-2025-09-11-15-24-22-121.jpg',
   'hall des gardiens exterieur nuit': 'https://i.ibb.co/7FyTcK3/Image-2025-09-11-15-24-22-122.jpg',
+
+  // origamy world
+  'origamy world' : 'https://i.ibb.co/cKGZRtXX/20250911-193010.jpg',
 };
 
 /**
