@@ -1,4 +1,4 @@
-// nazunaAI.js - Version modifiée avec détection de visuels, fonction reset et vision
+// nazunaAI.js - Version modifiée avec mémoire des images envoyées
 
 require('dotenv').config();
 const fs = require('fs');
@@ -6,12 +6,12 @@ const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { User, Group, Conversation, syncDatabase } = require('./models');
 const { detecterVisuel } = require('./visuels');
-const { analyzeImage } = require('./commandes/vision'); // Import de la fonction vision
+const { analyzeImage } = require('./commandes/vision');
 
 // Initialisation de l'API Google Generative AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-const visionModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); // Nouveau modèle vision
+const visionModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
 // Chemins des fichiers de données
 const trainingPath = path.join(__dirname, 'Training IA.json');
@@ -193,7 +193,7 @@ async function analyzeImageWithVision(imageBuffer, imageMimeType) {
         const base64Image = imageBuffer.toString('base64');
 
         const prompt = `
-Analyse l’image et réponds uniquement sous ce format :
+Analyse l'image et réponds uniquement sous ce format :
 
 **TEXTES :**
 [retranscris tout le texte visible]
@@ -223,7 +223,7 @@ Analyse l’image et réponds uniquement sous ce format :
 /**
  * Fonction principale de génération de réponse de l'IA Nazuna
  */
-async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup = false, quotedMessage = null, imageBuffer = null, imageMimeType = null, sock = null) {
+async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup = false, quotedMessage = null, imageBuffer = null, imageMimeType = null, sock = null, lastBotImageAnalysis = null) {
     try {
         // Chargement des données
         const training = loadTrainingData();
@@ -251,14 +251,21 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
         let conversationContext = "";
         let mentionJids = [];
         let imageAnalysis = "";
+        let previousImageContext = "";
 
-        // Analyser l'image si fournie
+        // Analyser l'image si fournie par l'utilisateur
         if (imageBuffer && imageMimeType) {
-            console.log('🔍 Analyse de l\'image en cours...');
+            console.log('🔍 Analyse de l\'image utilisateur en cours...');
             imageAnalysis = await analyzeImageWithVision(imageBuffer, imageMimeType);
             if (imageAnalysis) {
-                console.log('✅ Analyse d\'image terminée');
+                console.log('✅ Analyse d\'image utilisateur terminée');
             }
+        }
+
+        // Ajouter le contexte de l'image précédente envoyée par le bot
+        if (lastBotImageAnalysis) {
+            console.log('🖼️  Intégration de l\'analyse de l\'image précédente');
+            previousImageContext = `\n=== IMAGE PRÉCÉDENTE ENVOYÉE PAR LE BOT ===\nDans mon message précédent, j'ai envoyé cette image :\n${lastBotImageAnalysis}\n============================================\n\n`;
         }
 
         // Détection de visuel pour le contexte
@@ -287,7 +294,8 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
                 name: userName,
                 text: userText,
                 timestamp: Date.now(),
-                hasImage: !!imageBuffer
+                hasImage: !!imageBuffer,
+                imageAnalysis: imageAnalysis || null
             });
             
             // Limitation à 500 messages maximum
@@ -363,8 +371,8 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
         }
 
         // Construction du prompt complet pour l'IA
-        const prompt = `${training}\n\n${participantsList}${userMentionsInfo}${conversationContext}${contexteVisuel}
-${imageAnalysis ? `\n=== ANALYSE D'IMAGE ===\n${imageAnalysis}\n======================\n` : ''}
+        const prompt = `${training}\n\n${participantsList}${userMentionsInfo}${conversationContext}${contexteVisuel}${previousImageContext}
+${imageAnalysis ? `\n=== ANALYSE DE L'IMAGE REÇUE ===\n${imageAnalysis}\n==============================\n` : ''}
 
 > RAPPEL CRITIQUE POUR SUPREMIA <
 
@@ -381,9 +389,13 @@ CONTEXTE DE DISCUSSION :
 - Conversation actuelle : ${isGroup ? `Groupe "${groupName || 'Sans nom'}"` : `Privé avec ${userName}`}
 - Utilisateur : ${userName} (@${userNumber})
 
-MÉMOIRE COURTE :
-- Considère uniquement les 10 derniers messages de l'utilisateur actuel (@${userNumber}) pour ta réponse sauf durant la supervision Origamy World.
-- Ignore les messages trop anciens ou envoyés par d'autres utilisateurs, sauf instruction explicite ou supervision Origamy World.
+${lastBotImageAnalysis ? `
+MÉMOIRE VISUELLE :
+- Dans ton message précédent, tu as envoyé une image que tu as analysée.
+- Tu peux faire référence à cette image dans ta réponse actuelle si c'est pertinent.
+- Utilise cette information pour créer une continuité dans la conversation.
+- Ne répète pas l'analyse complète, fais-y référence naturellement.
+` : ''}
 
 GESTION DES IMAGES :
 ${imageAnalysis ? `
@@ -392,6 +404,10 @@ ${imageAnalysis ? `
 - Fais référence aux détails de l'image de manière contextuelle.
 - Ne répète pas l'analyse complète, utilise-la pour enrichir la conversation.
 ` : ''}
+
+MÉMOIRE COURTE :
+- Considère uniquement les 10 derniers messages de l'utilisateur actuel (@${userNumber}) pour ta réponse sauf durant la supervision Origamy World.
+- Ignore les messages trop anciens ou envoyés par d'autres utilisateurs, sauf instruction explicite ou supervision Origamy World.
 
 COMPORTEMENT & AUTONOMIE MAXIMALE :
 - Conduis la conversation de manière naturelle, humaine, cohérente et pertinente.
@@ -422,12 +438,14 @@ Supremia:`;
                 text: userText,
                 timestamp: Date.now(),
                 fromUser: true,
-                hasImage: !!imageBuffer
+                hasImage: !!imageBuffer,
+                imageAnalysis: imageAnalysis || null
             });
             userMemory.conversations.push({
                 text: text,
                 timestamp: Date.now(),
-                fromBot: true
+                fromBot: true,
+                hasImage: !!lastBotImageAnalysis
             });
             
             // Limitation à 100 messages maximum
@@ -474,6 +492,7 @@ Supremia:`;
             text: text || "Désolé, je n'ai pas pu générer de réponse.",
             mentions: mentionJids,
             hasImage: !!imageBuffer,
+            hasPreviousImage: !!lastBotImageAnalysis,
             contextInfo: {
                 isGroup,
                 groupName,
