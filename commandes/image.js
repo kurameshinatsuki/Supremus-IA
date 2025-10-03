@@ -30,7 +30,7 @@ async function execute(args, msg, sock) {
         const prompt = args.join(" ");
 
         if (!prompt) {
-            return `🎨 *Création IA :*\n\nPour générer une image :\n• ✍️ Tapez "/image [description]"`;
+            return `🎨 *Création IA :*\n\nPour générer une image :\n• ✍️ Tapez "/imagine [description]"`;
         }
 
         const imageBuffer = await generateImage(prompt);
@@ -51,7 +51,7 @@ async function execute(args, msg, sock) {
 }
 
 module.exports = {
-    name: 'image',
+    name: 'imagine',
     description: 'Génère une image avec Makima Supremus',
     execute
 };
