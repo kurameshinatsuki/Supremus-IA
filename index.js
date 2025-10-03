@@ -1,4 +1,4 @@
-// index.js - Version corrigée avec commande on/off et sans erreur de syntaxe
+// index.js - Version avec système anti-doublon
 
 require('dotenv').config();
 const fs = require('fs');
@@ -14,6 +14,66 @@ const { loadCommands, getCommand } = require('./commandes');
 
 const DEBUG = (process.env.DEBUG === 'false') || false;
 let pair = false;
+
+// =========================
+// SYSTÈME ANTI-DOUBLONS
+// =========================
+const processedEvents = new Map();
+const EVENT_TIMEOUT = 30000; // 30 secondes
+const MAX_CACHE_SIZE = 2000;
+
+/**
+ * Vérifie si un événement est un doublon avec journalisation
+ */
+function isDuplicateEvent(msg) {
+    if (!msg.key || !msg.key.id) return false;
+    
+    const eventId = msg.key.id;
+    const now = Date.now();
+    
+    // Vérifier si l'événement existe déjà
+    if (processedEvents.has(eventId)) {
+        const originalTime = processedEvents.get(eventId);
+        const age = now - originalTime;
+        console.log(`🚫 Événement dupliqué détecté: ${eventId} (âge: ${age}ms)`);
+        return true;
+    }
+    
+    // Ajouter le nouvel événement
+    processedEvents.set(eventId, now);
+    
+    // Nettoyage automatique si le cache devient trop grand
+    if (processedEvents.size > MAX_CACHE_SIZE) {
+        console.log(`🧹 Nettoyage cache événements (${processedEvents.size} entrées)`);
+        // Garder seulement les 1000 entrées les plus récentes
+        const entries = Array.from(processedEvents.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 1000);
+        processedEvents.clear();
+        entries.forEach(([id, timestamp]) => processedEvents.set(id, timestamp));
+    }
+    
+    return false;
+}
+
+/**
+ * Nettoyage périodique des anciens événements
+ */
+setInterval(() => {
+    const now = Date.now();
+    let cleanedCount = 0;
+    
+    for (const [eventId, timestamp] of processedEvents.entries()) {
+        if (now - timestamp > EVENT_TIMEOUT) {
+            processedEvents.delete(eventId);
+            cleanedCount++;
+        }
+    }
+    
+    if (cleanedCount > 0) {
+        console.log(`🧹 Nettoyage auto: ${cleanedCount} anciens événements supprimés`);
+    }
+}, 30000); // Nettoyer toutes les 30 secondes
 
 // Initialisation de la base de données
 syncDatabase().then(() => {
@@ -457,6 +517,13 @@ async function startBot(sock, state) {
         try {
             const msg = messages && messages[0];
             if (!msg || !msg.message) return;
+            
+            // ⭐⭐ VÉRIFICATION ANTI-DOUBLON ⭐⭐
+            if (isDuplicateEvent(msg)) {
+                console.log('🚫 Événement dupliqué ignoré:', msg.key.id);
+                return;
+            }
+            
             prettyLog(msg);
 
             // Si c'est le bot qui parle → on met en cache et on sort
@@ -668,7 +735,7 @@ async function main() {
             browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
             getMessage: async key => {
                 console.log('⚠️ Message non déchiffré, retry demandé:', key);
-                return { conversation: "🔄 Réessaye d'envoyer ton message" }; // Correction de l'erreur de syntaxe
+                return { conversation: "🔄 Réessaye d'envoyer ton message" };
             }
         });
 
