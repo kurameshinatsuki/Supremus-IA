@@ -4,7 +4,7 @@ const fs = require('fs');
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Utilisation du modèle Imagen 4.0
-const imageModel = genAI.getGenerativeModel({ model: "imagen-4.0-generate-001" });
+const imageModel = genAI.getGenerativeModel({ model: "imagen-3.0-generate-002" });
 
 async function generateImage(prompt) {
     try {
