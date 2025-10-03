@@ -1,22 +1,29 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const fs = require('fs');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-// Utilisation du modèle Imagen 4.0
-const imageModel = genAI.getGenerativeModel({ model: "imagen-3.0-generate-002" });
 
 async function generateImage(prompt) {
     try {
         console.log('🎨 Génération image...');
-        const result = await imageModel.generateContent({
-            contents: [{ role: "user", parts: [{ text: prompt }] }]
+        
+        // Utilisation du bon modèle et de la bonne méthode
+        const model = genAI.getGenerativeModel({ 
+            model: "imagen-3.0-generate-002" // ou "imagen-002" selon ta région
         });
 
-        // Récupérer les données de l’image
-        const base64Image = result.response.candidates[0].content.parts[0].inlineData.data;
-        const buffer = Buffer.from(base64Image, "base64");
+        const result = await model.generateImages({
+            prompt: prompt,
+            numberOfImages: 1, // Tu peux augmenter si besoin
+            // Tu peux ajouter d'autres paramètres comme la taille
+            // dimensions: { height: 1024, width: 1024 }
+        });
 
+        // Récupération de l'image
+        const image = result.images[0];
+        
+        // Convertir en buffer pour WhatsApp
+        const buffer = Buffer.from(await image.arrayBuffer());
+        
         return buffer;
     } catch (error) {
         console.error('❌ Erreur génération image:', error);
