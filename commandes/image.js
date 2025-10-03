@@ -8,7 +8,7 @@ async function generateImage(prompt) {
         
         // Utilisation du bon modèle et de la bonne méthode
         const model = genAI.getGenerativeModel({ 
-            model: "imagen-3.0-generate-002" // ou "imagen-002" selon ta région
+            model: "gemini-flash-latest" 
         });
 
         const result = await model.generateImages({
