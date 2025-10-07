@@ -724,36 +724,57 @@ async function startBot(sock, state) {
  * ========================= */
 async function main() {
     try {
-        // Attendre que la base de données soit initialisée
         await syncDatabase();
         console.log('✅ Base de données PostgreSQL prête');
 
         const { state, saveCreds } = await useMultiFileAuthState('./auth');
+        
         const sock = makeWASocket({
             auth: state,
             printQRInTerminal: true,
             browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
-            getMessage: async key => {
-                console.log('⚠️ Message non déchiffré, retry demandé:', key);
-                return { conversation: "🔄 Réessaye d'envoyer ton message" };
+            markOnlineOnConnect: true,
+            generateHighQualityLinkPreview: true,
+            emitOwnEvents: true,
+            retryRequestDelayMs: 2000,
+            maxRetries: 3,
+            connectTimeoutMs: 30000,
+            keepAliveIntervalMs: 15000, // 🔥 IMPORTANT
+            logger: DEBUG ? P.defaultLogger : P.consoleLogger,
+            version: [2, 2413, 1] // Version spécifique
+        });
+
+        // Meilleure gestion des connexions
+        sock.ev.on('connection.update', (update) => {
+            const { connection, lastDisconnect, qr } = update;
+            
+            console.log('🔌 Statut:', connection);
+            
+            if (connection === 'open') {
+                console.log('✅ Connecté avec succès');
+            } else if (connection === 'close') {
+                const statusCode = lastDisconnect?.error?.output?.statusCode;
+                console.log('❌ Déconnecté, code:', statusCode);
+                
+                // Reconnexion selon le code d'erreur
+                if (statusCode !== 401) { // 401 = besoin de nouveau QR
+                    setTimeout(main, 5000);
+                }
+            }
+            
+            if (qr) {
+                console.log('📱 QR Code reçu - Scannez rapidement');
             }
         });
 
         sock.ev.on('creds.update', saveCreds);
-
-        console.log('📱 Scannez le QR code affiché pour connecter votre compte');
-
         await startBot(sock, state);
+        
     } catch (error) {
-        console.error('💥 Erreur fatale lors du démarrage:', error);
-        process.exit(1);
+        console.error('💥 Erreur démarrage:', error);
+        setTimeout(main, 10000); // Reconnexion automatique
     }
 }
-
-main().catch(err => {
-    console.error('💥 Erreur fatale:', err?.stack || err);
-    process.exit(1);
-});
 
 // Export des fonctions pour les commandes
 module.exports = {
