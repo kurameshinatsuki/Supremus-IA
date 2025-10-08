@@ -518,7 +518,7 @@ async function startBot(sock, state) {
             const msg = messages && messages[0];
             if (!msg || !msg.message) return;
             
-            // ⭐⭐ VÉRIFICATION ANTI-DOUBLON ⭐⭐
+            // VÉRIFICATION ANTI-DOUBLON
             if (isDuplicateEvent(msg)) {
                 console.log('🚫 Événement dupliqué ignoré:', msg.key.id);
                 return;
@@ -724,57 +724,47 @@ async function startBot(sock, state) {
  * ========================= */
 async function main() {
     try {
+        // Attendre que la base de données soit initialisée
         await syncDatabase();
         console.log('✅ Base de données PostgreSQL prête');
 
         const { state, saveCreds } = await useMultiFileAuthState('./auth');
-        
         const sock = makeWASocket({
             auth: state,
-            printQRInTerminal: true,
+            printQRInTerminal: true, // Utiliser QR code au lieu du pairing code
             browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
-            markOnlineOnConnect: true,
-            generateHighQualityLinkPreview: true,
-            emitOwnEvents: true,
-            retryRequestDelayMs: 2000,
-            maxRetries: 3,
-            connectTimeoutMs: 30000,
-            keepAliveIntervalMs: 15000, // 🔥 IMPORTANT
-            logger: DEBUG ? P.defaultLogger : P.consoleLogger,
-            version: [2, 2413, 1] // Version spécifique
-        });
-
-        // Meilleure gestion des connexions
-        sock.ev.on('connection.update', (update) => {
-            const { connection, lastDisconnect, qr } = update;
-            
-            console.log('🔌 Statut:', connection);
-            
-            if (connection === 'open') {
-                console.log('✅ Connecté avec succès');
-            } else if (connection === 'close') {
-                const statusCode = lastDisconnect?.error?.output?.statusCode;
-                console.log('❌ Déconnecté, code:', statusCode);
-                
-                // Reconnexion selon le code d'erreur
-                if (statusCode !== 401) { // 401 = besoin de nouveau QR
-                    setTimeout(main, 5000);
-                }
-            }
-            
-            if (qr) {
-                console.log('📱 QR Code reçu - Scannez rapidement');
+            getMessage: async key => {
+                console.log('⚠️ Message non déchiffré, retry demandé:', key);
+                return { conversation: '🔄 Réessaye d\'envoyer ton message' };
             }
         });
 
         sock.ev.on('creds.update', saveCreds);
+
+        // Désactiver le pairing code automatisé pour plus de sécurité
+        console.log('📱 Scannez le QR code affiché pour connecter votre compte');
+
         await startBot(sock, state);
         
+        // Gestion de la déconnexion avec reconnexion automatique
+        sock.ev.on('connection.update', (update) => {
+            const { connection, lastDisconnect } = update;
+            if (connection === 'close') {
+                console.log('🔌 Connexion fermée, reconnexion dans 10 secondes...');
+                setTimeout(main, 10000); // Reconnexion automatique
+            }
+        });
+        
     } catch (error) {
-        console.error('💥 Erreur démarrage:', error);
-        setTimeout(main, 10000); // Reconnexion automatique
+        console.error('💥 Erreur fatale lors du démarrage:', error);
+        setTimeout(main, 10000); // Reconnexion en cas d'erreur
     }
 }
+
+main().catch(err => {
+    console.error('💥 Erreur fatale:', err?.stack || err);
+    setTimeout(main, 10000); // Reconnexion en cas d'erreur
+});
 
 // Export des fonctions pour les commandes
 module.exports = {
