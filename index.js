@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const sharp = require('sharp');
-const { default: makeWASocket, useMultiFileAuthState, delay, downloadContentFromMessage } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useMultiFileAuthState, delay, downloadContentFromMessage, DisconnectReason } = require('@whiskeysockets/baileys');
 const { nazunaReply, resetConversationMemory, analyzeImageWithVision } = require('./nazunaAI');
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 const { syncDatabase } = require('./models');
@@ -739,24 +739,30 @@ async function main() {
             }
         });
 
-        sock.ev.on('connection.update', (update) => {
-    const { connection, lastDisconnect } = update;
-
+ // Gestion de la déconnexion avec reconnexion automatique  
+sock.ev.on('connection.update', (update) => {  
+    const { connection, lastDisconnect } = update;  
+    
     if (connection === 'close') {
+        // Vérifier si c'est une déconnexion intentionnelle ou une erreur
         const shouldReconnect = 
-            lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-
-        console.log('🔌 Connexion fermée, tentative de reconnexion dans 10 secondes...');
-
-        try {
-            // Fermer proprement la socket
-            sock.end(new Error('Redémarrage de la session'));
-        } catch (err) {
-            console.error('⚠️ Erreur lors de la fermeture de la socket:', err);
+            lastDisconnect?.error?.output?.statusCode !== 
+            DisconnectReason.loggedOut;
+        
+        console.log('🔌 Connexion fermée:', {
+            statusCode: lastDisconnect?.error?.output?.statusCode,
+            error: lastDisconnect?.error
+        });
+        
+        if (shouldReconnect) {
+            console.log('🔄 Reconnexion dans 10 secondes...');  
+            setTimeout(main, 10000); // Reconnexion automatique  
+        } else {
+            console.log('❌ Déconnexion définitive (logged out), pas de reconnexion automatique');
+            // Ici vous pourriez supprimer les fichiers d'auth ou prendre d'autres actions
         }
-
-        // Attendre un peu avant de relancer la fonction principale
-        if (shouldReconnect) setTimeout(main, 10000);
+    } else if (connection === 'open') {
+        console.log('✅ Connexion établie avec succès');
     }
 });
 
