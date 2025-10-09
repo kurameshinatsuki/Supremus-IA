@@ -731,7 +731,7 @@ async function main() {
         const { state, saveCreds } = await useMultiFileAuthState('./auth');
         const sock = makeWASocket({
             auth: state,
-            printQRInTerminal: true, // Utiliser QR code au lieu du pairing code
+            printQRInTerminal: true,
             browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
             getMessage: async key => {
                 console.log('⚠️ Message non déchiffré, retry demandé:', key);
@@ -739,34 +739,51 @@ async function main() {
             }
         });
 
- // Gestion de la déconnexion avec reconnexion automatique  
-sock.ev.on('connection.update', (update) => {  
-    const { connection, lastDisconnect } = update;  
-    
-    if (connection === 'close') {
-        // Vérifier si c'est une déconnexion intentionnelle ou une erreur
-        const shouldReconnect = 
-            lastDisconnect?.error?.output?.statusCode !== 
-            DisconnectReason.loggedOut;
-        
-        console.log('🔌 Connexion fermée:', {
-            statusCode: lastDisconnect?.error?.output?.statusCode,
-            error: lastDisconnect?.error
+        // Événement pour sauvegarder les credentials
+        sock.ev.on('creds.update', saveCreds);
+
+        // Démarrer le bot
+        await startBot(sock, state);
+
+        // Gestion de la déconnexion avec reconnexion automatique  
+        sock.ev.on('connection.update', (update) => {  
+            const { connection, lastDisconnect } = update;  
+
+            if (connection === 'close') {
+                // Vérifier si c'est une déconnexion intentionnelle ou une erreur
+                const shouldReconnect = 
+                    lastDisconnect?.error?.output?.statusCode !== 
+                    DisconnectReason.loggedOut;
+
+                console.log('🔌 Connexion fermée:', {
+                    statusCode: lastDisconnect?.error?.output?.statusCode,
+                    error: lastDisconnect?.error
+                });
+
+                if (shouldReconnect) {
+                    console.log('🔄 Reconnexion dans 10 secondes...');  
+                    setTimeout(main, 10000);
+                } else {
+                    console.log('❌ Déconnexion définitive (logged out), pas de reconnexion automatique');
+                }
+            } else if (connection === 'open') {
+                console.log('✅ Connexion établie avec succès');
+            }
         });
-        
-        if (shouldReconnect) {
-            console.log('🔄 Reconnexion dans 10 secondes...');  
-            setTimeout(main, 10000); // Reconnexion automatique  
-        } else {
-            console.log('❌ Déconnexion définitive (logged out), pas de reconnexion automatique');
-            // Ici vous pourriez supprimer les fichiers d'auth ou prendre d'autres actions
-        }
-    } else if (connection === 'open') {
-        console.log('✅ Connexion établie avec succès');
+
+    } catch (error) {
+        console.error('💥 Erreur fatale lors du démarrage:', error);
+        setTimeout(main, 10000);
     }
+}
+
+// N'oubliez pas d'appeler main() et de gérer les erreurs globales
+main().catch(err => {
+    console.error('💥 Erreur fatale:', err?.stack || err);
+    setTimeout(main, 10000);
 });
 
-// Export des fonctions pour les commandes
+// Export des fonctions pour les commandes (gardez cette partie à la fin)
 module.exports = {
     isUserAdmin,
     isBotOwner,
