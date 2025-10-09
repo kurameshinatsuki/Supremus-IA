@@ -739,31 +739,25 @@ async function main() {
             }
         });
 
-        sock.ev.on('creds.update', saveCreds);
-
-        // Désactiver le pairing code automatisé pour plus de sécurité
-        console.log('📱 Scannez le QR code affiché pour connecter votre compte');
-
-        await startBot(sock, state);
-        
-        // Gestion de la déconnexion avec reconnexion automatique
         sock.ev.on('connection.update', (update) => {
-            const { connection, lastDisconnect } = update;
-            if (connection === 'close') {
-                console.log('🔌 Connexion fermée, reconnexion dans 10 secondes...');
-                setTimeout(main, 10000); // Reconnexion automatique
-            }
-        });
-        
-    } catch (error) {
-        console.error('💥 Erreur fatale lors du démarrage:', error);
-        setTimeout(main, 10000); // Reconnexion en cas d'erreur
-    }
-}
+    const { connection, lastDisconnect } = update;
 
-main().catch(err => {
-    console.error('💥 Erreur fatale:', err?.stack || err);
-    setTimeout(main, 10000); // Reconnexion en cas d'erreur
+    if (connection === 'close') {
+        const shouldReconnect = 
+            lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
+
+        console.log('🔌 Connexion fermée, tentative de reconnexion dans 10 secondes...');
+
+        try {
+            // Fermer proprement la socket
+            sock.end(new Error('Redémarrage de la session'));
+        } catch (err) {
+            console.error('⚠️ Erreur lors de la fermeture de la socket:', err);
+        }
+
+        // Attendre un peu avant de relancer la fonction principale
+        if (shouldReconnect) setTimeout(main, 10000);
+    }
 });
 
 // Export des fonctions pour les commandes
