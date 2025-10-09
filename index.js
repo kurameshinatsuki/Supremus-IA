@@ -739,51 +739,51 @@ async function main() {
             }
         });
 
-        // Événement pour sauvegarder les credentials
+        // Sauvegarde des credentials
         sock.ev.on('creds.update', saveCreds);
 
         // Démarrer le bot
         await startBot(sock, state);
 
-        // Gestion de la déconnexion avec reconnexion automatique  
+        // Gestion de la déconnexion  
         sock.ev.on('connection.update', (update) => {  
             const { connection, lastDisconnect } = update;  
 
             if (connection === 'close') {
-                // Vérifier si c'est une déconnexion intentionnelle ou une erreur
                 const shouldReconnect = 
                     lastDisconnect?.error?.output?.statusCode !== 
                     DisconnectReason.loggedOut;
 
                 console.log('🔌 Connexion fermée:', {
-                    statusCode: lastDisconnect?.error?.output?.statusCode,
-                    error: lastDisconnect?.error
+                    statusCode: lastDisconnect?.error?.output?.statusCode
                 });
 
                 if (shouldReconnect) {
                     console.log('🔄 Reconnexion dans 10 secondes...');  
                     setTimeout(main, 10000);
                 } else {
-                    console.log('❌ Déconnexion définitive (logged out), pas de reconnexion automatique');
+                    console.log('❌ Déconnexion définitive - suppression session');
+                    // Nettoyer la session précédente
+                    process.exit(0);
                 }
             } else if (connection === 'open') {
-                console.log('✅ Connexion établie avec succès');
+                console.log('✅ Connexion établie');
             }
         });
 
     } catch (error) {
-        console.error('💥 Erreur fatale lors du démarrage:', error);
+        console.error('💥 Erreur démarrage:', error);
         setTimeout(main, 10000);
     }
 }
 
-// N'oubliez pas d'appeler main() et de gérer les erreurs globales
+// Gestion propre du redémarrage
 main().catch(err => {
-    console.error('💥 Erreur fatale:', err?.stack || err);
+    console.error('💥 Erreur:', err?.message);
     setTimeout(main, 10000);
 });
 
-// Export des fonctions pour les commandes (gardez cette partie à la fin)
+// Export des fonctions
 module.exports = {
     isUserAdmin,
     isBotOwner,
