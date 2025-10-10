@@ -731,7 +731,7 @@ async function main() {
         const { state, saveCreds } = await useMultiFileAuthState('./auth');
         const sock = makeWASocket({
             auth: state,
-            printQRInTerminal: true,
+            printQRInTerminal: true, // Utiliser QR code au lieu du pairing code
             browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
             getMessage: async key => {
                 console.log('⚠️ Message non déchiffré, retry demandé:', key);
@@ -739,48 +739,21 @@ async function main() {
             }
         });
 
-        // Sauvegarde des credentials
         sock.ev.on('creds.update', saveCreds);
 
-        // Démarrer le bot
+        // Désactiver le pairing code automatisé pour plus de sécurité
+        console.log('📱 Scannez le QR code affiché pour connecter votre compte');
+
         await startBot(sock, state);
-
-        // Gestion de la déconnexion  
-        sock.ev.on('connection.update', (update) => {  
-            const { connection, lastDisconnect } = update;  
-
-            if (connection === 'close') {
-                const shouldReconnect = 
-                    lastDisconnect?.error?.output?.statusCode !== 
-                    DisconnectReason.loggedOut;
-
-                console.log('🔌 Connexion fermée:', {
-                    statusCode: lastDisconnect?.error?.output?.statusCode
-                });
-
-                if (shouldReconnect) {
-                    console.log('🔄 Reconnexion dans 10 secondes...');  
-                    setTimeout(main, 10000);
-                } else {
-                    console.log('❌ Déconnexion définitive - suppression session');
-                    // Nettoyer la session précédente
-                    process.exit(0);
-                }
-            } else if (connection === 'open') {
-                console.log('✅ Connexion établie');
-            }
-        });
-
     } catch (error) {
-        console.error('💥 Erreur démarrage:', error);
-        setTimeout(main, 10000);
+        console.error('💥 Erreur fatale lors du démarrage:', error);
+        process.exit(1);
     }
 }
 
-// Gestion propre du redémarrage
 main().catch(err => {
-    console.error('💥 Erreur:', err?.message);
-    setTimeout(main, 10000);
+    console.error('💥 Erreur fatale:', err?.stack || err);
+    process.exit(1);
 });
 
 // Export des fonctions
