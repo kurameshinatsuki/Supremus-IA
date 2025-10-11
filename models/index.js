@@ -34,7 +34,6 @@ const User = sequelize.define('User', {
     defaultValue: {}
   }
 }, {
-  // Désactiver les timestamps automatiques si non nécessaires
   timestamps: false
 });
 
@@ -53,7 +52,7 @@ const Group = sequelize.define('Group', {
   timestamps: false
 });
 
-// Modèle Conversation (optionnel, si vous voulez garder cette table)
+// Modèle Conversation
 const Conversation = sequelize.define('Conversation', {
   id: {
     type: DataTypes.INTEGER,
@@ -76,7 +75,33 @@ const Conversation = sequelize.define('Conversation', {
   timestamps: false
 });
 
-// Relations (optionnelles)
+// NOUVEAU : Modèle pour stocker les credentials WhatsApp
+const WhatsAppAuth = sequelize.define('WhatsAppAuth', {
+  key: {
+    type: DataTypes.STRING,
+    primaryKey: true,
+    allowNull: false
+  },
+  value: {
+    type: DataTypes.JSONB,
+    allowNull: false
+  },
+  createdAt: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW
+  },
+  updatedAt: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW
+  }
+}, {
+  tableName: 'whatsapp_auth',
+  timestamps: true,
+  updatedAt: 'updatedAt',
+  createdAt: 'createdAt'
+});
+
+// Relations
 User.hasMany(Conversation, { foreignKey: 'jid', sourceKey: 'jid' });
 Group.hasMany(Conversation, { foreignKey: 'jid', sourceKey: 'jid' });
 
@@ -87,13 +112,10 @@ async function syncDatabase() {
     console.log('✅ Connexion à PostgreSQL établie avec succès.');
     
     // Utiliser sync avec { force: false } pour éviter de recréer les tables
-    // ou { alter: false } pour désalterer les modifications de schéma automatiques
     await sequelize.sync({ force: false, alter: false });
     console.log('✅ Modèles synchronisés avec la base de données.');
   } catch (error) {
     console.error('❌ Erreur de connexion à la base de données:', error);
-    
-    // En cas d'erreur, on continue quand même sans synchro forcée
     console.log('⚠️  Continuation avec les tables existantes...');
   }
 }
@@ -103,5 +125,6 @@ module.exports = {
   User,
   Group,
   Conversation,
+  WhatsAppAuth,
   syncDatabase
 };
