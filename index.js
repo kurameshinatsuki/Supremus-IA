@@ -1,17 +1,16 @@
-// index.js - Version avec système anti-doublon, PostgreSQL et pairing code
+// index.js - Version avec système anti-doublon
 
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const sharp = require('sharp');
-const { default: makeWASocket, delay, downloadContentFromMessage } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useMultiFileAuthState, delay, downloadContentFromMessage, DisconnectReason } = require('@whiskeysockets/baileys');
 const { nazunaReply, resetConversationMemory, analyzeImageWithVision } = require('./nazunaAI');
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 const { syncDatabase } = require('./models');
 const { detecterVisuel } = require('./visuels');
 const { loadCommands, getCommand } = require('./commandes');
-const { SequelizeAuthState } = require('./auth-sequelize');
 
 const DEBUG = (process.env.DEBUG === 'false') || false;
 let pair = false;
@@ -219,63 +218,16 @@ function getLastBotImageAnalysis(remoteJid) {
 }
 
 /**
- * Gère le processus de pairing
+ * Petit utilitaire CLI (pairing code)
  */
-async function handlePairing(sock) {
-    if (!sock.authState.creds.registered && !pair) {
-        try {
-            console.log('🔄 Démarrage du processus de pairing...');
-            
-            // Vérifier que le numéro est configuré
-            const pairNumber = process.env.PAIR_NUMBER;
-            if (!pairNumber) {
-                console.error('❌ PAIR_NUMBER non configuré dans les variables d\'environnement');
-                console.log('💡 Ajoutez PAIR_NUMBER=242065773003 dans votre .env');
-                return;
-            }
-
-            await delay(3000);
-            const code = await sock.requestPairingCode(pairNumber);
-            console.log("═══════════════════════════════════════");
-            console.log("🔗 CODE DE PAIRAGE :", code);
-            console.log("📱 Dans WhatsApp : Paramètres → Appareils liés → Lier un appareil");
-            console.log("⏳ Ce code est valable 30 secondes");
-            console.log("═══════════════════════════════════════");
-            pair = true;
-            
-            // Attendre que la connexion soit établie
-            let attempts = 0;
-            const maxAttempts = 90; // 3 minutes max d'attente
-            
-            while (attempts < maxAttempts && !sock.authState.creds.registered) {
-                await delay(2000);
-                attempts++;
-                if (attempts % 10 === 0) {
-                    console.log(`⏳ Attente de connexion... (${attempts}/${maxAttempts})`);
-                }
-            }
-            
-            if (sock.authState.creds.registered) {
-                console.log('✅ Connexion WhatsApp établie avec succès!');
-                console.log('🔒 Les credentials sont sauvegardés dans PostgreSQL');
-            } else {
-                console.log('❌ Timeout - Connexion non établie');
-                console.log('🔄 Nouvelle tentative dans 10 secondes...');
-                setTimeout(() => handlePairing(sock), 10000);
-            }
-            
-        } catch (err) {
-            console.error("❌ Erreur lors du pairage :", err.message);
-            
-            if (err.message.includes('rate limit')) {
-                console.log('⏳ Rate limit détecté, nouvelle tentative dans 30 secondes...');
-                setTimeout(() => handlePairing(sock), 30000);
-            } else {
-                console.log('🔄 Nouvelle tentative dans 10 secondes...');
-                setTimeout(() => handlePairing(sock), 10000);
-            }
-        }
-    }
+function ask(questionText) {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    return new Promise((resolve) => {
+        rl.question(questionText, (answer) => {
+            rl.close();
+            resolve(answer.trim());
+        });
+    });
 }
 
 /* =========================
@@ -566,7 +518,7 @@ async function startBot(sock, state) {
             const msg = messages && messages[0];
             if (!msg || !msg.message) return;
             
-            // ⭐⭐ VÉRIFICATION ANTI-DOUBLON ⭐⭐
+            // VÉRIFICATION ANTI-DOUBLON
             if (isDuplicateEvent(msg)) {
                 console.log('🚫 Événement dupliqué ignoré:', msg.key.id);
                 return;
@@ -776,109 +728,97 @@ async function main() {
         await syncDatabase();
         console.log('✅ Base de données PostgreSQL prête');
 
-        // Initialiser l'auth state avec Sequelize
-        const authState = new SequelizeAuthState();
-        await authState.init();
-        await authState.loadAllKeys(); // Charger les credentials existants
-
+        const { state, saveCreds } = await useMultiFileAuthState('./auth');
+        
         const sock = makeWASocket({
-            auth: {
-                creds: authState.creds,
-                keys: {
-                    get: (type, ids) => {
-                        const keyMap = {};
-                        for (const id of ids) {
-                            const key = `${type}-${id}`;
-                            if (authState.keys[key]) {
-                                keyMap[id] = authState.keys[key];
-                            }
-                        }
-                        return keyMap;
-                    },
-                    set: (keyData) => {
-                        for (const key of Object.keys(keyData)) {
-                            authState.keys[key] = keyData[key];
-                            authState.saveKey(key, keyData[key]);
-                        }
-                    },
-                    del: (keyIds) => {
-                        for (const key of keyIds) {
-                            delete authState.keys[key];
-                            authState.removeKey(key);
-                        }
-                    }
-                }
-            },
-            printQRInTerminal: false, // Désactiver le QR code
+            auth: state,
+            printQRInTerminal: true,
             browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
             getMessage: async key => {
                 console.log('⚠️ Message non déchiffré, retry demandé:', key);
-                return { conversation: "🔄 Réessaye d'envoyer ton message" };
+                return { conversation: '🔄 Réessaye d\'envoyer ton message' };
             }
         });
 
-        // Sauvegarder les credentials quand ils sont mis à jour
-        sock.ev.on('creds.update', () => {
-            authState.saveCreds();
-        });
+        sock.ev.on('creds.update', saveCreds);
 
-        // Gérer la connexion et le pairing
-        sock.ev.on('connection.update', async (update) => {
-            const { connection, qr } = update;
+        // Gestion des événements de connexion
+        sock.ev.on('connection.update', (update) => {
+            const { connection, lastDisconnect, qr } = update;
             
-            if (connection === 'open') {
-                console.log('✅ Connexion WhatsApp établie');
-                pair = true;
+            console.log('🔗 Statut de connexion:', connection);
+            
+            // Si un QR code est généré (nouvelle connexion détectée)
+            if (qr) {
+                console.log('🔄 Nouvelle connexion détectée, fermeture...');
+                // Fermer la connexion immédiatement
+                sock.end(new Error('Nouvelle connexion non autorisée'));
+                return;
+            }
+            
+            // Si la connexion est fermée et que c'est une déconnexion normale
+            if (connection === 'close') {
+                const shouldReconnect = 
+                    lastDisconnect?.error?.output?.statusCode !== 401 && // Session invalide
+                    lastDisconnect?.error?.output?.statusCode !== 403; // Banni
                 
-                // Afficher les informations de connexion
-                if (sock.user?.id) {
-                    console.log(`👤 Connecté en tant que: ${sock.user.id}`);
+                console.log('🔌 Connexion fermée:', {
+                    statusCode: lastDisconnect?.error?.output?.statusCode,
+                    shouldReconnect: shouldReconnect
+                });
+                
+                // Si la session n'est plus valide, ne pas reconnecter
+                if (!shouldReconnect) {
+                    console.log('❌ Session invalide, fermeture définitive');
+                    process.exit(1);
                 }
-            } else if (connection === 'close') {
-                console.log('❌ Connexion WhatsApp fermée');
-                pair = false;
-                
-                // Réessayer le pairing après 5 secondes
-                console.log('🔄 Tentative de reconnexion...');
-                setTimeout(() => handlePairing(sock), 5000);
             }
             
-            // Fallback QR code (au cas où)
-            if (qr && !pair) {
-                console.log('📷 QR Code de fallback généré (le pairing est préféré)');
+            // Si connecté avec succès
+            if (connection === 'open') {
+                console.log('✅ Connecté avec succès à WhatsApp');
+                
+                // Vérifier périodiquement l'état de la session
+                setInterval(() => {
+                    if (!sock.user || sock.user.id === undefined) {
+                        console.log('❌ Session invalide détectée, fermeture...');
+                        sock.end(new Error('Session invalide'));
+                        process.exit(1);
+                    }
+                }, 30000); // Vérifier toutes les 30 secondes
             }
         });
 
-        console.log('🔗 Démarrage du système de pairing...');
-        console.log('💡 Utilisation de PostgreSQL pour la persistance des credentials');
-        
-        // Démarrer le processus de pairing
-        await handlePairing(sock);
+        // Gestion des erreurs globales
+        sock.ev.on('connection.update', (update) => {
+            if (update.connection === 'close') {
+                const statusCode = update.lastDisconnect?.error?.output?.statusCode;
+                
+                // Codes d'erreur qui indiquent une session invalide
+                const invalidSessionCodes = [401, 403, 419];
+                
+                if (invalidSessionCodes.includes(statusCode)) {
+                    console.log('🔐 Session expirée ou invalide, fermeture...');
+                    process.exit(1);
+                }
+            }
+        });
 
-        await startBot(sock, authState);
+        console.log('📱 Scannez le QR code affiché pour connecter votre compte');
+
+        await startBot(sock, state);
     } catch (error) {
         console.error('💥 Erreur fatale lors du démarrage:', error);
         process.exit(1);
     }
 }
 
-// Gestion propre de la fermeture
-process.on('SIGINT', async () => {
-    console.log('\n🔄 Fermeture propre du bot...');
-    process.exit(0);
-});
-
-process.on('SIGTERM', async () => {
-    console.log('\n🔄 Arrêt du bot...');
-    process.exit(0);
-});
-
 main().catch(err => {
     console.error('💥 Erreur fatale:', err?.stack || err);
     process.exit(1);
 });
 
-// Export des fonctions pour les commandes
+// Export des fonctions
 module.exports = {
     isUserAdmin,
     isBotOwner,
