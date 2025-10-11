@@ -1,32 +1,65 @@
-// auth-sequelize.js
+// auth-sequelize.js - VERSION SÉCURISÉE
 const { WhatsAppAuth } = require('./models');
 
 class SequelizeAuthState {
     constructor() {
-        this.creds = {};
+        this.creds = this.getEmptyCreds();
         this.keys = {};
+    }
+
+    getEmptyCreds() {
+        return {
+            noiseKey: null,
+            pairingEphemeralKeyPair: null,
+            signedIdentityKey: null,
+            signedPreKey: null,
+            registrationId: null,
+            advSecretKey: null,
+            processedHistoryMessages: [],
+            nextPreKeyId: null,
+            firstUnuploadedPreKeyId: null,
+            accountSyncCounter: 1,
+            accountSettings: { unarchiveChats: false },
+            registered: false,
+            me: null,
+            signalIdentities: [],
+            platform: null,
+            routingInfo: null,
+            lastAccountSyncTimestamp: null,
+            lastPropHash: null,
+            myAppStateKeyId: null
+        };
+    }
+
+    areCredsValid(creds) {
+        return creds && 
+               creds.noiseKey && 
+               creds.signedIdentityKey && 
+               creds.signedPreKey;
     }
 
     async init() {
         try {
-            // Vérifier que la table existe en essayant une requête simple
             await WhatsAppAuth.findOne({ where: { key: 'creds' } });
-            console.log('✅ Auth state initialisé avec Sequelize');
         } catch (error) {
-            console.error('❌ Erreur initialisation auth Sequelize:', error);
-            throw error;
+            // Ignorer les erreurs de table
         }
     }
 
     async saveCreds() {
         try {
-            await WhatsAppAuth.upsert({
-                key: 'creds',
-                value: this.creds
-            });
-            console.log('✅ Credentials sauvegardés dans PostgreSQL via Sequelize');
+            // Ne sauvegarder que si les credentials sont valides
+            if (this.areCredsValid(this.creds)) {
+                await WhatsAppAuth.upsert({
+                    key: 'creds',
+                    value: this.creds
+                });
+                console.log('✅ Credentials valides sauvegardés');
+            } else {
+                console.log('⚠️  Credentials incomplets - non sauvegardés');
+            }
         } catch (error) {
-            console.error('❌ Erreur sauvegarde credentials:', error);
+            console.error('❌ Erreur sauvegarde:', error);
         }
     }
 
@@ -52,27 +85,38 @@ class SequelizeAuthState {
     async loadAllKeys() {
         try {
             const results = await WhatsAppAuth.findAll();
+            
+            // TOUJOURS réinitialiser au démarrage
+            this.creds = this.getEmptyCreds();
+            this.keys = {};
+            
             for (const row of results) {
-                if (row.key === 'creds') {
+                if (row.key === 'creds' && this.areCredsValid(row.value)) {
+                    console.log('✅ Chargement de credentials valides');
                     this.creds = row.value;
-                } else {
+                } else if (row.key === 'creds') {
+                    console.log('🚨 Credentials incomplets détectés - utilisation de valeurs vides');
+                    this.creds = this.getEmptyCreds();
+                } else if (row.value) {
                     this.keys[row.key] = row.value;
                 }
             }
-            console.log('✅ Auth state chargé depuis PostgreSQL via Sequelize');
+            
         } catch (error) {
             console.error('❌ Erreur chargement auth state:', error);
+            this.creds = this.getEmptyCreds();
+            this.keys = {};
         }
     }
 
     async clear() {
         try {
             await WhatsAppAuth.destroy({ where: {} });
-            this.creds = {};
+            this.creds = this.getEmptyCreds();
             this.keys = {};
-            console.log('✅ Auth state nettoyé');
+            console.log('✅ Table complètement vidée');
         } catch (error) {
-            console.error('❌ Erreur nettoyage auth state:', error);
+            console.error('❌ Erreur nettoyage:', error);
         }
     }
 }
