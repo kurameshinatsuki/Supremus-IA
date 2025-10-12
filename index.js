@@ -729,10 +729,9 @@ async function main() {
         console.log('✅ Base de données PostgreSQL prête');
 
         const { state, saveCreds } = await useMultiFileAuthState('./auth');
-        
         const sock = makeWASocket({
             auth: state,
-            printQRInTerminal: true,
+            printQRInTerminal: true, // Utiliser QR code au lieu du pairing code
             browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
             getMessage: async key => {
                 console.log('⚠️ Message non déchiffré, retry demandé:', key);
@@ -742,68 +741,7 @@ async function main() {
 
         sock.ev.on('creds.update', saveCreds);
 
-        // Gestion des événements de connexion
-        sock.ev.on('connection.update', (update) => {
-            const { connection, lastDisconnect, qr } = update;
-            
-            console.log('🔗 Statut de connexion:', connection);
-            
-            // Si un QR code est généré (nouvelle connexion détectée)
-            if (qr) {
-                console.log('🔄 Nouvelle connexion détectée, fermeture...');
-                // Fermer la connexion immédiatement
-                sock.end(new Error('Nouvelle connexion non autorisée'));
-                return;
-            }
-            
-            // Si la connexion est fermée et que c'est une déconnexion normale
-            if (connection === 'close') {
-                const shouldReconnect = 
-                    lastDisconnect?.error?.output?.statusCode !== 401 && // Session invalide
-                    lastDisconnect?.error?.output?.statusCode !== 403; // Banni
-                
-                console.log('🔌 Connexion fermée:', {
-                    statusCode: lastDisconnect?.error?.output?.statusCode,
-                    shouldReconnect: shouldReconnect
-                });
-                
-                // Si la session n'est plus valide, ne pas reconnecter
-                if (!shouldReconnect) {
-                    console.log('❌ Session invalide, fermeture définitive');
-                    process.exit(1);
-                }
-            }
-            
-            // Si connecté avec succès
-            if (connection === 'open') {
-                console.log('✅ Connecté avec succès à WhatsApp');
-                
-                // Vérifier périodiquement l'état de la session
-                setInterval(() => {
-                    if (!sock.user || sock.user.id === undefined) {
-                        console.log('❌ Session invalide détectée, fermeture...');
-                        sock.end(new Error('Session invalide'));
-                        process.exit(1);
-                    }
-                }, 30000); // Vérifier toutes les 30 secondes
-            }
-        });
-
-        // Gestion des erreurs globales
-        sock.ev.on('connection.update', (update) => {
-            if (update.connection === 'close') {
-                const statusCode = update.lastDisconnect?.error?.output?.statusCode;
-                
-                // Codes d'erreur qui indiquent une session invalide
-                const invalidSessionCodes = [401, 403, 419];
-                
-                if (invalidSessionCodes.includes(statusCode)) {
-                    console.log('🔐 Session expirée ou invalide, fermeture...');
-                    process.exit(1);
-                }
-            }
-        });
-
+        // Désactiver le pairing code automatisé pour plus de sécurité
         console.log('📱 Scannez le QR code affiché pour connecter votre compte');
 
         await startBot(sock, state);
