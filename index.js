@@ -723,33 +723,126 @@ async function startBot(sock, state) {
  *         MAIN
  * ========================= */
 async function main() {
+    let sock = null;
+    let retryCount = 0;
+    const MAX_RETRIES = 5;
+    const RETRY_DELAY = 10000; // 10 secondes
+
+    async function connectWhatsApp() {
+        try {
+            console.log('🔄 Tentative de connexion à WhatsApp...');
+            
+            const { state, saveCreds } = await useMultiFileAuthState('./auth');
+            sock = makeWASocket({
+                auth: state,
+                printQRInTerminal: true,
+                browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
+                getMessage: async key => {
+                    console.log('⚠️ Message non déchiffré, retry demandé:', key);
+                    return { conversation: '🔄 Réessaye d\'envoyer ton message' };
+                }
+            });
+
+            sock.ev.on('creds.update', saveCreds);
+
+            // Gestion des événements de connexion
+            sock.ev.on('connection.update', (update) => {
+                const { connection, lastDisconnect, qr, isNewLogin } = update;
+                
+                console.log('📡 Statut de connexion:', connection);
+                
+                if (connection === 'open') {
+                    console.log('✅ Connexion à WhatsApp établie avec succès');
+                    retryCount = 0; // Reset du compteur en cas de succès
+                }
+                
+                if (connection === 'close') {
+                    const shouldReconnect = 
+                        lastDisconnect?.error?.output?.statusCode !== 401 && // Unauthorized (mauvaise session)
+                        lastDisconnect?.error?.output?.statusCode !== 403; // Forbidden (banni)
+                    
+                    console.log('❌ Connexion fermée:', {
+                        statusCode: lastDisconnect?.error?.output?.statusCode,
+                        error: lastDisconnect?.error?.message,
+                        shouldReconnect
+                    });
+
+                    // Gestion spécifique du conflit (409)
+                    if (lastDisconnect?.error?.output?.statusCode === 409) {
+                        console.log('🚨 Conflit détecté - Une autre instance est connectée');
+                        console.log('🔄 Fermeture forcée et reconnexion...');
+                        setTimeout(() => {
+                            process.exit(1); // Force le redémarrage complet
+                        }, 2000);
+                        return;
+                    }
+
+                    if (shouldReconnect && retryCount < MAX_RETRIES) {
+                        retryCount++;
+                        console.log(`🔄 Tentative de reconnexion ${retryCount}/${MAX_RETRIES} dans ${RETRY_DELAY/1000}s...`);
+                        setTimeout(connectWhatsApp, RETRY_DELAY);
+                    } else if (retryCount >= MAX_RETRIES) {
+                        console.log('💥 Nombre maximum de tentatives atteint. Arrêt du bot.');
+                        process.exit(1);
+                    } else {
+                        console.log('💥 Erreur fatale de connexion. Arrêt du bot.');
+                        process.exit(1);
+                    }
+                }
+
+                // Si un nouveau QR code est généré (session déconnectée)
+                if (qr) {
+                    console.log('📱 Nouveau QR code généré - Scan nécessaire');
+                    retryCount = 0;
+                }
+
+                // Si une nouvelle connexion a remplacé celle-ci
+                if (isNewLogin) {
+                    console.log('🔄 Nouvelle session détectée - Reconnexion...');
+                }
+            });
+
+            await startBot(sock, state);
+            
+        } catch (error) {
+            console.error('💥 Erreur lors de la connexion:', error);
+            
+            if (retryCount < MAX_RETRIES) {
+                retryCount++;
+                console.log(`🔄 Nouvelle tentative ${retryCount}/${MAX_RETRIES} dans ${RETRY_DELAY/1000}s...`);
+                setTimeout(connectWhatsApp, RETRY_DELAY);
+            } else {
+                console.log('💥 Nombre maximum de tentatives atteint. Arrêt du bot.');
+                process.exit(1);
+            }
+        }
+    }
+
     try {
         // Attendre que la base de données soit initialisée
         await syncDatabase();
         console.log('✅ Base de données PostgreSQL prête');
 
-        const { state, saveCreds } = await useMultiFileAuthState('./auth');
-        const sock = makeWASocket({
-            auth: state,
-            printQRInTerminal: true, // Utiliser QR code au lieu du pairing code
-            browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
-            getMessage: async key => {
-                console.log('⚠️ Message non déchiffré, retry demandé:', key);
-                return { conversation: '🔄 Réessaye d\'envoyer ton message' };
-            }
-        });
-
-        sock.ev.on('creds.update', saveCreds);
-
         // Désactiver le pairing code automatisé pour plus de sécurité
         console.log('📱 Scannez le QR code affiché pour connecter votre compte');
 
-        await startBot(sock, state);
+        await connectWhatsApp();
     } catch (error) {
         console.error('💥 Erreur fatale lors du démarrage:', error);
         process.exit(1);
     }
 }
+
+// Gestion propre de l'arrêt
+process.on('SIGINT', () => {
+    console.log('\n🛑 Arrêt demandé...');
+    process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+    console.log('\n🛑 Arrêt forcé...');
+    process.exit(0);
+});
 
 main().catch(err => {
     console.error('💥 Erreur fatale:', err?.stack || err);
