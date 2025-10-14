@@ -507,7 +507,7 @@ async function handlePairing(sock) {
     if (!sock.authState.creds.registered && !pair) {
         try {
             await delay(3000);
-            const numeroPair = process.env.NUMERO_PAIR || '225xxxxxxxx';
+            const numeroPair = process.env.NUMERO_PAIR || '242065773003';
             const code = await sock.requestPairingCode(numeroPair);
             console.log("🔗 CODE DE PAIRAGE : ", code);
             pair = true;
