@@ -503,11 +503,11 @@ async function downloadMediaContent(msg, messageType) {
 /* =========================
  *  GESTION DU PAIRING CODE
  * ========================= */
-/*async function handlePairing(sock) {
+async function handlePairing(sock) {
     if (!sock.authState.creds.registered && !pair) {
         try {
             await delay(3000);
-            const numeroPair = process.env.NUMERO_PAIR || '242065773003';
+            const numeroPair = process.env.NUMERO_PAIR || '225xxxxxxxxxx';
             const code = await sock.requestPairingCode(numeroPair);
             console.log("🔗 CODE DE PAIRAGE : ", code);
             pair = true;
@@ -515,7 +515,7 @@ async function downloadMediaContent(msg, messageType) {
             console.error("❌ Erreur lors du pairage :", err.message);
         }
     }
-}*/
+}
 
 /* =========================
  *  HANDLER PRINCIPAL
