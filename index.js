@@ -503,7 +503,7 @@ async function downloadMediaContent(msg, messageType) {
 /* =========================
  *  GESTION DU PAIRING CODE
  * ========================= */
-async function handlePairing(sock) {
+/*async function handlePairing(sock) {
     if (!sock.authState.creds.registered && !pair) {
         try {
             await delay(3000);
@@ -515,7 +515,7 @@ async function handlePairing(sock) {
             console.error("❌ Erreur lors du pairage :", err.message);
         }
     }
-}
+}*/
 
 /* =========================
  *  HANDLER PRINCIPAL
