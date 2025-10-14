@@ -1,4 +1,4 @@
-// index.js - Version avec système anti-doublon
+// index.js - Version avec système anti-doublon et pairing code
 
 require('dotenv').config();
 const fs = require('fs');
@@ -501,10 +501,30 @@ async function downloadMediaContent(msg, messageType) {
 }
 
 /* =========================
+ *  GESTION DU PAIRING CODE
+ * ========================= */
+async function handlePairing(sock) {
+    if (!sock.authState.creds.registered && !pair) {
+        try {
+            await delay(3000);
+            const numeroPair = process.env.NUMERO_PAIR || '225xxxxxxxx';
+            const code = await sock.requestPairingCode(numeroPair);
+            console.log("🔗 CODE DE PAIRAGE : ", code);
+            pair = true;
+        } catch (err) {
+            console.error("❌ Erreur lors du pairage :", err.message);
+        }
+    }
+}
+
+/* =========================
  *  HANDLER PRINCIPAL
  * ========================= */
 async function startBot(sock, state) {
     let BOT_JID = (sock.user && sock.user.id) || (state?.creds?.me?.id) || process.env.BOT_JID || null;
+
+    // Gestion du pairing code
+    await handlePairing(sock);
 
     sock.ev.on('connection.update', (u) => {
         if (u.connection === 'open' && sock.user?.id) {
@@ -719,7 +739,6 @@ async function startBot(sock, state) {
     });
 }
 
-
 /* =========================
  *         MAIN
  * ========================= */
@@ -732,7 +751,7 @@ async function main() {
         const { state, saveCreds } = await useMultiFileAuthState('./auth');
         const sock = makeWASocket({
             auth: state,
-            printQRInTerminal: true, // Utiliser QR code au lieu du pairing code
+            printQRInTerminal: false, // Désactiver QR code pour utiliser pairing code
             browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
             getMessage: async key => {
                 console.log('⚠️ Message non déchiffré, retry demandé:', key);
@@ -742,8 +761,7 @@ async function main() {
 
         sock.ev.on('creds.update', saveCreds);
 
-        // Désactiver le pairing code automatisé pour plus de sécurité
-        console.log('📱 Scannez le QR code affiché pour connecter votre compte');
+        console.log('📱 Démarrage avec système de pairing code...');
 
         await startBot(sock, state);
     } catch (error) {
@@ -756,7 +774,6 @@ main().catch(err => {
     console.error('💥 Erreur fatale:', err?.stack || err);
     process.exit(1);
 });
-
 
 // Export des fonctions
 module.exports = {
