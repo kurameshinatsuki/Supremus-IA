@@ -749,15 +749,17 @@ async function main() {
         console.log('✅ Base de données PostgreSQL prête');
 
         const { state, saveCreds } = await useMultiFileAuthState('./auth');
+
         const sock = makeWASocket({
-            auth: state,
-            printQRInTerminal: false, // Désactiver QR code pour utiliser pairing code
-            browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
-            getMessage: async key => {
-                console.log('⚠️ Message non déchiffré, retry demandé:', key);
-                return { conversation: '🔄 Réessaye d\'envoyer ton message' };
-            }
-        });
+    auth: state,
+    printQRInTerminal: false,
+    browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
+    version: [2, 3000, 1025190524], 
+    getMessage: async key => {
+        console.log('⚠️ Message non déchiffré, retry demandé:', key);
+        return { conversation: '🔄 Réessaye d\'envoyer ton message' };
+    }
+});
 
         sock.ev.on('creds.update', saveCreds);
 
