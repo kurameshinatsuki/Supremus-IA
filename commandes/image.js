@@ -1,5 +1,4 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const fs = require('fs');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -11,24 +10,27 @@ async function generateImage(prompt) {
             model: "gemini-2.0-flash-preview-image"
         });
 
-        // Appel correct pour une génération d'image
         const result = await model.generateContent({
-            contents: [{
-                role: "user",
-                parts: [{ text: prompt }]
-            }],
-            generationConfig: {
-                responseMimeType: "image/png"
-            }
+            contents: [
+                {
+                    role: "user",
+                    parts: [{ text: prompt }]
+                }
+            ]
         });
 
-        // Récupération du contenu image
-        const imageData = result.response.candidates[0].content.parts[0].inlineData.data;
-        const buffer = Buffer.from(imageData, "base64");
+        // ✅ Extraction correcte de l'image (base64)
+        const imagePart = result.response.candidates[0].content.parts.find(
+            (part) => part.inlineData && part.inlineData.mimeType.startsWith("image/")
+        );
 
+        if (!imagePart) throw new Error("Aucune image n'a été générée.");
+
+        const buffer = Buffer.from(imagePart.inlineData.data, "base64");
         return buffer;
+
     } catch (error) {
-        console.error('❌ Erreur génération image:', error);
+        console.error("❌ Erreur génération image:", error);
         return null;
     }
 }
