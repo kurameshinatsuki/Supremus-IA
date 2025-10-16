@@ -6,16 +6,26 @@ async function generateImage(prompt) {
   try {
     console.log("🎨 Génération image...");
 
+    // ✅ Utilisation du bon modèle
     const model = genAI.getGenerativeModel({
       model: "gemini-2.0-flash-preview-image-generation",
     });
 
-    // ✅ Appel avec generateContent (et non generateImage)
-    const result = await model.generateContent([
-      { role: "user", parts: [{ text: prompt }] },
-    ]);
+    // ✅ Appel correct pour ce modèle
+    const result = await model.generateContent({
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: prompt,
+            },
+          ],
+        },
+      ],
+    });
 
-    // ✅ Récupération du Base64
+    // ✅ Extraction du Base64
     const base64 = result.response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
 
     if (!base64) throw new Error("Aucune image reçue");
