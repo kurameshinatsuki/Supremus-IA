@@ -1,5 +1,4 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const fs = require("fs");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -7,21 +6,21 @@ async function generateImage(prompt) {
   try {
     console.log("🎨 Génération image...");
 
-    // ✅ Utiliser le bon modèle pour la génération d'image
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash-image",
+      model: "gemini-2.0-flash-preview-image-generation",
     });
 
-    const result = await model.generateImage({
-      prompt,
-      // Tu peux ajouter des options comme :
-      // size: "1024x1024", aspectRatio: "1:1"
-    });
+    // ✅ Appel avec generateContent (et non generateImage)
+    const result = await model.generateContent([
+      { role: "user", parts: [{ text: prompt }] },
+    ]);
 
-    // ✅ La réponse est différente ici : elle contient un buffer base64
-    const imageBase64 = result.data[0].b64_json;
-    const buffer = Buffer.from(imageBase64, "base64");
+    // ✅ Récupération du Base64
+    const base64 = result.response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
 
+    if (!base64) throw new Error("Aucune image reçue");
+
+    const buffer = Buffer.from(base64, "base64");
     return buffer;
   } catch (error) {
     console.error("❌ Erreur génération image:", error);
