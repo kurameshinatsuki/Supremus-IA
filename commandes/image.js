@@ -1,5 +1,4 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function generateImage(prompt) {
@@ -7,30 +6,25 @@ async function generateImage(prompt) {
         console.log('🎨 Génération image...');
 
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.0-flash-preview-image"
+            model: "gemini-1.5-flash"
         });
 
         const result = await model.generateContent({
-            contents: [
-                {
-                    role: "user",
-                    parts: [{ text: prompt }]
-                }
-            ]
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: "image/png" }
         });
 
-        // ✅ Extraction correcte de l'image (base64)
         const imagePart = result.response.candidates[0].content.parts.find(
-            (part) => part.inlineData && part.inlineData.mimeType.startsWith("image/")
+            p => p.inlineData && p.inlineData.mimeType.startsWith("image/")
         );
 
-        if (!imagePart) throw new Error("Aucune image n'a été générée.");
+        if (!imagePart) throw new Error("Aucune image générée.");
 
         const buffer = Buffer.from(imagePart.inlineData.data, "base64");
         return buffer;
 
-    } catch (error) {
-        console.error("❌ Erreur génération image:", error);
+    } catch (err) {
+        console.error("❌ Erreur génération image:", err);
         return null;
     }
 }
@@ -39,30 +33,28 @@ async function execute(args, msg, sock) {
     try {
         const jid = msg.key.remoteJid;
         const prompt = args.join(" ");
-
         if (!prompt) {
-            return `🎨 *Création IA :*\n\nPour générer une image :\n• ✍️ Tapez "/imagine [description]"`;
+            return await sock.sendMessage(jid, { text: "🎨 Utilisation : /imagine [description]" }, { quoted: msg });
         }
 
-        const imageBuffer = await generateImage(prompt);
-
-        if (!imageBuffer) {
-            return "❌ Désolé, je n'ai pas pu générer cette image.";
+        const image = await generateImage(prompt);
+        if (!image) {
+            return await sock.sendMessage(jid, { text: "❌ Désolé, je n'ai pas pu générer cette image." }, { quoted: msg });
         }
 
         await sock.sendMessage(jid, {
-            image: imageBuffer,
-            caption: `🖼️ *IMAGE GÉNÉRÉE :*\n"${prompt}"`
+            image,
+            caption: `🖼️ *Image générée :* ${prompt}`
         }, { quoted: msg });
 
-    } catch (error) {
-        console.error('❌ Erreur commande image:', error);
-        return "❌ Une erreur est survenue pendant la génération.";
+    } catch (e) {
+        console.error("Erreur commande imagine:", e);
+        await sock.sendMessage(msg.key.remoteJid, { text: "❌ Erreur pendant la génération." }, { quoted: msg });
     }
 }
 
 module.exports = {
-    name: 'imagine',
-    description: 'Génère une image avec Makima Supremus',
+    name: "imagine",
+    description: "Génère une image avec Gemini",
     execute
 };
