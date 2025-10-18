@@ -6,7 +6,6 @@ const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { User, Group, Conversation, syncDatabase } = require('./models');
 const { detecterVisuel } = require('./visuels');
-const { analyzeImage } = require('./commandes/ia');
 
 // Initialisation de l'API Google Generative AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -49,13 +48,13 @@ async function loadUserMemory(jid) {
     if (user) {
       return user.memory;
     }
-    
+
     // Créer un nouvel utilisateur si non trouvé
     const newUser = await User.create({
       jid,
       memory: { conversations: [] }
     });
-    
+
     return newUser.memory;
   } catch (error) {
     console.error('Erreur lecture mémoire utilisateur:', error);
@@ -72,13 +71,13 @@ async function loadGroupMemory(jid) {
     if (group) {
       return group.memory;
     }
-    
+
     // Créer un nouveau groupe si non trouvé
     const newGroup = await Group.create({
       jid,
       memory: { participants: {}, lastMessages: [] }
     });
-    
+
     return newGroup.memory;
   } catch (error) {
     console.error('Erreur lecture mémoire groupe:', error);
@@ -122,7 +121,7 @@ async function resetConversationMemory(jid, isGroup = false) {
         if (isGroup) {
             // Réinitialiser la mémoire du groupe
             await Group.destroy({ where: { jid } });
-            
+
             // Créer une nouvelle entrée vide
             await Group.create({
                 jid,
@@ -131,14 +130,14 @@ async function resetConversationMemory(jid, isGroup = false) {
         } else {
             // Réinitialiser la mémoire utilisateur
             await User.destroy({ where: { jid } });
-            
+
             // Créer une nouvelle entrée vide
             await User.create({
                 jid,
                 memory: { conversations: [] }
             });
         }
-        
+
         return true;
     } catch (error) {
         console.error('Erreur réinitialisation mémoire:', error);
@@ -171,7 +170,7 @@ function extractNumberFromJid(jid) {
 async function getGroupName(sock, remoteJid) {
     try {
         if (!remoteJid.endsWith('@g.us')) return null;
-        
+
         const metadata = await sock.groupMetadata(remoteJid);
         return metadata.subject || null;
     } catch (error) {
@@ -181,9 +180,9 @@ async function getGroupName(sock, remoteJid) {
 }
 
 /**
- * Analyse une image avec Google Vision
+ * Analyse une image avec Google Vision - CORRIGÉE
  */
-async function analyzeImageWithVision(imageBuffer, imageMimeType) {
+async function analyzeImageWithVision(imageBuffer, imageMimeType, trainingContext) {
     try {
         if (!imageBuffer || !imageMimeType) {
             return null;
@@ -192,14 +191,25 @@ async function analyzeImageWithVision(imageBuffer, imageMimeType) {
         // Convertir l'image en base64 pour l'API Gemini
         const base64Image = imageBuffer.toString('base64');
 
-        const prompt = `
-Analyse l'image et réponds uniquement sous ce format :
+        const prompt = `${trainingContext}
 
-**TEXTES :**
-[retranscris tout le texte visible]
+Analyse cette image et réponds EXCLUSIVEMENT sous ce format :
 
-**VISUEL :**
-[description brève et factuelle en quelques mots]
+**CONTENU TEXTUEL :**
+[Retranscris tout le texte visible]
+
+**CONTEXTE VISUEL :**
+[Description concise : 
+- Type d'interface (menu, écran de sélection, carte de jeu, etc.)
+- Éléments interactifs identifiés et leur couleur (boutons, curseurs, icônes)
+- Design global (moderne, rétro, épuré, etc.)
+- Émotions/atmosphère suggérée]
+
+**IDENTIFICATION :**
+[Lier explicitement les éléments à la base de connaissance :
+- "Ceci correspond au personnage [nom] de ABM avec ses compétences [X]"
+- "Interface du jeu [nom] montrant [fonction spécifique]"
+- "Élément de gameplay [mécanique identifiée]"]
 `;
 
         const result = await visionModel.generateContent([
@@ -221,13 +231,13 @@ Analyse l'image et réponds uniquement sous ce format :
 }
 
 /**
- * Fonction principale de génération de réponse de l'IA Nazuna
+ * Fonction principale de génération de réponse de l'IA Nazuna - CORRIGÉE
  */
 async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup = false, quotedMessage = null, imageBuffer = null, imageMimeType = null, sock = null, lastBotImageAnalysis = null) {
     try {
-        // Chargement des données
+        // Chargement des données - CORRECTION : Stocker dans une variable
         const training = loadTrainingData();
-        
+
         // Charger les mémoires depuis PostgreSQL
         const userMemory = await loadUserMemory(sender);
         const groupMemory = isGroup ? await loadGroupMemory(remoteJid) : null;
@@ -253,10 +263,10 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
         let imageAnalysis = "";
         let previousImageContext = "";
 
-        // Analyser l'image si fournie par l'utilisateur
+        // Analyser l'image si fournie par l'utilisateur - CORRECTION : Passer le contexte training
         if (imageBuffer && imageMimeType) {
             console.log('🔍 Analyse de l\'image utilisateur en cours...');
-            imageAnalysis = await analyzeImageWithVision(imageBuffer, imageMimeType);
+            imageAnalysis = await analyzeImageWithVision(imageBuffer, imageMimeType, training);
             if (imageAnalysis) {
                 console.log('✅ Analyse d\'image utilisateur terminée');
             }
@@ -286,7 +296,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
                     number: userNumber 
                 };
             }
-            
+
             // Ajout du message à l'historique du groupe
             groupMemory.lastMessages = groupMemory.lastMessages || [];
             groupMemory.lastMessages.push({
@@ -297,12 +307,12 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
                 hasImage: !!imageBuffer,
                 imageAnalysis: imageAnalysis || null
             });
-            
+
             // Limitation à 500 messages maximum
             if (groupMemory.lastMessages.length > 500) {
                 groupMemory.lastMessages = groupMemory.lastMessages.slice(-500);
             }
-            
+
             // Construction du contexte de conversation groupe
             conversationContext = `Conversation dans le groupe "${groupName || 'Sans nom'}":\n` +
                 groupMemory.lastMessages
@@ -312,7 +322,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
         } else {
             // Gestion des conversations privées
             userMemory.conversations = userMemory.conversations || [];
-            
+
             if (userMemory.conversations.length > 0) {
                 conversationContext = `Historique de notre conversation privée avec ${userName}:\n` +
                     userMemory.conversations
@@ -345,12 +355,12 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
             const mentionRegex = /@(\d{5,})/g;
             let match;
             const mentionedNumbers = new Set();
-            
+
             // Recherche des mentions dans le message de l'utilisateur
             while ((match = mentionRegex.exec(userText)) !== null) {
                 mentionedNumbers.add(match[1]);
             }
-            
+
             // Ajout des informations sur les personnes mentionnées
             if (mentionedNumbers.size > 0 && groupMemory?.participants) {
                 userMentionsInfo = "Personnes mentionnées dans le message (avec leurs numéros):\n";
@@ -359,7 +369,7 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
                     const mentionedUser = Object.values(groupMemory.participants).find(
                         p => p.number === number
                     );
-                    
+
                     if (mentionedUser) {
                         userMentionsInfo += `- ${mentionedUser.name} (@${number})\n`;
                     } else {
@@ -447,12 +457,12 @@ Supremia:`;
                 fromBot: true,
                 hasImage: !!lastBotImageAnalysis
             });
-            
+
             // Limitation à 100 messages maximum
             if (userMemory.conversations.length > 100) {
                 userMemory.conversations = userMemory.conversations.slice(-100);
             }
-            
+
             // Sauvegarder la mémoire utilisateur
             await saveUserMemory(sender, userMemory);
         } else {
