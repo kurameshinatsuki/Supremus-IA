@@ -1,22 +1,65 @@
 // ./commandes/ia.js
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { downloadContentFromMessage } = require('@whiskeysockets/baileys');
+const path = require('path');
+const fs = require('fs');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const visionModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
+// Chemins des fichiers de données
+const trainingPath = path.join(__dirname, 'Training IA.json');
+
+let trainingData = null;
+let lastModified = null;
+
+// Initialiser la base de données
+// syncDatabase(); // COMMENTÉ - Fonction non définie dans ce fichier
+
+/**
+ * Charge les données d'entraînement depuis le fichier JSON
+ */
+function loadTrainingData() {
+  try {
+    const stats = fs.statSync(trainingPath);
+    if (!lastModified || stats.mtime > lastModified) {
+      trainingData = fs.readFileSync(trainingPath, 'utf-8');
+      lastModified = stats.mtime;
+      console.log("[NazunaAI] Training IA.json rechargé.");
+    }
+  } catch (err) {
+    console.error("[NazunaAI] Erreur de lecture Training IA.json:", err.message);
+    trainingData = "Contexte par défaut indisponible.";
+  }
+  return trainingData;
+}
+
 async function analyzeImage(imageBuffer, imageMimeType) {
     try {
         const base64Image = imageBuffer.toString('base64');
+        
+        // CHANGEMENT : Charger les données d'entraînement ici
+        const training = loadTrainingData();
 
-        const prompt = `
-Analyse l’image et réponds uniquement sous ce format :
+        const prompt = `${training}
 
-**TEXTES :**
-[retranscris tout le texte visible]
+Analyse cette image et réponds EXCLUSIVEMENT sous ce format :
 
-**VISUEL :**
-[description brève et factuelle en quelques mots]
+**CONTENU TEXTUEL :**
+[Retranscris tout le texte visible]
+
+**CONTEXTE VISUEL :**
+[Description concise : 
+- Type d'interface (menu, écran de sélection, carte de jeu, etc.)
+- Éléments interactifs identifiés et leur couleur (boutons, curseurs, icônes)
+- Design global (moderne, rétro, épuré, etc.)
+- Émotions/atmosphère suggérée]
+
+**IDENTIFICATION :**
+[Lier explicitement les éléments à la base de connaissance :
+- "Ceci correspond au personnage [nom] de ABM avec ses compétences [X]"
+- "Interface du jeu [nom] montrant [fonction spécifique]"
+- "Élément de gameplay [mécanique identifiée]"]
 `;
 
         const result = await visionModel.generateContent([
