@@ -5,16 +5,13 @@ const path = require('path');
 const fs = require('fs');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const visionModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+const visionModel = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
-// Chemins des fichiers de données
-const trainingPath = path.join(__dirname, 'Training IA.json');
+// CORRECTION : Chemin vers le fichier à la racine
+const trainingPath = path.join(__dirname, '..', 'Training IA.json');
 
 let trainingData = null;
 let lastModified = null;
-
-// Initialiser la base de données
-// syncDatabase(); // COMMENTÉ - Fonction non définie dans ce fichier
 
 /**
  * Charge les données d'entraînement depuis le fichier JSON
@@ -49,7 +46,7 @@ Analyse cette image et réponds EXCLUSIVEMENT sous ce format :
 [Retranscris tout le texte visible]
 
 **CONTEXTE VISUEL :**
-[Description concise : 
+[Décris brièvement : 
 - Type d'interface (menu, écran de sélection, carte de jeu, etc.)
 - Éléments interactifs identifiés et leur couleur (boutons, curseurs, icônes)
 - Design global (moderne, rétro, épuré, etc.)
