@@ -35,12 +35,14 @@ async function analyzeImage(imageBuffer, imageMimeType) {
     try {
         const base64Image = imageBuffer.toString('base64');
         
-        // CHANGEMENT : Charger les données d'entraînement ici
+      // Charger les données d'entraînement ici
         const training = loadTrainingData();
 
         const prompt = `${training}
 
 Analyse cette image et réponds EXCLUSIVEMENT sous ce format :
+
+N.B : Les icônes en forme de losange représente le potentiel physique (Poing Dorée = Force, Vitesse Bleu/Violette = Vitesse Normal, Énergie verte = Résistance/Durabilité, Œil marron = Sensorialité) des personnages selon la couleur de bordure du losange (Brun/Marron/Bronze = Brown, Gris/Argenté = Gray, Jaune/Dorée = Yellow, Bleu Pure = Blue, Vert Pure = Green). Il y a aussi l'icône d'éclair "⚡" qui représente la réactivité du personnage (1⚡= 500ms, 2⚡= 400ms, 3⚡= 300ms, 4⚡= 200ms, 5⚡= 100ms)
 
 **CONTENU TEXTUEL :**
 [Retranscris tout le texte visible]
@@ -48,8 +50,7 @@ Analyse cette image et réponds EXCLUSIVEMENT sous ce format :
 **CONTEXTE VISUEL :**
 [Décris brièvement : 
 - Type d'interface (menu, écran de sélection, carte de jeu, etc.)
-- Éléments interactifs identifiés et leur couleur (boutons, curseurs, icônes)
-- Design global (moderne, rétro, épuré, etc.)
+- Éléments interactifs identifiés et leur couleur interne et bordure (boutons, curseurs, icônes)
 - Émotions/atmosphère suggérée]
 
 **IDENTIFICATION :**
