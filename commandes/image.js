@@ -55,6 +55,6 @@ async function execute(args, msg, sock) {
 
 module.exports = {
     name: "imagine",
-    description: "Génère une image avec Gemini",
+    description: "Génère une image avec Makima",
     execute
 };
