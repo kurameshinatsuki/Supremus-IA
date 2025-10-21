@@ -22,7 +22,7 @@ function loadTrainingData() {
     if (!lastModified || stats.mtime > lastModified) {
       trainingData = fs.readFileSync(trainingPath, 'utf-8');
       lastModified = stats.mtime;
-      console.log("[NazunaAI] Training IA.json rechargé.");
+      console.log("[SupremIA] Training IA.json rechargé.");
     }
   } catch (err) {
     console.error("[NazunaAI] Erreur de lecture Training IA.json:", err.message);
@@ -42,10 +42,14 @@ async function analyzeImage(imageBuffer, imageMimeType) {
 
 Analyse cette image et réponds EXCLUSIVEMENT sous ce format :
 
-N.B : Les icônes en forme de losange représente le potentiel physique (Poing Dorée = Force, Vitesse Bleu/Violette = Vitesse Normal, Énergie verte = Résistance/Durabilité, Œil marron = Sensorialité) des personnages selon la couleur de bordure du losange (Brun/Marron/Bronze = Brown, Gris/Argenté = Gray, Jaune/Dorée = Yellow, Bleu Pure = Blue, Vert Pure = Green). Il y a aussi l'icône d'éclair "⚡" qui représente la réactivité du personnage (1⚡= 500ms, 2⚡= 400ms, 3⚡= 300ms, 4⚡= 200ms, 5⚡= 100ms)
+N.B : Les icônes en forme de losange représente le potentiel physique (Poing = Force, Speed = Vitesse Normal, Bouclier = Résistance/Durabilité, Œil = Sensorialité) des personnages selon la couleur du losange (Marron/Bronze = Brown, Gris/Argenté = Gray, Jaune/Dorée = Yellow, Bleu Pure = Blue, Vert Pure = Green). Il y a aussi l'icône d'éclair "⚡" qui représente la réactivité du personnage (1⚡= 500ms, 2⚡= 400ms, 3⚡= 300ms, 4⚡= 200ms, 5⚡= 100ms)
 
 **CONTENU TEXTUEL :**
-[Retranscris tout le texte visible]
+[Retranscris tout le texte visible bien organisé :
+- Les textes du haut de l'image (gauche, centre, droit) sont retranscrit dans les premières lignes 
+- Les textes du milieu de l'image (gauche, centre, droit) sont retranscrit dans les secondes lignes 
+- Les textes du bas de l'image (gauche, centre, droit) sont retranscrit dans les dernières lignes
+- Analyse bien les emojis et caractères spéciaux (⊡, 𝗔𝗕𝗖, etc)]
 
 **CONTEXTE VISUEL :**
 [Décris brièvement : 
@@ -55,7 +59,7 @@ N.B : Les icônes en forme de losange représente le potentiel physique (Poing D
 
 **IDENTIFICATION :**
 [Lier explicitement les éléments à la base de connaissance :
-- "Ceci correspond au personnage [nom] de ABM avec ses compétences [X]"
+- "Ceci correspond au personnage [nom] de [jeu] avec ses compétences [X]"
 - "Interface du jeu [nom] montrant [fonction spécifique]"
 - "Élément de gameplay [mécanique identifiée]"]
 `;
