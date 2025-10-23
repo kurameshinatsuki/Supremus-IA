@@ -522,6 +522,7 @@ async function handlePairing(sock) {
  * ========================= */
 async function startBot(sock, state) {
     let BOT_JID = (sock.user && sock.user.id) || (state?.creds?.me?.id) || process.env.BOT_JID || null;
+    let connectionOpened = false;
 
     // Gestion du pairing code
     await handlePairing(sock);
@@ -530,6 +531,16 @@ async function startBot(sock, state) {
         if (u.connection === 'open' && sock.user?.id) {
             BOT_JID = sock.user.id;
             console.log('✅ Connexion ouverte — Bot JID:', BOT_JID);
+            
+            // AFFICHER LA SESSION UNIQUEMENT QUAND LA CONNEXION RÉUSSIT
+            if (!connectionOpened) {
+                connectionOpened = true;
+                console.log('\n✨ CONNEXION WHATSAPP RÉUSSIE !');
+                console.log('📋 SESSION PERSISTANTE À COPIER :');
+                const sessionText = Buffer.from(JSON.stringify(sock.authState.creds)).toString('base64');
+                console.log(sessionText);
+                console.log('💾 Garde ce texte précieusement pour restaurer la session !\n');
+            }
         }
     });
 
@@ -761,16 +772,7 @@ async function main() {
     }
 });
 
-        // MODIFICATION ICI : Afficher la session quand elle est mise à jour
-        sock.ev.on('creds.update', (creds) => {
-            saveCreds();
-            
-            // Affiche la session en Base64 pour copie
-            console.log('\n✨ SESSION PERSISTANTE À COPIER :');
-            const sessionText = Buffer.from(JSON.stringify(creds)).toString('base64');
-            console.log(sessionText);
-            console.log('📋 Copie le texte ci-dessus !\n');
-        });
+        sock.ev.on('creds.update', saveCreds);
 
         console.log('📱 Démarrage avec système de pairing code...');
 
