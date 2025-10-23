@@ -761,7 +761,16 @@ async function main() {
     }
 });
 
-        sock.ev.on('creds.update', saveCreds);
+        // MODIFICATION ICI : Afficher la session quand elle est mise à jour
+        sock.ev.on('creds.update', (creds) => {
+            saveCreds();
+            
+            // Affiche la session en Base64 pour copie
+            console.log('\n✨ SESSION PERSISTANTE À COPIER :');
+            const sessionText = Buffer.from(JSON.stringify(creds)).toString('base64');
+            console.log(sessionText);
+            console.log('📋 Copie le texte ci-dessus !\n');
+        });
 
         console.log('📱 Démarrage avec système de pairing code...');
 
