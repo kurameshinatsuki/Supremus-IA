@@ -1,4 +1,4 @@
-// index.js - Version avec système anti-doublon et pairing code
+// index.js - Version avec affichage session après reconnexion
 
 require('dotenv').config();
 const fs = require('fs');
@@ -522,24 +522,43 @@ async function handlePairing(sock) {
  * ========================= */
 async function startBot(sock, state) {
     let BOT_JID = (sock.user && sock.user.id) || (state?.creds?.me?.id) || process.env.BOT_JID || null;
-    let connectionOpened = false;
+    let sessionDisplayed = false;
 
     // Gestion du pairing code
     await handlePairing(sock);
 
     sock.ev.on('connection.update', (u) => {
+        console.log('🔌 Statut connexion:', u.connection);
+        
         if (u.connection === 'open' && sock.user?.id) {
             BOT_JID = sock.user.id;
             console.log('✅ Connexion ouverte — Bot JID:', BOT_JID);
             
-            // AFFICHER LA SESSION UNIQUEMENT QUAND LA CONNEXION RÉUSSIT
-            if (!connectionOpened) {
-                connectionOpened = true;
-                console.log('\n✨ CONNEXION WHATSAPP RÉUSSIE !');
+            // AFFICHER LA SESSION UNIQUEMENT APRÈS RECONNEXION RÉUSSIE
+            if (!sessionDisplayed && sock.authState.creds.registered) {
+                sessionDisplayed = true;
+                console.log('\n' + '='.repeat(70));
+                console.log('✨ CONNEXION WHATSAPP RÉUSSIE !');
                 console.log('📋 SESSION PERSISTANTE À COPIER :');
+                console.log('='.repeat(70));
+                
                 const sessionText = Buffer.from(JSON.stringify(sock.authState.creds)).toString('base64');
                 console.log(sessionText);
-                console.log('💾 Garde ce texte précieusement pour restaurer la session !\n');
+                
+                console.log('='.repeat(70));
+                console.log('💾 Garde ce texte précieusement pour restaurer la session !');
+                console.log('='.repeat(70) + '\n');
+            }
+        }
+        
+        // Gérer la reconnexion après pairing
+        if (u.connection === 'close') {
+            const shouldReconnect = u.lastDisconnect?.error?.output?.statusCode !== 401;
+            console.log('🔌 Déconnexion, reconnexion:', shouldReconnect);
+            
+            if (shouldReconnect) {
+                // Reset du flag pour afficher à nouveau la session après reconnexion
+                sessionDisplayed = false;
             }
         }
     });
