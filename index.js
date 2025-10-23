@@ -1,4 +1,4 @@
-// index.js - Version V5
+// index.js - Version avec système anti-doublon et pairing code
 
 require('dotenv').config();
 const fs = require('fs');
@@ -27,10 +27,10 @@ const MAX_CACHE_SIZE = 2000;
  */
 function isDuplicateEvent(msg) {
     if (!msg.key || !msg.key.id) return false;
-    
+
     const eventId = msg.key.id;
     const now = Date.now();
-    
+
     // Vérifier si l'événement existe déjà
     if (processedEvents.has(eventId)) {
         const originalTime = processedEvents.get(eventId);
@@ -38,10 +38,10 @@ function isDuplicateEvent(msg) {
         console.log(`🚫 Événement dupliqué détecté: ${eventId} (âge: ${age}ms)`);
         return true;
     }
-    
+
     // Ajouter le nouvel événement
     processedEvents.set(eventId, now);
-    
+
     // Nettoyage automatique si le cache devient trop grand
     if (processedEvents.size > MAX_CACHE_SIZE) {
         console.log(`🧹 Nettoyage cache événements (${processedEvents.size} entrées)`);
@@ -52,7 +52,7 @@ function isDuplicateEvent(msg) {
         processedEvents.clear();
         entries.forEach(([id, timestamp]) => processedEvents.set(id, timestamp));
     }
-    
+
     return false;
 }
 
@@ -62,14 +62,14 @@ function isDuplicateEvent(msg) {
 setInterval(() => {
     const now = Date.now();
     let cleanedCount = 0;
-    
+
     for (const [eventId, timestamp] of processedEvents.entries()) {
         if (now - timestamp > EVENT_TIMEOUT) {
             processedEvents.delete(eventId);
             cleanedCount++;
         }
     }
-    
+
     if (cleanedCount > 0) {
         console.log(`🧹 Nettoyage auto: ${cleanedCount} anciens événements supprimés`);
     }
@@ -149,19 +149,19 @@ function isAIActive(jid) {
  */
 async function getCachedGroupName(sock, remoteJid) {
     if (!remoteJid.endsWith('@g.us')) return null;
-    
+
     if (groupNameCache.has(remoteJid)) {
         return groupNameCache.get(remoteJid);
     }
-    
+
     try {
         const metadata = await sock.groupMetadata(remoteJid);
         const groupName = metadata.subject || null;
-        
+
         // Mettre en cache pour 5 minutes
         groupNameCache.set(remoteJid, groupName);
         setTimeout(() => groupNameCache.delete(remoteJid), 5 * 60 * 1000);
-        
+
         return groupName;
     } catch (error) {
         console.error('❌ Erreur récupération nom du groupe:', error);
@@ -175,27 +175,27 @@ async function getCachedGroupName(sock, remoteJid) {
 async function analyzeAndStoreBotImage(imageUrl, remoteJid) {
     try {
         console.log('🔍 Analyse de l\'image envoyée par le bot...');
-        
+
         // Télécharger l'image depuis l'URL
         const response = await fetch(imageUrl);
         const imageBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(imageBuffer);
-        
+
         // Analyser avec vision
         const analysis = await analyzeImageWithVision(buffer, 'image/jpeg');
-        
+
         if (analysis) {
             // Stocker l'analyse pour ce chat
             botSentImages.set(remoteJid, {
                 analysis: analysis,
                 timestamp: Date.now()
             });
-            
+
             // Nettoyer après 10 minutes
             setTimeout(() => {
                 botSentImages.delete(remoteJid);
             }, 10 * 60 * 1000);
-            
+
             console.log('✅ Analyse vision stockée pour le prochain message');
             return analysis;
         }
@@ -236,11 +236,11 @@ function ask(questionText) {
 async function handleCommand(command, args, msg, sock) {
     const commandName = (command || '').toLowerCase();
     const commandModule = getCommand(commandName);
-    
+
     if (commandModule) {
         return await commandModule.execute(args, msg, sock);
     }
-    
+
     return `❌ Commande inconnue: /${command}\nTapez /help pour voir les commandes disponibles.`;
 }
 
@@ -537,13 +537,13 @@ async function startBot(sock, state) {
         try {
             const msg = messages && messages[0];
             if (!msg || !msg.message) return;
-            
+
             // VÉRIFICATION ANTI-DOUBLON
             if (isDuplicateEvent(msg)) {
                 console.log('🚫 Événement dupliqué ignoré:', msg.key.id);
                 return;
             }
-            
+
             prettyLog(msg);
 
             // Si c'est le bot qui parle → on met en cache et on sort
@@ -629,7 +629,7 @@ async function startBot(sock, state) {
                 // 1) commandes
                 if (isCommand) {
                     const [command, ...args] = text.slice(1).trim().split(/\s+/);
-                    
+
                     // Commande réservée au propriétaire : /ai on/off
                     if (command === 'ai' && isBotOwner(senderJid)) {
                         const action = args[0]?.toLowerCase();
@@ -645,7 +645,7 @@ async function startBot(sock, state) {
                     } else {
                         reply = await handleCommand(command, args, msg, sock);
                     }
-                    
+
                     if (reply) {
                         await sendReplyWithTyping(sock, msg, { text: reply });
                         cacheBotReply(remoteJid, reply);
@@ -702,7 +702,7 @@ async function startBot(sock, state) {
 
                         // Analyser et stocker l'image envoyée pour le prochain message
                         await analyzeAndStoreBotImage(visuel.urlImage, remoteJid);
-                        
+
                         cacheBotReply(remoteJid, replyObj.text);
                     } else {
                         // Envoi normal si pas de visuel détecté
@@ -748,65 +748,34 @@ async function main() {
         await syncDatabase();
         console.log('✅ Base de données PostgreSQL prête');
 
-        // Initialiser le gestionnaire d'auth
-        const AuthManager = require('./auth');
-        const authManager = new AuthManager();
-
-        let state;
-        let saveCreds;
-
-        // Vérifier si une session existe déjà
-        if (authManager.hasExistingSession()) {
-            console.log('🔍 Session existante détectée, tentative de restauration...');
-            const savedCreds = await authManager.loadCredentials();
-            
-            if (savedCreds) {
-                // Utiliser useMultiFileAuthState normalement
-                const authState = await useMultiFileAuthState('./auth');
-                state = authState.state;
-                saveCreds = authState.saveCreds;
-                
-                // Mettre à jour avec les credentials sauvegardés
-                Object.assign(state.creds, savedCreds);
-                console.log('✅ Session restaurée avec succès');
-            } else {
-                // Fallback à la méthode normale
-                const authState = await useMultiFileAuthState('./auth');
-                state = authState.state;
-                saveCreds = authState.saveCreds;
-            }
-        } else {
-            // Nouvelle session
-            const authState = await useMultiFileAuthState('./auth');
-            state = authState.state;
-            saveCreds = authState.saveCreds;
-        }
+        const { state, saveCreds } = await useMultiFileAuthState('./auth');
 
         const sock = makeWASocket({
-            auth: state,
-            printQRInTerminal: false,
-            browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
-            version: [2, 3000, 1025190524],
-            getMessage: async key => {
-                console.log('⚠️ Message non déchiffré, retry demandé:', key);
-                return { conversation: '🔄 Réessaye d\'envoyer ton message' };
-            }
-        });
+    auth: state,
+    printQRInTerminal: false,
+    browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
+    version: [2, 3000, 1025190524], 
+    getMessage: async key => {
+        console.log('⚠️ Message non déchiffré, retry demandé:', key);
+        return { conversation: '🔄 Réessaye d\'envoyer ton message' };
+    }
+});
 
-        // Sauvegarder les credentials à chaque mise à jour
-        sock.ev.on('creds.update', async (creds) => {
-            await saveCreds(); // Sauvegarde Baileys normale
-            await authManager.saveCredentials(creds); // Notre backup
-        });
+        sock.ev.on('creds.update', saveCreds);
 
-        console.log('📱 Démarrage avec système de persistance de session...');
+        console.log('📱 Démarrage avec système de pairing code...');
+
         await startBot(sock, state);
-
     } catch (error) {
         console.error('💥 Erreur fatale lors du démarrage:', error);
         process.exit(1);
     }
 }
+
+main().catch(err => {
+    console.error('💥 Erreur fatale:', err?.stack || err);
+    process.exit(1);
+});
 
 // Export des fonctions
 module.exports = {
