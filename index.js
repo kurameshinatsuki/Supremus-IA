@@ -1,4 +1,4 @@
-// index.js - Version avec affichage session après reconnexion
+// index.js - Version avec reconnexion automatique après pairing
 
 require('dotenv').config();
 const fs = require('fs');
@@ -14,6 +14,9 @@ const { loadCommands, getCommand } = require('./commandes');
 
 const DEBUG = (process.env.DEBUG === 'false') || false;
 let pair = false;
+let sock = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 5;
 
 // =========================
 // SYSTÈME ANTI-DOUBLONS
@@ -527,11 +530,12 @@ async function startBot(sock, state) {
     // Gestion du pairing code
     await handlePairing(sock);
 
-    sock.ev.on('connection.update', (u) => {
-        console.log('🔌 Statut connexion:', u.connection);
+    sock.ev.on('connection.update', async (u) => {
+        console.log('🔌 Statut connexion:', u.connection, '| QR:', u.qr);
         
         if (u.connection === 'open' && sock.user?.id) {
             BOT_JID = sock.user.id;
+            reconnectAttempts = 0; // Reset des tentatives de reconnexion
             console.log('✅ Connexion ouverte — Bot JID:', BOT_JID);
             
             // AFFICHER LA SESSION UNIQUEMENT APRÈS RECONNEXION RÉUSSIE
@@ -554,12 +558,36 @@ async function startBot(sock, state) {
         // Gérer la reconnexion après pairing
         if (u.connection === 'close') {
             const shouldReconnect = u.lastDisconnect?.error?.output?.statusCode !== 401;
-            console.log('🔌 Déconnexion, reconnexion:', shouldReconnect);
+            console.log('🔌 Déconnexion, reconnexion:', shouldReconnect, '| Tentative:', reconnectAttempts);
             
-            if (shouldReconnect) {
+            if (shouldReconnect && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                reconnectAttempts++;
                 // Reset du flag pour afficher à nouveau la session après reconnexion
                 sessionDisplayed = false;
+                
+                // Délai exponentiel avant reconnexion
+                const delayTime = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+                console.log(`🔄 Reconnexion dans ${delayTime}ms...`);
+                
+                await delay(delayTime);
+                console.log('🔄 Tentative de reconnexion...');
+                
+                // Forcer la reconnexion
+                try {
+                    await sock.ws.close();
+                    await delay(1000);
+                    // La reconnexion automatique de Baileys devrait se déclencher
+                } catch (error) {
+                    console.error('❌ Erreur lors de la reconnexion:', error);
+                }
+            } else if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+                console.log('❌ Nombre maximum de tentatives de reconnexion atteint');
             }
+        }
+        
+        // Afficher le QR code si nécessaire
+        if (u.qr) {
+            console.log('📱 QR Code reçu, scannez-le avec WhatsApp');
         }
     });
 
@@ -780,16 +808,19 @@ async function main() {
 
         const { state, saveCreds } = await useMultiFileAuthState('./auth');
 
-        const sock = makeWASocket({
-    auth: state,
-    printQRInTerminal: false,
-    browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
-    version: [2, 3000, 1025190524], 
-    getMessage: async key => {
-        console.log('⚠️ Message non déchiffré, retry demandé:', key);
-        return { conversation: '🔄 Réessaye d\'envoyer ton message' };
-    }
-});
+        sock = makeWASocket({
+            auth: state,
+            printQRInTerminal: false,
+            browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
+            version: [2, 3000, 1025190524], 
+            getMessage: async key => {
+                console.log('⚠️ Message non déchiffré, retry demandé:', key);
+                return { conversation: '🔄 Réessaye d\'envoyer ton message' };
+            },
+            // Activer la reconnexion automatique
+            reconnectOnError: true,
+            maxRetries: 10,
+        });
 
         sock.ev.on('creds.update', saveCreds);
 
@@ -798,7 +829,11 @@ async function main() {
         await startBot(sock, state);
     } catch (error) {
         console.error('💥 Erreur fatale lors du démarrage:', error);
-        process.exit(1);
+        // Tentative de redémarrage après 5 secondes
+        setTimeout(() => {
+            console.log('🔄 Redémarrage du bot...');
+            main();
+        }, 5000);
     }
 }
 
