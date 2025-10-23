@@ -1,5 +1,5 @@
 // ./commandes/session.js
-const { isBotOwner } = require('../index');
+const { isBotOwner } = require('./index');
 
 async function executeDecodeSession(args, msg, sock) {
     const sender = msg.key.participant || msg.key.remoteJid;
