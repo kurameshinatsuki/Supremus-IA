@@ -1,4 +1,4 @@
-// index.js - Version avec système anti-doublon et pairing code
+// index.js - Version V5
 
 require('dotenv').config();
 const fs = require('fs');
@@ -748,34 +748,65 @@ async function main() {
         await syncDatabase();
         console.log('✅ Base de données PostgreSQL prête');
 
-        const { state, saveCreds } = await useMultiFileAuthState('./auth');
+        // Initialiser le gestionnaire d'auth
+        const AuthManager = require('./auth');
+        const authManager = new AuthManager();
+
+        let state;
+        let saveCreds;
+
+        // Vérifier si une session existe déjà
+        if (authManager.hasExistingSession()) {
+            console.log('🔍 Session existante détectée, tentative de restauration...');
+            const savedCreds = await authManager.loadCredentials();
+            
+            if (savedCreds) {
+                // Utiliser useMultiFileAuthState normalement
+                const authState = await useMultiFileAuthState('./auth');
+                state = authState.state;
+                saveCreds = authState.saveCreds;
+                
+                // Mettre à jour avec les credentials sauvegardés
+                Object.assign(state.creds, savedCreds);
+                console.log('✅ Session restaurée avec succès');
+            } else {
+                // Fallback à la méthode normale
+                const authState = await useMultiFileAuthState('./auth');
+                state = authState.state;
+                saveCreds = authState.saveCreds;
+            }
+        } else {
+            // Nouvelle session
+            const authState = await useMultiFileAuthState('./auth');
+            state = authState.state;
+            saveCreds = authState.saveCreds;
+        }
 
         const sock = makeWASocket({
-    auth: state,
-    printQRInTerminal: false,
-    browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
-    version: [2, 3000, 1025190524], 
-    getMessage: async key => {
-        console.log('⚠️ Message non déchiffré, retry demandé:', key);
-        return { conversation: '🔄 Réessaye d\'envoyer ton message' };
-    }
-});
+            auth: state,
+            printQRInTerminal: false,
+            browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
+            version: [2, 3000, 1025190524],
+            getMessage: async key => {
+                console.log('⚠️ Message non déchiffré, retry demandé:', key);
+                return { conversation: '🔄 Réessaye d\'envoyer ton message' };
+            }
+        });
 
-        sock.ev.on('creds.update', saveCreds);
+        // Sauvegarder les credentials à chaque mise à jour
+        sock.ev.on('creds.update', async (creds) => {
+            await saveCreds(); // Sauvegarde Baileys normale
+            await authManager.saveCredentials(creds); // Notre backup
+        });
 
-        console.log('📱 Démarrage avec système de pairing code...');
-
+        console.log('📱 Démarrage avec système de persistance de session...');
         await startBot(sock, state);
+
     } catch (error) {
         console.error('💥 Erreur fatale lors du démarrage:', error);
         process.exit(1);
     }
 }
-
-main().catch(err => {
-    console.error('💥 Erreur fatale:', err?.stack || err);
-    process.exit(1);
-});
 
 // Export des fonctions
 module.exports = {
