@@ -12,25 +12,29 @@ async function executeReset(args, msg, sock) {
         // Vérifier si un JID est fourni en argument
         if (args.length > 0) {
             const jidArg = args[0].trim();
-            
+
             // Validation basique du JID
             if (!jidArg.includes('@') || (!jidArg.endsWith('@s.whatsapp.net') && !jidArg.endsWith('@g.us'))) {
                 return "❌ Format de JID invalide. Utilisez: !reset [jid] ou !reset pour la conversation actuelle.";
             }
-            
+
             targetJid = jidArg;
         }
 
         // Vérifications de sécurité et permissions
+        const isOwner = await isBotOwner(sender);
+        
         if (targetJid.endsWith('@g.us')) {
             // Pour les groupes
-            const isAdmin = await isUserAdmin(targetJid, sender, sock);
-            if (!isAdmin) {
-                return "❌ Seuls les administrateurs peuvent réinitialiser les conversations de groupe.";
+            if (!isOwner) {
+                const isAdmin = await isUserAdmin(targetJid, sender, sock);
+                if (!isAdmin) {
+                    return "❌ Seuls les administrateurs peuvent réinitialiser les conversations de groupe.";
+                }
             }
         } else {
             // Pour les conversations privées
-            if (targetJid !== sender && !targetJid.includes('@g.us')) {
+            if (targetJid !== sender && !isOwner) {
                 return "❌ Vous ne pouvez réinitialiser que votre propre conversation ou des groupes où vous êtes administrateur.";
             }
         }
@@ -68,9 +72,12 @@ async function executeTagall(args, msg, sock) {
         return "❌ Cette commande n'est disponible que dans les groupes.";
     }
 
-    const isAdmin = await isUserAdmin(jid, sender, sock);
-    if (!isAdmin) {
-        return "❌ Seuls les administrateurs peuvent utiliser cette commande.";
+    const isOwner = await isBotOwner(sender);
+    if (!isOwner) {
+        const isAdmin = await isUserAdmin(jid, sender, sock);
+        if (!isAdmin) {
+            return "❌ Seuls les administrateurs peuvent utiliser cette commande.";
+        }
     }
 
     try {
@@ -100,6 +107,104 @@ async function executeTagall(args, msg, sock) {
     }
 }
 
+// Commande hidetag
+async function executeHidetag(args, msg, sock) {
+    const jid = msg.key.remoteJid;
+    const sender = msg.key.participant || msg.key.remoteJid;
+
+    if (!jid.endsWith('@g.us')) {
+        return "❌ Cette commande n'est disponible que dans les groupes.";
+    }
+
+    const isOwner = await isBotOwner(sender);
+    if (!isOwner) {
+        const isAdmin = await isUserAdmin(jid, sender, sock);
+        if (!isAdmin) {
+            return "❌ Seuls les administrateurs peuvent utiliser cette commande.";
+        }
+    }
+
+    try {
+        const groupMetadata = await sock.groupMetadata(jid);
+        const participants = groupMetadata.participants || [];
+
+        const mentions = [];
+        participants.forEach(p => {
+            if (p.id !== sock.user.id) {
+                mentions.push(p.id);
+            }
+        });
+
+        const message = args.length > 0 ? args.join(' ') : '📢 Notification silencieuse';
+        
+        await sock.sendMessage(
+            jid,
+            { 
+                text: message, 
+                mentions,
+                contextInfo: {
+                    mentionedJid: mentions
+                }
+            },
+            { quoted: msg }
+        );
+
+        return null;
+    } catch (error) {
+        console.error('❌ Erreur lors du /hidetag:', error);
+        return "❌ Une erreur est survenue lors de la mention silencieuse.";
+    }
+}
+
+// Commande tag
+async function executeTag(args, msg, sock) {
+    const jid = msg.key.remoteJid;
+    const sender = msg.key.participant || msg.key.remoteJid;
+
+    if (!jid.endsWith('@g.us')) {
+        return "❌ Cette commande n'est disponible que dans les groupes.";
+    }
+
+    const isOwner = await isBotOwner(sender);
+    if (!isOwner) {
+        const isAdmin = await isUserAdmin(jid, sender, sock);
+        if (!isAdmin) {
+            return "❌ Seuls les administrateurs peuvent utiliser cette commande.";
+        }
+    }
+
+    try {
+        const groupMetadata = await sock.groupMetadata(jid);
+        const participants = groupMetadata.participants || [];
+
+        const mentions = [];
+        let mentionText = '';
+
+        participants.forEach(p => {
+            if (p.id !== sock.user.id) {
+                mentions.push(p.id);
+                mentionText += `@${String(p.id).split('@')[0]} `;
+            }
+        });
+
+        const customMessage = args.length > 0 ? args.join(' ') : '📢 Mention de tous les membres';
+        
+        await sock.sendMessage(
+            jid,
+            { 
+                text: `${customMessage}\n${mentionText}`, 
+                mentions 
+            },
+            { quoted: msg }
+        );
+
+        return null;
+    } catch (error) {
+        console.error('❌ Erreur lors du /tag:', error);
+        return "❌ Une erreur est survenue lors de la mention des membres.";
+    }
+}
+
 // Commande help
 async function executeHelp(args, msg, sock) {
     const { getAllCommands } = require('./index');
@@ -121,8 +226,18 @@ module.exports = [
     },
     {
         name: 'tagall',
-        description: 'Mentionne tous les membres du groupe',
+        description: 'Mentionne tous les membres du groupe avec liste visible',
         execute: executeTagall
+    },
+    {
+        name: 'hidetag',
+        description: 'Mentionne tous les membres sans afficher la liste (tag silencieux)',
+        execute: executeHidetag
+    },
+    {
+        name: 'tag',
+        description: 'Mentionne tous les membres avec un message personnalisé',
+        execute: executeTag
     },
     {
         name: 'help',
