@@ -4,27 +4,51 @@ const { resetConversationMemory } = require('../nazunaAI');
 
 // Commande reset
 async function executeReset(args, msg, sock) {
-    const jid = msg.key.remoteJid;
+    let targetJid = msg.key.remoteJid;
     const sender = msg.key.participant || msg.key.remoteJid;
-    const isGroup = jid.endsWith('@g.us');
+    const isGroup = targetJid.endsWith('@g.us');
 
     try {
-        if (isGroup) {
-            const isAdmin = await isUserAdmin(jid, sender, sock);
+        // Vérifier si un JID est fourni en argument
+        if (args.length > 0) {
+            const jidArg = args[0].trim();
+            
+            // Validation basique du JID
+            if (!jidArg.includes('@') || (!jidArg.endsWith('@s.whatsapp.net') && !jidArg.endsWith('@g.us'))) {
+                return "❌ Format de JID invalide. Utilisez: !reset [jid] ou !reset pour la conversation actuelle.";
+            }
+            
+            targetJid = jidArg;
+        }
+
+        // Vérifications de sécurité et permissions
+        if (targetJid.endsWith('@g.us')) {
+            // Pour les groupes
+            const isAdmin = await isUserAdmin(targetJid, sender, sock);
             if (!isAdmin) {
-                return "❌ Seuls les administrateurs peuvent utiliser cette commande.";
+                return "❌ Seuls les administrateurs peuvent réinitialiser les conversations de groupe.";
+            }
+        } else {
+            // Pour les conversations privées
+            if (targetJid !== sender && !targetJid.includes('@g.us')) {
+                return "❌ Vous ne pouvez réinitialiser que votre propre conversation ou des groupes où vous êtes administrateur.";
             }
         }
 
         // Réinitialiser le cache des messages du bot
         const { botMessageCache } = require('../index');
-        botMessageCache.delete(jid);
+        botMessageCache.delete(targetJid);
 
         // Réinitialiser la mémoire dans la base de données
-        const success = await resetConversationMemory(isGroup ? jid : sender, isGroup);
+        const targetIsGroup = targetJid.endsWith('@g.us');
+        const success = await resetConversationMemory(targetJid, targetIsGroup);
 
         if (success) {
-            return "✅ Historique de la conversation réinitialisé avec succès !";
+            if (targetJid === msg.key.remoteJid) {
+                return "✅ Historique de la conversation réinitialisé avec succès !";
+            } else {
+                return `✅ Historique de la conversation ${targetJid} réinitialisé avec succès !`;
+            }
         } else {
             return "❌ Une erreur est survenue lors de la réinitialisation.";
         }
