@@ -1,3 +1,5 @@
+mon code est correct ?
+
 // nazunaAI.js - Version corrigée avec mémoire des images envoyées
 
 require('dotenv').config();
@@ -10,16 +12,9 @@ const { detecterVisuel } = require('./visuels');
 // Initialisation de l'API Google Generative AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Modèle principal avec recherche web activée
-const model = genAI.getGenerativeModel({
-    model: "gemini-flash-latest",
-    tools: [{ name: "google_search" }]  // Active la recherche Internet
-});
-
-// Modèle pour la vision (sans recherche web)
-const visionModel = genAI.getGenerativeModel({ 
-    model: "gemini-flash-latest" 
-});
+// Modèle principal avec recherche web désactivée
+const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+const visionModel = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
 // Chemins des fichiers de données
 const trainingPath = path.join(__dirname, 'Training IA.json');
@@ -525,12 +520,6 @@ games_stats, games_clean
 
 - Tu peux raisonner mentalement avant d’agir pour assurer la cohérence.  
 - Ta sortie finale doit toujours être claire, cohérente et conforme au rôle.
-
-> RECHERCHE & VÉRIFICATION <
-- Utilise la recherche web pour vérifier les informations récentes lorsque c'est nécessaire.
-- Pour les actualités, événements en cours ou informations postérieures à ta date de coupure, effectue une recherche.
-- Cite tes sources lorsque tu t'appuies sur des informations spécifiques trouvées en ligne.
-- Priorise les sources fiables et officielles.
 
 > CONVERSATION ACTUELLE <
 
