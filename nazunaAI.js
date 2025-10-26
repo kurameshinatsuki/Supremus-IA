@@ -1,6 +1,4 @@
-mon code est correct ?
-
-// nazunaAI.js - Version corrigée avec mémoire des images envoyées
+// nazunaAI.js - Version v3.0
 
 require('dotenv').config();
 const fs = require('fs');
