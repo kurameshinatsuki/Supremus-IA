@@ -12,7 +12,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Modèle principal avec recherche web activée
 const model = genAI.getGenerativeModel({ 
-    model: "gemini-flash-latest",
+    model: "gemini-2.5-flash",
     tools: [
         {
             googleSearchRetrieval: {}  // Activation de la recherche web
