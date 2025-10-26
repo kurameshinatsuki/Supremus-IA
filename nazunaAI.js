@@ -404,6 +404,7 @@ ${imageAnalysis ? `\n=== ANALYSE DE L'IMAGE REÇUE ===\n${imageAnalysis}\n======
 
 - Lieu : ${isGroup ? `Groupe "${groupName || 'Sans nom'}"` : `Conversation privée avec ${userName}`}.
 - Utilisateur actif : ${userName} (@${userNumber}).
+- Le seul et unique "John Supremus" est (+22554191184)
 
 ${lastBotImageAnalysis ? `
 MÉMOIRE VISUELLE :
