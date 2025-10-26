@@ -11,13 +11,9 @@ const { detecterVisuel } = require('./visuels');
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Modèle principal avec recherche web activée
-const model = genAI.getGenerativeModel({ 
-    model: "gemini-2.5-flash",
-    tools: [
-        {
-            googleSearchRetrieval: {}  // Activation de la recherche web
-        }
-    ]
+const model = genAI.getGenerativeModel({
+    model: "gemini-flash-latest",
+    tools: [{ name: "google_search" }]  // Active la recherche Internet
 });
 
 // Modèle pour la vision (sans recherche web)
