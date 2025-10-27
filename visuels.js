@@ -273,7 +273,7 @@ const visuels = {
 /**
  * Nettoie et normalise le texte pour la détection de mots-clés
  */
-/*function normaliserTexte(texte) {
+function normaliserTexte(texte) {
   return String(texte || "")
     .toLowerCase()
     .normalize("NFD")
@@ -281,20 +281,50 @@ const visuels = {
     .replace(/[^\p{L}\p{N}\p{Emoji}\s]/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
-}*/
+}
+
+/**
+ * Extrait la section visuel d'un texte formaté
+ */
+function extraireSectionVisuel(texte) {
+  const texteBrut = String(texte || "").trim();
+  
+  // Regex pour capturer le contenu après "🎦 *Visuel :*"
+  const regexVisuel = /🎦\s*\*?Visuel\*?\s*:\*?\s*([^\n]*)/i;
+  const match = texteBrut.match(regexVisuel);
+  
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+  
+  return null;
+}
 
 /**
  * Détecte un visuel correspondant au texte
  */
 function detecterVisuel(texte) {
-  const texteBrut = String(texte || "").trim();
+  // Essayer d'abord d'extraire la section visuel
+  const sectionVisuel = extraireSectionVisuel(texte);
+  const texteAVerifier = sectionVisuel || String(texte || "").trim();
+  
+  // Normaliser le texte pour la comparaison
+  const texteNormalise = normaliserTexte(texteAVerifier);
   
   for (const [motCle, urlImage] of Object.entries(visuels)) {
-    if (texteBrut === motCle) {
-      return { motCle, urlImage };
+    const motCleNormalise = normaliserTexte(motCle);
+    
+    // Comparaison exacte
+    if (texteNormalise === motCleNormalise) {
+      return { 
+        motCle: motCle, 
+        urlImage, 
+        sectionTrouvee: !!sectionVisuel,
+        texteOriginal: sectionVisuel || texteAVerifier
+      };
     }
   }
-  
+
   return null;
 }
 
@@ -305,8 +335,25 @@ function obtenirMotsCles() {
   return Object.keys(visuels);
 }
 
+/**
+ * Analyse un texte complet et extrait toutes les informations
+ */
+function analyserTexteComplet(texte) {
+  const sectionVisuel = extraireSectionVisuel(texte);
+  const detection = detecterVisuel(texte);
+  
+  return {
+    sectionVisuel: sectionVisuel,
+    detectionVisuel: detection,
+    texteComplet: String(texte || "").trim()
+  };
+}
+
+
 module.exports = {
   visuels,
   detecterVisuel,
-  obtenirMotsCles
+  obtenirMotsCles,
+  extraireSectionVisuel,
+  analyserTexteComplet
 };
