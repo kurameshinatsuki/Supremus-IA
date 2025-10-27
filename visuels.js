@@ -273,7 +273,7 @@ const visuels = {
 /**
  * Nettoie et normalise le texte pour la détection de mots-clés
  */
-function normaliserTexte(texte) {
+/*function normaliserTexte(texte) {
   return String(texte || "")
     .toLowerCase()
     .normalize("NFD")
@@ -281,7 +281,7 @@ function normaliserTexte(texte) {
     .replace(/[^\p{L}\p{N}\p{Emoji}\s]/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
-}
+}*/
 
 /**
  * Détecte un visuel correspondant au texte
