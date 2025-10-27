@@ -287,18 +287,10 @@ const visuels = {
  * Détecte un visuel correspondant au texte
  */
 function detecterVisuel(texte) {
-  const texteNormalise = normaliserTexte(texte);
+  const texteBrut = String(texte || "").trim();
   
   for (const [motCle, urlImage] of Object.entries(visuels)) {
-    const motCleNormalise = normaliserTexte(motCle);
-    
-    // Détection par parties pour gérer les espaces
-    const partiesMotCle = motCleNormalise.split(' ');
-    const texteContientToutesParties = partiesMotCle.every(partie => 
-      texteNormalise.includes(partie)
-    );
-    
-    if (texteContientToutesParties) {
+    if (texteBrut === motCle) {
       return { motCle, urlImage };
     }
   }
