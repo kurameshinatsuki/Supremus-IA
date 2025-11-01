@@ -1,4 +1,4 @@
-// index.js - Version avec support audio et signature invisible
+// index.js - Version avec support audio
 
 require('dotenv').config();
 const fs = require('fs');
@@ -18,7 +18,7 @@ let pair = false;
 // =========================
 // SYSTÈME SIGNATURE INVISIBLE
 // =========================
-const BOT_SIGNATURE = '\u200B\u200C\u200D'; // Caractères Zero-Width invisibles
+const BOT_SIGNATURE = '\u200B\u200C\u200D';
 
 /**
  * Ajoute une signature invisible aux messages du bot
@@ -263,6 +263,41 @@ async function transcribeAudioMessage(msg) {
         return transcription;
     } catch (error) {
         console.error('❌ Erreur transcription audio:', error);
+        return null;
+    }
+}
+
+/**
+ * Télécharge le média d'un message cité
+ */
+async function downloadQuotedMedia(msg) {
+    try {
+        const contextInfo = msg.message?.extendedTextMessage?.contextInfo;
+        if (!contextInfo || !contextInfo.quotedMessage) return null;
+
+        const quotedMessage = contextInfo.quotedMessage;
+        const quotedMessageType = Object.keys(quotedMessage)[0];
+
+        if (quotedMessageType === 'imageMessage') {
+            console.log('📸 Image citée détectée, téléchargement...');
+            const buffer = await downloadMediaContent({ message: { imageMessage: quotedMessage.imageMessage } }, 'imageMessage');
+            return {
+                type: 'image',
+                buffer: buffer,
+                mimeType: quotedMessage.imageMessage.mimetype
+            };
+        } else if (quotedMessageType === 'audioMessage') {
+            console.log('🎤 Audio cité détecté, téléchargement...');
+            const buffer = await downloadMediaContent({ message: { audioMessage: quotedMessage.audioMessage } }, 'audioMessage');
+            return {
+                type: 'audio',
+                buffer: buffer
+            };
+        }
+
+        return null;
+    } catch (error) {
+        console.error('❌ Erreur téléchargement média cité:', error);
         return null;
     }
 }
@@ -648,27 +683,68 @@ async function startBot(sock, state) {
             const isReplyToBot = quotedText && quotedMatchesBot(remoteJid, quotedText);
 
             // ===========================================
-            // GESTION DES MESSAGES AUDIO
+            // NOUVELLE FONCTIONNALITÉ : ANALYSE DES MÉDIAS CITÉS
             // ===========================================
-            let transcribedAudioText = null;
-            if (messageType === 'audioMessage') {
-                console.log('🎤 Message audio détecté, transcription en cours...');
-                transcribedAudioText = await transcribeAudioMessage(msg);
+            let quotedMediaBuffer = null;
+            let quotedMediaType = null;
+            let quotedMediaMimeType = null;
+            let transcribedQuotedAudio = null;
+
+            // Vérifier si l'utilisateur mentionne le bot sur un média cité
+            if (isMentioned && msg.message?.extendedTextMessage?.contextInfo) {
+                console.log('🔍 Mention détectée sur message cité, vérification média...');
+                const quotedMedia = await downloadQuotedMedia(msg);
                 
-                if (transcribedAudioText) {
-                    console.log('✅ Transcription audio réussie:', transcribedAudioText);
-                } else {
-                    console.log('❌ Échec de la transcription audio');
-                    // Envoyer un message d'erreur si la transcription échoue
-                    await sendReply(sock, msg, { 
-                        text: '❌ Désolé, je n\'ai pas pu comprendre le message audio. Pouvez-vous réessayer ou taper votre message ?' 
-                    });
-                    return;
+                if (quotedMedia) {
+                    if (quotedMedia.type === 'image') {
+                        console.log('📸 Image citée détectée avec mention - analyse déclenchée');
+                        quotedMediaBuffer = quotedMedia.buffer;
+                        quotedMediaType = 'image';
+                        quotedMediaMimeType = quotedMedia.mimeType;
+                    } else if (quotedMedia.type === 'audio') {
+                        console.log('🎤 Audio cité détecté avec mention - transcription déclenchée');
+                        try {
+                            transcribedQuotedAudio = await transcribeAudio(quotedMedia.buffer);
+                            if (transcribedQuotedAudio) {
+                                console.log('✅ Transcription audio citée réussie:', transcribedQuotedAudio);
+                            } else {
+                                console.log('❌ Échec transcription audio cité');
+                            }
+                        } catch (error) {
+                            console.error('❌ Erreur transcription audio cité:', error);
+                        }
+                    }
                 }
             }
 
             // ===========================================
-            // NOUVELLE LOGIQUE : ANALYSE D'IMAGES CONDITIONNELLE CORRIGÉE
+            // GESTION DES MESSAGES AUDIO DIRECTS
+            // ===========================================
+            let transcribedAudioText = null;
+            if (messageType === 'audioMessage') {
+                // Condition audio : mention OU réponse au bot
+                const shouldTranscribeAudio = isMentioned || isReplyToBot || !isGroup;
+                
+                if (shouldTranscribeAudio) {
+                    console.log('🎤 Message audio détecté, transcription en cours...');
+                    transcribedAudioText = await transcribeAudioMessage(msg);
+                    
+                    if (transcribedAudioText) {
+                        console.log('✅ Transcription audio réussie:', transcribedAudioText);
+                    } else {
+                        console.log('❌ Échec de la transcription audio');
+                        await sendReply(sock, msg, { 
+                            text: '❌ Désolé, je n\'ai pas pu comprendre le message audio. Pouvez-vous réessayer ou taper votre message ?' 
+                        });
+                        return;
+                    }
+                } else {
+                    console.log('🎤 Audio ignoré - Aucune condition de transcription remplie');
+                }
+            }
+
+            // ===========================================
+            // ANALYSE D'IMAGES CONDITIONNELLE CORRIGÉE
             // ===========================================
             let imageBuffer = null;
             let imageMimeType = null;
@@ -686,7 +762,7 @@ async function startBot(sock, state) {
                 const shouldAnalyzeImage = imageHasMention || isReplyToBotWithImage || isPrivateImage;
                 
                 if (shouldAnalyzeImage) {
-                    console.log('📸 Analyse image déclenchée - Conditions:', {
+                    console.log('📸 Analyse image directe déclenchée - Conditions:', {
                         imageHasMention,
                         isReplyToBotWithImage, 
                         isPrivateImage
@@ -695,18 +771,21 @@ async function startBot(sock, state) {
                     imageMimeType = msg.message.imageMessage.mimetype;
                     console.log('📸 Image téléchargée, taille:', imageBuffer?.length || 0, 'bytes');
                 } else {
-                    console.log('📸 Image ignorée - Aucune condition d\'analyse remplie');
+                    console.log('📸 Image directe ignorée - Aucune condition d\'analyse remplie');
                 }
             }
 
-            // Texte final à traiter (texte normal OU transcription audio)
-            const finalText = transcribedAudioText || text;
+            // ===========================================
+            // TEXTE FINAL À TRAITER
+            // ===========================================
+            // Priorité : transcription audio citée > transcription audio directe > texte normal
+            const finalText = transcribedQuotedAudio || transcribedAudioText || text;
 
             // Vérifier si c'est un message avec média mais sans texte
-            if (!finalText && !imageBuffer) {
+            if (!finalText && !imageBuffer && !quotedMediaBuffer) {
                 // Si c'est un message média sans légende, on ne le traite pas
                 const isMedia = ['imageMessage', 'videoMessage', 'documentMessage', 'audioMessage'].includes(messageType);
-                if (isMedia && !transcribedAudioText) {
+                if (isMedia && !transcribedAudioText && !transcribedQuotedAudio) {
                     console.log('📸 Message média sans légende - ignoré');
                     return;
                 }
@@ -728,14 +807,22 @@ async function startBot(sock, state) {
             }
 
             // ===========================================
-            // DÉCISION DE RÉPONSE
+            // DÉCISION DE RÉPONSE AMÉLIORÉE
             // ===========================================
-            // - privé => toujours répondre
-            // - groupe => répondre si commande, mention, reply-to-bot, ou image à analyser, ou audio transcrit
-            const shouldReply = !isGroup || isCommand || isReplyToBot || isMentioned || (imageBuffer && (isMentioned || isReplyToBot || !isGroup)) || transcribedAudioText;
+            // Nouveaux critères : média cité avec mention
+            const hasQuotedMediaWithMention = isMentioned && (quotedMediaBuffer || transcribedQuotedAudio);
+            
+            const shouldReply = !isGroup || 
+                              isCommand || 
+                              isReplyToBot || 
+                              isMentioned || 
+                              (imageBuffer && (isMentioned || isReplyToBot || !isGroup)) || 
+                              transcribedAudioText ||
+                              transcribedQuotedAudio ||
+                              hasQuotedMediaWithMention;
 
             console.log(
-                `📌 Decision: shouldReply=${shouldReply} | isGroup=${isGroup} | isCommand=${isCommand} | isReplyToBot=${isReplyToBot} | isMentioned=${isMentioned} | hasImage=${!!imageBuffer} | hasAudio=${!!transcribedAudioText} | AIActive=${isAIActive(remoteJid)}`
+                `📌 Decision: shouldReply=${shouldReply} | isGroup=${isGroup} | isCommand=${isCommand} | isReplyToBot=${isReplyToBot} | isMentioned=${isMentioned} | hasImage=${!!imageBuffer} | hasQuotedImage=${!!quotedMediaBuffer} | hasAudio=${!!transcribedAudioText} | hasQuotedAudio=${!!transcribedQuotedAudio} | AIActive=${isAIActive(remoteJid)}`
             );
 
             if (!shouldReply) return;
@@ -770,7 +857,7 @@ async function startBot(sock, state) {
                     }
                 }
 
-                // 2) IA (mention / reply / privé / image conditionnelle / audio)
+                // 2) IA (mention / reply / privé / image conditionnelle / audio / média cité)
                 console.log(`🤖 IA: génération de réponse pour ${senderJid} dans ${remoteJid}`);
 
                 // Récupérer l'analyse de la dernière image envoyée par le bot (si existe)
@@ -792,6 +879,10 @@ async function startBot(sock, state) {
                 const quotedSender = contextInfo?.participant || null;
                 const quotedMessageInfo = quotedTextForAI && quotedSender ? { sender: quotedSender, text: quotedTextForAI } : null;
 
+                // Déterminer le buffer d'image à utiliser (image directe OU image citée)
+                const finalImageBuffer = quotedMediaBuffer || imageBuffer;
+                const finalImageMimeType = quotedMediaMimeType || imageMimeType;
+
                 const replyObj = await nazunaReply(
                     finalText, 
                     senderJid, 
@@ -799,11 +890,11 @@ async function startBot(sock, state) {
                     pushName, 
                     isGroup,
                     quotedMessageInfo,
-                    imageBuffer,
-                    imageMimeType,
+                    finalImageBuffer,
+                    finalImageMimeType,
                     sock,
                     lastBotImageAnalysis,
-                    transcribedAudioText ? true : false // Indiquer si c'est une transcription audio
+                    transcribedAudioText || transcribedQuotedAudio ? true : false // Indiquer si c'est une transcription audio
                 );
 
                 if (replyObj && replyObj.text) {
@@ -911,5 +1002,6 @@ module.exports = {
     addSignature,
     hasSignature,
     removeSignature,
-    transcribeAudioMessage
+    transcribeAudioMessage,
+    downloadQuotedMedia
 };
