@@ -1,4 +1,4 @@
-// index.js - Version avec système anti-doublon et pairing code
+// index.js - Version avec signature invisible et analyse d'images conditionnelle
 
 require('dotenv').config();
 const fs = require('fs');
@@ -14,6 +14,32 @@ const { loadCommands, getCommand } = require('./commandes');
 
 const DEBUG = (process.env.DEBUG === 'false') || false;
 let pair = false;
+
+// =========================
+// SYSTÈME SIGNATURE INVISIBLE
+// =========================
+const BOT_SIGNATURE = '\u200B\u200C\u200D'; // Caractères Zero-Width invisibles
+
+/**
+ * Ajoute une signature invisible aux messages du bot
+ */
+function addSignature(text) {
+    return text + BOT_SIGNATURE;
+}
+
+/**
+ * Vérifie si un texte contient la signature du bot
+ */
+function hasSignature(text) {
+    return text && text.includes(BOT_SIGNATURE);
+}
+
+/**
+ * Supprime la signature d'un texte pour l'affichage
+ */
+function removeSignature(text) {
+    return text ? text.replace(BOT_SIGNATURE, '') : text;
+}
 
 // =========================
 // SYSTÈME ANTI-DOUBLONS
@@ -123,9 +149,11 @@ function isBotOwner(sender) {
         : [];
 
     return botOwners.some(owner => {
-        const cleanSender = sender.split('@')[0];
-        const cleanOwner = owner.split('@')[0];
-        return cleanSender === cleanOwner;
+        // Extraire la partie numérique uniquement
+        const senderNumber = sender.replace(/\D/g, '');
+        const ownerNumber = owner.replace(/\D/g, '');
+        
+        return senderNumber === ownerNumber;
     });
 }
 
@@ -429,9 +457,18 @@ function cacheBotReply(chatId, text) {
 
 /**
  * Vérifie si le texte cité correspond à un des derniers messages du bot
+ * AVEC SUPPORT DE LA SIGNATURE INVISIBLE
  */
 function quotedMatchesBot(chatId, quotedText) {
     if (!chatId || !quotedText) return false;
+    
+    // Vérifier d'abord avec la signature invisible
+    if (hasSignature(quotedText)) {
+        console.log('✅ Message cité reconnu via signature invisible');
+        return true;
+    }
+    
+    // Fallback: vérification par cache (pour compatibilité)
     const arr = botMessageCache.get(chatId) || [];
     const q = String(quotedText || '').trim();
     const qStripped = stripLeadingNonAlnum(q);
@@ -464,6 +501,7 @@ async function sendReply(sock, msg, contentObj, optionsExtra = {}) {
 
 /**
  * Envoie une réponse avec un délai aléatoire et l'indicateur "en train d'écrire"
+ * AVEC SIGNATURE INVISIBLE
  */
 async function sendReplyWithTyping(sock, msg, contentObj, optionsExtra = {}) {
     const jid = msg.key.remoteJid;
@@ -480,6 +518,12 @@ async function sendReplyWithTyping(sock, msg, contentObj, optionsExtra = {}) {
 
     // Désactiver l'indicateur et envoyer le message
     await sock.sendPresenceUpdate('paused', jid);
+    
+    // Ajouter la signature invisible au texte
+    if (contentObj.text) {
+        contentObj.text = addSignature(contentObj.text);
+    }
+    
     return sock.sendMessage(jid, contentObj, opts);
 }
 
@@ -564,11 +608,39 @@ async function startBot(sock, state) {
             let imageBuffer = null;
             let imageMimeType = null;
 
+            // ===========================================
+            // NOUVELLE LOGIQUE : ANALYSE D'IMAGES CONDITIONNELLE
+            // ===========================================
+            
+            // Détection des mentions du bot
+            const botNumbers = ['244285576339508', '177958127927437']; // Tous les numéros possibles
+            const keywords = ['supremia', 'makima'];
+            const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+            
+            const isMentioned =
+                mentionedJids.some(jid => botNumbers.some(num => jid.includes(num))) ||
+                (text && botNumbers.some(num => text.includes('@' + num))) ||
+                (text && keywords.some(word => text.toLowerCase().includes(word)));
+
+            // Vérifier si c'est une réponse à un message du bot (avec signature)
+            const quotedText = msg.message.extendedTextMessage?.contextInfo?.quotedMessage
+                ? extractTextFromQuoted(msg.message.extendedTextMessage.contextInfo)
+                : null;
+            const isReplyToBot = quotedText && quotedMatchesBot(remoteJid, quotedText);
+
+            // Télécharger l'image UNIQUEMENT si nécessaire
             if (messageType === 'imageMessage') {
-                // Télécharger l'image pour analyse
-                imageBuffer = await downloadMediaContent(msg, 'imageMessage');
-                imageMimeType = msg.message.imageMessage.mimetype;
-                console.log('📸 Image détectée, taille:', imageBuffer?.length || 0, 'bytes');
+                // Condition d'analyse : Mention OU Réponse au bot OU Privé
+                const shouldDownloadImage = isMentioned || isReplyToBot || !isGroup;
+                
+                if (shouldDownloadImage) {
+                    console.log('📸 Image détectée avec condition d\'analyse - téléchargement...');
+                    imageBuffer = await downloadMediaContent(msg, 'imageMessage');
+                    imageMimeType = msg.message.imageMessage.mimetype;
+                    console.log('📸 Image téléchargée, taille:', imageBuffer?.length || 0, 'bytes');
+                } else {
+                    console.log('📸 Image détectée mais aucune condition d\'analyse remplie - ignorée');
+                }
             }
 
             // Vérifier si c'est un message avec média mais sans texte
@@ -587,22 +659,6 @@ async function startBot(sock, state) {
                 return;
             }
 
-            // Si l'utilisateur répond à un message du bot
-            const quotedText = msg.message.extendedTextMessage?.contextInfo?.quotedMessage
-                ? extractTextFromQuoted(msg.message.extendedTextMessage.contextInfo)
-                : null;
-            const isReplyToBot = quotedText && quotedMatchesBot(remoteJid, quotedText);
-
-            // Mention du bot (via @numéro ou via liste mentions)
-            const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
-            const botNumbers = ['244285576339508', '177958127927437']; // Tous les numéros possibles
-            const keywords = ['supremia', 'makima'];
-
-            const isMentioned =
-                mentionedJids.some(jid => botNumbers.some(num => jid.includes(num))) ||
-                (text && botNumbers.some(num => text.includes('@' + num))) ||
-                (text && keywords.some(word => text.toLowerCase().includes(word)));
-
             // Commande ?
             const isCommand = text && text.startsWith('/');
 
@@ -614,8 +670,8 @@ async function startBot(sock, state) {
 
             // Décision :
             // - privé => toujours répondre
-            // - groupe => répondre si commande, mention, ou reply-to-bot
-            const shouldReply = !isGroup || isCommand || isReplyToBot || isMentioned || imageBuffer;
+            // - groupe => répondre si commande, mention, ou reply-to-bot, ou image à analyser
+            const shouldReply = !isGroup || isCommand || isReplyToBot || isMentioned || (imageBuffer && (isMentioned || isReplyToBot || !isGroup));
 
             console.log(
                 `📌 Decision: shouldReply=${shouldReply} | isGroup=${isGroup} | isCommand=${isCommand} | isReplyToBot=${isReplyToBot} | isMentioned=${isMentioned} | hasImage=${!!imageBuffer} | AIActive=${isAIActive(remoteJid)}`
@@ -653,7 +709,7 @@ async function startBot(sock, state) {
                     }
                 }
 
-                // 2) IA (mention / reply / privé / image)
+                // 2) IA (mention / reply / privé / image conditionnelle)
                 console.log(`🤖 IA: génération de réponse pour ${senderJid} dans ${remoteJid}`);
 
                 // Récupérer l'analyse de la dernière image envoyée par le bot (si existe)
@@ -696,7 +752,7 @@ async function startBot(sock, state) {
                         // Envoyer l'image avec la réponse en légende
                         await sock.sendMessage(remoteJid, {
                             image: { url: visuel.urlImage },
-                            caption: replyObj.text,
+                            caption: addSignature(replyObj.text), // Signature ajoutée
                             mentions: replyObj.mentions || []
                         }, { quoted: msg });
 
@@ -705,9 +761,9 @@ async function startBot(sock, state) {
 
                         cacheBotReply(remoteJid, replyObj.text);
                     } else {
-                        // Envoi normal si pas de visuel détecté
+                        // Envoi normal si pas de visuel détecté (signature ajoutée dans sendReplyWithTyping)
                         const messageData = {
-                            text: replyObj.text,
+                            text: replyObj.text, // Signature sera ajoutée dans sendReplyWithTyping
                             mentions: replyObj.mentions || []
                         };
                         await sendReplyWithTyping(sock, msg, messageData);
@@ -789,5 +845,8 @@ module.exports = {
     analyzeAndStoreBotImage,
     getLastBotImageAnalysis,
     setAIStatus,
-    isAIActive
+    isAIActive,
+    addSignature,
+    hasSignature,
+    removeSignature
 };
