@@ -1,4 +1,4 @@
-// nazunaAI.js - Version v3.0
+// nazunaAI.js - Version v3.0 - CORRIGÉ AVEC RECHERCHE WEB ACTIVÉE
 
 require('dotenv').config();
 const fs = require('fs');
@@ -7,12 +7,19 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { User, Group, Conversation, syncDatabase } = require('./models');
 const { detecterVisuel } = require('./visuels');
 
+// =========================================================
+// CORRECTION 1: Utilisation d'un modèle compatible avec l'ancrage Google Search
+// Modèles compatibles : gemini-2.5-flash, gemini-2.5-pro, etc.
+// gemini-2.5-flash est un bon choix pour le rapport performance-prix.
+// =========================================================
+const MODEL_NAME = "gemini-2.5-flash"; 
+
 // Initialisation de l'API Google Generative AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Modèle principal avec recherche web désactivée
-const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-const visionModel = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+// Modèles principaux
+const model = genAI.getGenerativeModel({ model: MODEL_NAME });
+const visionModel = genAI.getGenerativeModel({ model: MODEL_NAME }); // Vous pouvez utiliser le même pour la vision
 
 // Chemins des fichiers de données
 const trainingPath = path.join(__dirname, 'Training IA.json');
@@ -410,9 +417,7 @@ En attendant la reprise, les joueurs qu’ils soient **enregistrés ou non** peu
 - **Combats** dans le Hall  
 - **Courses** dans le Hall
 - **Duels Yu-Gi-Oh** dans le Hall
-- Et une bêta test en **sessions Origamy World** disponibles uniquement sur le serveur : **“Origamy World : Spécial Story”**  
-
-Cette période de pause est l’occasion pour la communauté de **se familiariser avec les mécaniques de jeu**, d’expérimenter les systèmes et de renforcer l’esprit Supremus avant la grande reprise. Néanmoins certains joueurs sont déjà enregistré leur données sont dans le bot Supremus-MD dans la catégorie **PLAYER-PROFIL** mais l'usage de ces commandes sont strictement interdits en dehors da la communauté principal SRPN donc même dans les Hall c'est interdit.
+- Et une bêta test en **sessions Origamy World** disponibles uniquement sur le serveur : **“Origamy World : Spécial Story”** Cette période de pause est l’occasion pour la communauté de **se familiariser avec les mécaniques de jeu**, d’expérimenter les systèmes et de renforcer l’esprit Supremus avant la grande reprise. Néanmoins certains joueurs sont déjà enregistré leur données sont dans le bot Supremus-MD dans la catégorie **PLAYER-PROFIL** mais l'usage de ces commandes sont strictement interdits en dehors da la communauté principal SRPN donc même dans les Hall c'est interdit.
 
 > CONTEXTE ACTUEL <
 
@@ -422,7 +427,7 @@ Cette période de pause est l’occasion pour la communauté de **se familiarise
 - N'utilise JAMAIS le nom pour les mentions,tu peux aussi parlé d'un utilisateur en écrivant son nom dans ta reponse. 
 - Si on te demande de "tag" ou "mentionner" quelqu'un, utilise toujours son numéro. 
 - Tu dois tag uniquement dans les conversations de groupe mais seulement si nécéssaire et non dans la conversation privé. 
-- Ne mélange JAMAIS les propos de plusieurs utilisateurs : répond uniquement en fonction de l'interlocuteur actuel (${userNumber}) sur le sujet dont vous discutez sauf lors d'une supervision Origamy World, traité les joueurs de façon collectif si ils sont dans la même zone.
+- Ne mélange JAMAIS les propos de plusieurs utilisateurs : répond uniquement en fonction de l'interlocuteur actuel (@${userNumber}) sur le sujet dont vous discutez sauf lors d'une supervision Origamy World, traité les joueurs de façon collectif si ils sont dans la même zone.
 - Le seul et unique "John Supremus" est (+22554191184)
 
 ${lastBotImageAnalysis ? `
@@ -671,13 +676,23 @@ Toute réponse au joueur doit être envoyée **dans un second message distinct**
 ${userName} (@${userNumber}) : ${userText}${imageBuffer ? ' [📸 IMAGE JOINTE]' : ''}
 SUPREMIA :`
 
+        // =========================================================
+        // CORRECTION 2: Activation de l'outil Google Search pour la recherche en ligne
+        // =========================================================
+        const generationConfig = {
+            tools: [{ googleSearch: {} }], // Active l'ancrage avec la recherche Google
+        };
+
         // Génération de la réponse via l'API Gemini
         console.log('🤖 Génération de réponse avec Gemini...');
-        const result = await model.generateContent(prompt);
+        const result = await model.generateContent({
+            contents: prompt,
+            config: generationConfig, // Utilise la configuration avec l'outil de recherche
+        });
         const response = await result.response;
         let text = (response && response.text) ? response.text().trim() : '';
-
-        // Mise à jour de l'historique des conversations privées
+        // ... (reste du code)
+// Mise à jour de l'historique des conversations privées
         if (!isGroup) {
             userMemory.conversations.push({
                 text: userText,
