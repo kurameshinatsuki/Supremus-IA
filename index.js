@@ -1,4 +1,4 @@
-// index.js - Version avec signature invisible et analyse d'images conditionnelle corrigée
+// index.js - Version avec support audio et signature invisible
 
 require('dotenv').config();
 const fs = require('fs');
@@ -6,7 +6,7 @@ const path = require('path');
 const readline = require('readline');
 const sharp = require('sharp');
 const { default: makeWASocket, useMultiFileAuthState, delay, downloadContentFromMessage, DisconnectReason } = require('@whiskeysockets/baileys');
-const { nazunaReply, resetConversationMemory, analyzeImageWithVision } = require('./nazunaAI');
+const { nazunaReply, resetConversationMemory, analyzeImageWithVision, transcribeAudio } = require('./nazunaAI');
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 const { syncDatabase } = require('./models');
 const { detecterVisuel } = require('./visuels');
@@ -246,6 +246,28 @@ function getLastBotImageAnalysis(remoteJid) {
 }
 
 /**
+ * Convertit un message audio en texte
+ */
+async function transcribeAudioMessage(msg) {
+    try {
+        console.log('🎤 Transcription audio en cours...');
+        const audioBuffer = await downloadMediaContent(msg, 'audioMessage');
+        
+        if (!audioBuffer) {
+            console.log('❌ Impossible de télécharger l\'audio');
+            return null;
+        }
+
+        const transcription = await transcribeAudio(audioBuffer);
+        console.log('✅ Transcription audio terminée:', transcription);
+        return transcription;
+    } catch (error) {
+        console.error('❌ Erreur transcription audio:', error);
+        return null;
+    }
+}
+
+/**
  * Petit utilitaire CLI (pairing code)
  */
 function ask(questionText) {
@@ -309,12 +331,13 @@ function extractTextFromQuoted(contextInfo = {}) {
         qm?.imageMessage?.caption ||
         qm?.videoMessage?.caption ||
         qm?.documentMessage?.caption ||
+        qm?.audioMessage?.caption ||
         null
     );
 }
 
 /**
- * Type de message (texte, image, etc.)
+ * Type de message (texte, image, audio, etc.)
  */
 function getMessageType(msg) {
     if (!msg || !msg.message) return null;
@@ -335,7 +358,7 @@ function extractText(msg) {
     if (m.extendedTextMessage?.text) return m.extendedTextMessage.text;
 
     // Messages média avec caption
-    const mediaTypes = ['imageMessage', 'videoMessage', 'documentMessage'];
+    const mediaTypes = ['imageMessage', 'videoMessage', 'documentMessage', 'audioMessage'];
     for (const type of mediaTypes) {
         if (m[type]?.caption) return m[type].caption;
     }
@@ -625,6 +648,26 @@ async function startBot(sock, state) {
             const isReplyToBot = quotedText && quotedMatchesBot(remoteJid, quotedText);
 
             // ===========================================
+            // GESTION DES MESSAGES AUDIO
+            // ===========================================
+            let transcribedAudioText = null;
+            if (messageType === 'audioMessage') {
+                console.log('🎤 Message audio détecté, transcription en cours...');
+                transcribedAudioText = await transcribeAudioMessage(msg);
+                
+                if (transcribedAudioText) {
+                    console.log('✅ Transcription audio réussie:', transcribedAudioText);
+                } else {
+                    console.log('❌ Échec de la transcription audio');
+                    // Envoyer un message d'erreur si la transcription échoue
+                    await sendReply(sock, msg, { 
+                        text: '❌ Désolé, je n\'ai pas pu comprendre le message audio. Pouvez-vous réessayer ou taper votre message ?' 
+                    });
+                    return;
+                }
+            }
+
+            // ===========================================
             // NOUVELLE LOGIQUE : ANALYSE D'IMAGES CONDITIONNELLE CORRIGÉE
             // ===========================================
             let imageBuffer = null;
@@ -656,11 +699,14 @@ async function startBot(sock, state) {
                 }
             }
 
+            // Texte final à traiter (texte normal OU transcription audio)
+            const finalText = transcribedAudioText || text;
+
             // Vérifier si c'est un message avec média mais sans texte
-            if (!text && !imageBuffer) {
+            if (!finalText && !imageBuffer) {
                 // Si c'est un message média sans légende, on ne le traite pas
                 const isMedia = ['imageMessage', 'videoMessage', 'documentMessage', 'audioMessage'].includes(messageType);
-                if (isMedia) {
+                if (isMedia && !transcribedAudioText) {
                     console.log('📸 Message média sans légende - ignoré');
                     return;
                 }
@@ -673,7 +719,7 @@ async function startBot(sock, state) {
             }
 
             // Commande ?
-            const isCommand = text && text.startsWith('/');
+            const isCommand = finalText && finalText.startsWith('/');
 
             // Vérifier si l'IA est désactivée pour cette discussion
             if (!isAIActive(remoteJid) && !isCommand) {
@@ -685,11 +731,11 @@ async function startBot(sock, state) {
             // DÉCISION DE RÉPONSE
             // ===========================================
             // - privé => toujours répondre
-            // - groupe => répondre si commande, mention, reply-to-bot, ou image à analyser
-            const shouldReply = !isGroup || isCommand || isReplyToBot || isMentioned || (imageBuffer && (isMentioned || isReplyToBot || !isGroup));
+            // - groupe => répondre si commande, mention, reply-to-bot, ou image à analyser, ou audio transcrit
+            const shouldReply = !isGroup || isCommand || isReplyToBot || isMentioned || (imageBuffer && (isMentioned || isReplyToBot || !isGroup)) || transcribedAudioText;
 
             console.log(
-                `📌 Decision: shouldReply=${shouldReply} | isGroup=${isGroup} | isCommand=${isCommand} | isReplyToBot=${isReplyToBot} | isMentioned=${isMentioned} | hasImage=${!!imageBuffer} | AIActive=${isAIActive(remoteJid)}`
+                `📌 Decision: shouldReply=${shouldReply} | isGroup=${isGroup} | isCommand=${isCommand} | isReplyToBot=${isReplyToBot} | isMentioned=${isMentioned} | hasImage=${!!imageBuffer} | hasAudio=${!!transcribedAudioText} | AIActive=${isAIActive(remoteJid)}`
             );
 
             if (!shouldReply) return;
@@ -699,7 +745,7 @@ async function startBot(sock, state) {
 
                 // 1) commandes
                 if (isCommand) {
-                    const [command, ...args] = text.slice(1).trim().split(/\s+/);
+                    const [command, ...args] = finalText.slice(1).trim().split(/\s+/);
 
                     // Commande réservée au propriétaire : /ai on/off
                     if (command === 'ai' && isBotOwner(senderJid)) {
@@ -724,7 +770,7 @@ async function startBot(sock, state) {
                     }
                 }
 
-                // 2) IA (mention / reply / privé / image conditionnelle)
+                // 2) IA (mention / reply / privé / image conditionnelle / audio)
                 console.log(`🤖 IA: génération de réponse pour ${senderJid} dans ${remoteJid}`);
 
                 // Récupérer l'analyse de la dernière image envoyée par le bot (si existe)
@@ -747,7 +793,7 @@ async function startBot(sock, state) {
                 const quotedMessageInfo = quotedTextForAI && quotedSender ? { sender: quotedSender, text: quotedTextForAI } : null;
 
                 const replyObj = await nazunaReply(
-                    text, 
+                    finalText, 
                     senderJid, 
                     remoteJid, 
                     pushName, 
@@ -756,12 +802,13 @@ async function startBot(sock, state) {
                     imageBuffer,
                     imageMimeType,
                     sock,
-                    lastBotImageAnalysis
+                    lastBotImageAnalysis,
+                    transcribedAudioText ? true : false // Indiquer si c'est une transcription audio
                 );
 
                 if (replyObj && replyObj.text) {
                     // Détection de visuel
-                    const visuel = detecterVisuel(text) || detecterVisuel(replyObj.text);
+                    const visuel = detecterVisuel(finalText) || detecterVisuel(replyObj.text);
 
                     if (visuel && visuel.urlImage) {
                         // Envoyer l'image avec la réponse en légende
@@ -863,5 +910,6 @@ module.exports = {
     isAIActive,
     addSignature,
     hasSignature,
-    removeSignature
+    removeSignature,
+    transcribeAudioMessage
 };
