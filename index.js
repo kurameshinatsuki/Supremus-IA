@@ -1,4 +1,4 @@
-// index.js - Version avec signature invisible et analyse d'images conditionnelle
+// index.js - Version avec signature invisible et analyse d'images conditionnelle corrigée
 
 require('dotenv').config();
 const fs = require('fs');
@@ -604,15 +604,9 @@ async function startBot(sock, state) {
             const messageType = getMessageType(msg);
             const senderJid = msg.key.participant || remoteJid;
 
-            // Vérifier si c'est un message avec média
-            let imageBuffer = null;
-            let imageMimeType = null;
-
             // ===========================================
-            // NOUVELLE LOGIQUE : ANALYSE D'IMAGES CONDITIONNELLE
+            // DÉTECTION DES MENTIONS DU BOT
             // ===========================================
-            
-            // Détection des mentions du bot
             const botNumbers = ['244285576339508', '177958127927437']; // Tous les numéros possibles
             const keywords = ['supremia', 'makima'];
             const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
@@ -622,24 +616,43 @@ async function startBot(sock, state) {
                 (text && botNumbers.some(num => text.includes('@' + num))) ||
                 (text && keywords.some(word => text.toLowerCase().includes(word)));
 
-            // Vérifier si c'est une réponse à un message du bot (avec signature)
+            // ===========================================
+            // VÉRIFICATION RÉPONSE AU BOT (AVEC SIGNATURE)
+            // ===========================================
             const quotedText = msg.message.extendedTextMessage?.contextInfo?.quotedMessage
                 ? extractTextFromQuoted(msg.message.extendedTextMessage.contextInfo)
                 : null;
             const isReplyToBot = quotedText && quotedMatchesBot(remoteJid, quotedText);
 
-            // Télécharger l'image UNIQUEMENT si nécessaire
+            // ===========================================
+            // NOUVELLE LOGIQUE : ANALYSE D'IMAGES CONDITIONNELLE CORRIGÉE
+            // ===========================================
+            let imageBuffer = null;
+            let imageMimeType = null;
+
             if (messageType === 'imageMessage') {
-                // Condition d'analyse : Mention OU Réponse au bot OU Privé
-                const shouldDownloadImage = isMentioned || isReplyToBot || !isGroup;
+                // CONDITION 1: Image avec mention dans la légende
+                const imageHasMention = isMentioned;
                 
-                if (shouldDownloadImage) {
-                    console.log('📸 Image détectée avec condition d\'analyse - téléchargement...');
+                // CONDITION 2: Réponse à un message du bot AVEC image
+                const isReplyToBotWithImage = isReplyToBot && messageType === 'imageMessage';
+                
+                // CONDITION 3: Discussion privée (toutes les images analysées)
+                const isPrivateImage = !isGroup;
+                
+                const shouldAnalyzeImage = imageHasMention || isReplyToBotWithImage || isPrivateImage;
+                
+                if (shouldAnalyzeImage) {
+                    console.log('📸 Analyse image déclenchée - Conditions:', {
+                        imageHasMention,
+                        isReplyToBotWithImage, 
+                        isPrivateImage
+                    });
                     imageBuffer = await downloadMediaContent(msg, 'imageMessage');
                     imageMimeType = msg.message.imageMessage.mimetype;
                     console.log('📸 Image téléchargée, taille:', imageBuffer?.length || 0, 'bytes');
                 } else {
-                    console.log('📸 Image détectée mais aucune condition d\'analyse remplie - ignorée');
+                    console.log('📸 Image ignorée - Aucune condition d\'analyse remplie');
                 }
             }
 
@@ -668,9 +681,11 @@ async function startBot(sock, state) {
                 return;
             }
 
-            // Décision :
+            // ===========================================
+            // DÉCISION DE RÉPONSE
+            // ===========================================
             // - privé => toujours répondre
-            // - groupe => répondre si commande, mention, ou reply-to-bot, ou image à analyser
+            // - groupe => répondre si commande, mention, reply-to-bot, ou image à analyser
             const shouldReply = !isGroup || isCommand || isReplyToBot || isMentioned || (imageBuffer && (isMentioned || isReplyToBot || !isGroup));
 
             console.log(
