@@ -852,7 +852,7 @@ async function startBot(sock, state) {
                     imageMimeType = msg.message.imageMessage.mimetype;
                     console.log('📸 Image téléchargée, taille:', imageBuffer?.length || 0, 'bytes');
                 } else {
-                    console.log('📸 Image directe ignorée - Aucune condition d'analyse remplie');
+                    console.log('📸 Image directe ignorée - Aucune condition d\'analyse remplie');
                 }
             }
 
