@@ -1,4 +1,4 @@
-// index.js - Version avec support audio
+// index.js - Version avec support audio et améliorations
 
 require('dotenv').config();
 const fs = require('fs');
@@ -303,6 +303,31 @@ async function downloadQuotedMedia(msg) {
 }
 
 /**
+ * Extrait le contenu des messages viewOnce (vues uniques)
+ */
+function extractViewOnceContent(msg) {
+    if (!msg || !msg.message) return null;
+    
+    const viewOnceMessage = msg.message.viewOnceMessage;
+    if (!viewOnceMessage) return null;
+    
+    const innerMessage = viewOnceMessage.message;
+    if (!innerMessage) return null;
+    
+    // Extraire le type de média
+    const mediaType = Object.keys(innerMessage)[0];
+    
+    // Extraire le texte (caption) si présent
+    const caption = innerMessage[mediaType]?.caption || '';
+    
+    return {
+        type: mediaType,
+        caption: caption,
+        message: innerMessage[mediaType]
+    };
+}
+
+/**
  * Petit utilitaire CLI (pairing code)
  */
 function ask(questionText) {
@@ -386,6 +411,13 @@ function extractText(msg) {
     if (!msg || !msg.message) return '';
 
     const m = msg.message;
+    
+    // Vérifier les messages viewOnce en premier
+    const viewOnceContent = extractViewOnceContent(msg);
+    if (viewOnceContent && viewOnceContent.caption) {
+        return viewOnceContent.caption;
+    }
+    
     // Message texte simple
     if (m.conversation) return m.conversation;
 
@@ -396,11 +428,6 @@ function extractText(msg) {
     const mediaTypes = ['imageMessage', 'videoMessage', 'documentMessage', 'audioMessage'];
     for (const type of mediaTypes) {
         if (m[type]?.caption) return m[type].caption;
-    }
-
-    // Messages viewOnce (messages supprimés après visualisation)
-    if (m.viewOnceMessage?.message) {
-        return extractText({ message: m.viewOnceMessage.message });
     }
 
     // Messages éphemères (disappearing messages)
@@ -471,10 +498,12 @@ async function getRandomSticker() {
 
         const buffer = fs.readFileSync(inputPath);
 
-        // Créer un sticker avec les métadonnées Suprêmus/Makima
+        // Créer un sticker avec les métadonnées Suprêmus/Makima ET signature invisible
+        const stickerMetadata = "Makima - Suprêmus" + BOT_SIGNATURE;
+        
         const sticker = new Sticker(buffer, {
             pack: "Makima",
-            author: "Suprêmus",
+            author: stickerMetadata, // Signature invisible incluse
             type: StickerTypes.FULL,
             quality: 100,
         });
@@ -682,6 +711,10 @@ async function startBot(sock, state) {
                 : null;
             const isReplyToBot = quotedText && quotedMatchesBot(remoteJid, quotedText);
 
+            // NOUVEAU: Vérifier si c'est une réponse à un sticker du bot
+            const quotedSticker = msg.message.extendedTextMessage?.contextInfo?.quotedMessage?.stickerMessage;
+            const isReplyToBotSticker = quotedSticker && isReplyToBot;
+
             // ===========================================
             // NOUVELLE FONCTIONNALITÉ : ANALYSE DES MÉDIAS CITÉS
             // ===========================================
@@ -718,15 +751,63 @@ async function startBot(sock, state) {
             }
 
             // ===========================================
-            // GESTION DES MESSAGES AUDIO DIRECTS
+            // DÉTECTION DES VUES UNIQUES (VIEW ONCE)
+            // ===========================================
+            let viewOnceContent = null;
+            if (messageType === 'viewOnceMessage') {
+                viewOnceContent = extractViewOnceContent(msg);
+                console.log('👁️ Message viewOnce détecté:', {
+                    type: viewOnceContent?.type,
+                    caption: viewOnceContent?.caption
+                });
+                
+                // Conditions pour traiter les vues uniques :
+                // - Mention OU réponse au bot OU privé
+                const shouldProcessViewOnce = isMentioned || isReplyToBot || isReplyToBotSticker || !isGroup;
+                
+                if (shouldProcessViewOnce && viewOnceContent) {
+                    console.log('📸 ViewOnce image à analyser - Conditions remplies');
+                    
+                    // Télécharger l'image viewOnce
+                    if (viewOnceContent.type === 'imageMessage') {
+                        try {
+                            const stream = await downloadContentFromMessage(
+                                viewOnceContent.message, 
+                                'image'
+                            );
+                            const chunks = [];
+                            for await (const chunk of stream) {
+                                chunks.push(chunk);
+                            }
+                            imageBuffer = Buffer.concat(chunks);
+                            imageMimeType = viewOnceContent.message.mimetype;
+                            console.log('📸 Image viewOnce téléchargée, taille:', imageBuffer?.length || 0, 'bytes');
+                        } catch (error) {
+                            console.error('❌ Erreur téléchargement image viewOnce:', error);
+                        }
+                    }
+                }
+            }
+
+            // ===========================================
+            // GESTION DES MESSAGES AUDIO DIRECTS AVEC CONDITIONS AMÉLIORÉES
             // ===========================================
             let transcribedAudioText = null;
             if (messageType === 'audioMessage') {
-                // Condition audio : mention OU réponse au bot
-                const shouldTranscribeAudio = isMentioned || isReplyToBot || !isGroup;
+                // CONDITIONS AUDIO ÉTENDUES : 
+                // - Mention OU 
+                // - Réponse au bot (texte) OU 
+                // - Réponse à un sticker du bot OU
+                // - Discussion privée
+                const shouldTranscribeAudio = isMentioned || isReplyToBot || isReplyToBotSticker || !isGroup;
                 
                 if (shouldTranscribeAudio) {
-                    console.log('🎤 Message audio détecté, transcription en cours...');
+                    console.log('🎤 Message audio détecté, transcription en cours... Conditions:', {
+                        isMentioned, 
+                        isReplyToBot, 
+                        isReplyToBotSticker, 
+                        isPrivate: !isGroup
+                    });
                     transcribedAudioText = await transcribeAudioMessage(msg);
                     
                     if (transcribedAudioText) {
@@ -771,8 +852,40 @@ async function startBot(sock, state) {
                     imageMimeType = msg.message.imageMessage.mimetype;
                     console.log('📸 Image téléchargée, taille:', imageBuffer?.length || 0, 'bytes');
                 } else {
-                    console.log('📸 Image directe ignorée - Aucune condition d\'analyse remplie');
+                    console.log('📸 Image directe ignorée - Aucune condition d'analyse remplie');
                 }
+            }
+
+            // ===========================================
+            // GESTION DES STICKERS
+            // ===========================================
+            const isStickerMessage = messageType === 'stickerMessage';
+            const isReplyWithSticker = isStickerMessage && (isReplyToBot || isMentioned || !isGroup);
+
+            // Si l'utilisateur envoie un sticker en réponse au bot, répondre par un sticker
+            if (isReplyWithSticker) {
+                console.log('🎨 Réponse par sticker déclenchée');
+                const stickerPath = await getRandomSticker();
+                if (stickerPath) {
+                    await sock.sendMessage(remoteJid, { sticker: fs.readFileSync(stickerPath) }, { quoted: msg });
+                    
+                    // Mettre en cache la "réponse" sticker pour la détection future
+                    cacheBotReply(remoteJid, "🎨 Sticker envoyé");
+                    
+                    // Supprimer le fichier temporaire
+                    try {
+                        fs.unlinkSync(stickerPath);
+                    } catch (e) {
+                        console.error('Erreur suppression sticker temporaire:', e);
+                    }
+                    return; // Ne pas traiter plus loin
+                }
+            }
+
+            // Si simple sticker sans contexte, ignorer
+            if (isStickerMessage && !isReplyToBot && !isMentioned && isGroup) {
+                console.log('🎨 Sticker simple ignoré en groupe');
+                return;
             }
 
             // ===========================================
@@ -782,9 +895,9 @@ async function startBot(sock, state) {
             const finalText = transcribedQuotedAudio || transcribedAudioText || text;
 
             // Vérifier si c'est un message avec média mais sans texte
-            if (!finalText && !imageBuffer && !quotedMediaBuffer) {
+            if (!finalText && !imageBuffer && !quotedMediaBuffer && !viewOnceContent) {
                 // Si c'est un message média sans légende, on ne le traite pas
-                const isMedia = ['imageMessage', 'videoMessage', 'documentMessage', 'audioMessage'].includes(messageType);
+                const isMedia = ['imageMessage', 'videoMessage', 'documentMessage', 'audioMessage', 'viewOnceMessage'].includes(messageType);
                 if (isMedia && !transcribedAudioText && !transcribedQuotedAudio) {
                     console.log('📸 Message média sans légende - ignoré');
                     return;
@@ -815,14 +928,16 @@ async function startBot(sock, state) {
             const shouldReply = !isGroup || 
                               isCommand || 
                               isReplyToBot || 
+                              isReplyToBotSticker || // NOUVEAU
                               isMentioned || 
                               (imageBuffer && (isMentioned || isReplyToBot || !isGroup)) || 
                               transcribedAudioText ||
                               transcribedQuotedAudio ||
-                              hasQuotedMediaWithMention;
+                              hasQuotedMediaWithMention ||
+                              (viewOnceContent && (isMentioned || isReplyToBot || !isGroup)); // NOUVEAU
 
             console.log(
-                `📌 Decision: shouldReply=${shouldReply} | isGroup=${isGroup} | isCommand=${isCommand} | isReplyToBot=${isReplyToBot} | isMentioned=${isMentioned} | hasImage=${!!imageBuffer} | hasQuotedImage=${!!quotedMediaBuffer} | hasAudio=${!!transcribedAudioText} | hasQuotedAudio=${!!transcribedQuotedAudio} | AIActive=${isAIActive(remoteJid)}`
+                `📌 Decision: shouldReply=${shouldReply} | isGroup=${isGroup} | isCommand=${isCommand} | isReplyToBot=${isReplyToBot} | isReplyToBotSticker=${isReplyToBotSticker} | isMentioned=${isMentioned} | hasImage=${!!imageBuffer} | hasViewOnce=${!!viewOnceContent} | hasQuotedImage=${!!quotedMediaBuffer} | hasAudio=${!!transcribedAudioText} | hasQuotedAudio=${!!transcribedQuotedAudio} | AIActive=${isAIActive(remoteJid)}`
             );
 
             if (!shouldReply) return;
@@ -879,7 +994,7 @@ async function startBot(sock, state) {
                 const quotedSender = contextInfo?.participant || null;
                 const quotedMessageInfo = quotedTextForAI && quotedSender ? { sender: quotedSender, text: quotedTextForAI } : null;
 
-                // Déterminer le buffer d'image à utiliser (image directe OU image citée)
+                // Déterminer le buffer d'image à utiliser (image directe OU image citée OU viewOnce)
                 const finalImageBuffer = quotedMediaBuffer || imageBuffer;
                 const finalImageMimeType = quotedMediaMimeType || imageMimeType;
 
@@ -1003,5 +1118,6 @@ module.exports = {
     hasSignature,
     removeSignature,
     transcribeAudioMessage,
-    downloadQuotedMedia
+    downloadQuotedMedia,
+    extractViewOnceContent
 };
