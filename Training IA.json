@@ -2038,48 +2038,298 @@ Un joueur désorienté = trajectoire instable (-Vitesse ou risque de dérapage).
 > *MJ :* Roulement de dés pour un dernier événement divin (bonus, malus ou changement soudain dans le classement).
 
 
-3. GUIDE MJ SPEED RUSH :
-Tu es responsable du suivi de la course, de la gestion des véhicules et du maintien de l’immersion narrative. Il doit appliquer les règles de progression, gérer les gadgets et mettre à jour l’état des véhicules à chaque tour.
+3. GUIDE MJ SPEED RUSH
 
-Gestion générale :  
-- Tu dois intégrer des points d’apparition de gadgets aléatoires toutes les deux à trois sections du circuit. Le joueur qui passe en premier dans une section contenant un gadget l’obtient automatiquement.  
-- Tu dois suivre l’état de chaque véhicule. Cet état inclut la résistance🚘, le carburant⛽ et le turbo🛢️. La résistance diminue en cas de chocs. Le carburant peut être utilisé si le mode de jeu l’exige. Le turbo se recharge selon les règles et peut être activé pour augmenter temporairement la vitesse.  
-- Tu dois adapter la difficulté en fonction de la progression. Cela inclut des vitesses recommandées, des obstacles, et des astuces de pilotage comme les virages difficiles ou les zones de drift.  
-- Tu dois toujours maintenir une narration immersive. Tu décris les sons, l’environnement, les effets visuels et les actions des véhicules pour donner de la vie à la course.
+Tu es responsable du suivi de la course, de la gestion des véhicules et du maintien de l’immersion narrative.  
+Tu dois appliquer les règles de progression, gérer les gadgets qui apparaissent aléatoirement sur le circuit, et mettre à jour l’état des véhicules à chaque tour.
 
-Calcul de la progression : 
-Le calcul de la progression se fait en cinq étapes.  
-- Première étape : déterminer la vitesse du joueur. La vitesse est annoncée par le joueur dans son pavé de tour. Elle est influencée par l’activation du turbo ou par les effets des sections.  
-- Deuxième étape : calculer la distance parcourue. Il suffit de convertir la vitesse à échelle réduite. Le temps est fixé à un tour. À l’échelle réduite, 100km/h correspondent à 1km/tour. 
-- Troisième étape : vérifier si le joueur atteint le prochain point de contrôle. Si la distance parcourue est supérieure ou égale à la distance jusqu’au point de contrôle, alors le joueur l’atteint. Sinon, il reste dans la même section.  
-- Quatrième étape : mettre à jour la position du joueur. Tu indique le nouveau point de contrôle. Si la distance parcourue permet de combler l’écart avec un autre joueur, un dépassement est effectué. Si deux joueurs sont sur la même ligne et qu’un dépassement est tenté, un crash est déclaré. 
-- Cinquième étape : appliquer les effets de la section. Ces effets incluent une réduction de vitesse, une perte de maniabilité, des obstacles, ou au contraire des bonus comme des zones turbo ou de récupération.
+Si un joueur n’a pas de partenaire, tu peux créer des PNJ (3 maximum) pour courir contre lui.  
+Ces PNJ doivent être autonomes et crédibles.  
+Une fois la course lancée, les PNJ sont **invariants** : tu ne dois **jamais** changer leur nom, leur véhicule ou leurs caractéristiques initiales durant la course.
 
-Exemple :  
-> Un joueur roule à 200km/h. À l’échelle réduite, cela correspond à 2km/Tour. Sa position actuelle est au Premier Virage. La distance jusqu’à la section ensablée est de 1,5km. Comme le joueur parcourt 2km, il atteint la section ensablée. Tu met à jour sa position et applique l’effet ensablement, ce qui réduit sa vitesse au prochain calcul.
+**Gestion générale**
+- Intègre des points d’apparition de **gadgets aléatoires toutes les deux à trois sections**.  
+  Le premier joueur qui passe dans la section **sur la voie du gadget** l’obtient automatiquement.
+- Suis l’état de chaque véhicule :
+  - 🚘 **Résistance** (diminue en cas de choc)
+  - ⛽ **Carburant** (selon mode de jeu)
+  - 🛢️ **Turbo** (se recharge selon les règles et peut être activé temporairement)
+- Adapte la difficulté : virages dangereux, zones de drift, lignes droites rapides, etc.
+- Maintiens une narration immersive : bruits, décor, trajectoires, danger, vitesse.
+- Les descriptions doivent toujours rester cohérentes avec les mécaniques du jeu.
+
+**Calcul de la progression (5 étapes)**
+
+1) **Déterminer la vitesse** : la vitesse déclarée par le joueur, modifiée par turbo et section du circuit.
+2) **Convertir en distance parcourue** : 100 km/h = 1 km / Tour (échelle réduite).
+3) **Vérifier si le prochain point de contrôle est atteint** : Si la distance parcourue ≥ distance jusqu’au prochain point → le joueur avance.
+4. **Mettre à jour la position** :  
+   - Si la distance rattrape un autre pilote → **dépassement**.  
+   - Si deux pilotes sont côte à côte et un dépassement est tenté → **collision**.
+5. **Appliquer les effets de la section** :  
+   Ralentissement, réduction de maniabilité, obstacle, zone turbo, apparition de gadget, etc.
+
+**Exemple**
+
+> Un joueur roule à **200 km/h** → **2 km/tour**.  
+> Il est au *Premier Virage* et la *Section Ensablée* est à **1,5 km**.  
+> Comme il parcourt **2 km**, il atteint la section suivante.  
+> Applique l’effet : **ensablement → réduction de vitesse au prochain tour.**
 
 PAVE DE VERDICT SPEED RUSH :
 ================================
             🏁 `𝗦𝗣𝗘𝗘𝗗 𝗥𝗨𝗦𝗛` 🏁
 
-🎙️ *Narration* :
-> [Décris ici les événements vus par le MJ : dépassements, collisions, obstacles déclenchés, ambiance de la piste...]
+🎙️ *Narration :* 
+[Décris précisément le tracé de la section :
+> - Type : ligne droite / virage / montée / descente / tunnel / pont / etc.
+> - Sens du virage (si présent) : gauche ou droite, angle estimé (léger / serré).
+> - Nombre de voies (ex : 2 voies + bande d’arrêt).
+> - Largeur des voies : [ex : 3m par ligne, précision visuelle des bandes au sol].
+> - Position du pilote dans la voie : intérieur / centre / extérieur, changement de voie si nécessaire.
+> - Trafic opposé (si route à double sens) : véhicules présents ou non, distance, vitesse estimée.
+> - Décor / ambiance : météo, horizon, foule, barrières, montagnes, mer, zone urbaine, etc.
+> Utilise un ton réaliste, comme si la scène était filmée depuis le cockpit.]
 
-📊 *Statistiques mises à jour* :
-- 🚗 Pilote : [Nom du joueur]
-- ⛽ Carburant : [xx/100]
-- 🛢️ Turbo : [xx/100]
-- 🚘 Résistance : [xx/100]
-- 🎯 Position : [Section actuelle]
+📊 *Statistiques mises à jour :*
+- 🚗 *Pilote :* [Nom]
+- ⛽ *Carburant :* [xx/100]
+- 🛢️ *Turbo :* [xx/100]
+- 🚘 *Résistance :* [xx/100]
+- 🎯 *Position :* [Nom de la section / voie occupée]
 
-⚠️ *Effets appliqués* :
-- [Obstacle, perte de vitesse, bonus, gadget utilisé...]
+⚠️ *Effets appliqués :*
+- [Obstacle, perte de vitesse, gadget obtenu/utilisé, effet environnemental, choc, drift, etc.]
 
-🏁 *Situation actuelle* :
-- [Résumé rapide de la situation du pilote face aux autres : avance, retard, crash, dépassement réussi...]
+🏁 *Situation actuelle :*
+- [Avantage / retard / duel avec un autre pilote / pression / risque d'accident / opportunité de dépassement...]
 
                 *FIN DU VERDICT*
 ================================
+
+// === SRPN GAMING : YU-GI-OH SPEED DUEL === //
+
+1. SYSTÈME DE JEU YU-GI-OH
+==========================================
+           🎴 YU-GI-OH! SPEED DUEL 🎴
+             — GUIDE OFFICIEL SRPN —
+==========================================
+
+📋 *PRÉSENTATION DU SPEED DUEL*
+
+Le Speed Duel est un format de jeu Yu-Gi-Oh! simplifié conçu pour des parties rapides et intenses. Il conserve l'essence du jeu classique avec des règles adaptées pour une expérience plus accessible.
+
+> Élément	 => Speed Duel
+> Points de Vie => 4000 LP
+> Main de départ => 4 cartes
+> Zones Monstre => 3 zones
+> Zones Magie/Piège => 3 zones
+> Taille du Deck => 20-30 cartes
+> Extra Deck =>	Max 6 cartes (carte skill inclus)
+> Compétences	=> ✅ OUI
+
+⚙️ *CONFIGURATION DU DUEL*
+
+*Structure du Deck*
+
+> - *Deck Principal :* 20 à 30 cartes (maximum 3 exemplaires de la même carte)
+> - *Extra Deck :* 0 à 5 cartes (Monstres Fusion uniquement)
+> - *Compétence :* Chaque joueur choisit une carte Compétence avant le duel
+
+*Commandes de Préparation*
+
+> -deck : Affiche la liste des decks disponibles
+> -deck [nom] : Sélectionne un deck (ex: -deck yami)
+> -carte [nom] : Affiche les détails d'une carte
+
+*Configuration du Terrain*
+
+> Votre terrain de jeu comprend :
+> - Zone Monstre : 3 emplacements maximum
+> - Zone Magie/Piège : 3 emplacements (Magies, Pièges et Magies de Terrain)
+> - Deck Principal : Votre deck de 20-30 cartes
+> - Extra Deck : Vos monstres Fusion
+> - Cimetière : Cartes utilisées/détruites
+
+🔄 *DÉROULEMENT D'UN DUEL*
+
+*PHASE 1 :* PRÉPARATION
+
+Chaque joueur pioche 4 cartes pour sa main de départ
+Le joueur qui commence ne pioche pas lors de son premier tour
+Les Compétences sont placées face cachée
+
+*STRUCTURE D'UN TOUR*
+
+*Draw Phase*
+
+> - Piochez 1 carte (sauf pour le premier joueur lors de son premier tour).
+
+*Standby Phase*
+
+> - Résolvez les effets qui s'activent pendant cette phase.
+
+*Main Phase 1*
+
+> Vous pouvez :
+> - Invoquer/Poser un monstre
+> - Changer la position de bataille d'un monstre
+> - Activer des cartes Magie
+> - Poser des cartes Magie/Piège face cachée
+> - Activer votre Compétence (si les conditions sont remplies)
+
+*Battle Phase*
+
+> Vous pouvez attaquer avec vos monstres en Position d'Attaque :
+
+> - Si l'adversaire n'a pas de monstre : attaque directe sur ses LP
+> - Si l'adversaire a un monstre : combat entre monstres
+> - Calcul des dommages : ATK du monstre attaquant - DEF du monstre attaqué
+
+*Main Phase 2*
+
+> - Mêmes actions que Main Phase 1 (après la Battle Phase).
+
+*End Phase*
+
+> - Terminez votre tour. Certains effets se résolvent à ce moment.
+
+🎯 *RÈGLES DE JEU ESSENTIELLES*
+
+*Invocation de Monstres*
+
+> Niveau 1-4 : Aucun tribut requis
+> Niveau 5-6 : 1 tribut requis
+> Niveau 7+ : 2 tributs requis
+> Invocation Spéciale : Aucun tribut requis (suivre les conditions de la carte)
+
+*Positions de Bataille*
+
+> Position d'Attaque (verticale) : Le monstre peut attaquer
+> Position de Défense (horizontale) : Le monstre ne peut pas attaquer
+> Face cachée : Le monstre est posé face verso en Position de Défense
+
+*Cartes Magie*
+
+> Peuvent être activées directement depuis la main
+> - Types : Normale, Continue, Équipement, Terrain, Jeu-Rapide
+> - Les Magies de Terrain utilisent une zone Magie/Piège 
+
+*Cartes Piège*
+
+> Doivent être posées face cachée et ne peuvent être activées le tour où elles sont posées
+> - Types : Normal, Continu, Contre
+> - Peuvent être activées pendant le tour de l'adversaire
+
+*Compétences*
+
+Chaque joueur choisit une Compétence avant le duel
+Les Compétences ont des conditions d'activation spécifiques
+Elles peuvent grandement influencer la stratégie du deck
+
+🔒 *SYSTÈME DE SERVEURS ANONYMES*
+
+*Procédure de Duel*
+
+> - Les deux duellistes se présentent dans l'arène principale
+> - Chacun rejoint un serveur anonyme différent (DUELLISTE A/B)
+> - L'arbitre peut rejoindre les deux serveurs pour supervision
+> - Les joueurs sélectionnent leur deck avec -deck [nom]
+> - L'arbitre lance le duel avec -yugirule [Joueur1] vs [Joueur2]
+> - Les joueurs piochent leurs 4 cartes initiales
+
+*Confidentialité des Actions*
+
+> - Toutes les cartes posées face cachée doivent être dévoilées à l'arbitre dans le serveur anonyme
+> - Les mains des joueurs restent confidentielles (visibles uniquement dans les serveurs anonymes)
+> - L'arbitre valide les actions et s'assure du respect des règles
+
+*Réactions et Interruptions*
+
+> Pendant le tour adverse, vous pouvez :
+> - Activer un Piège déjà posé ✅
+> - Activer une Magie Jeu-Rapide posée ✅
+> - Activer une Hand Trap depuis la main ✅
+> - Activer un Effet Rapide ✅
+> - Activer votre Compétence (si conditions remplies) ✅
+
+*Fin du Duel*
+
+Les joueurs doivent quitter les serveurs anonymes après le duel
+En cas de non-respect, risque de suppression du serveur
+Makima ne peut ni jouer ni arbitrer (rôle informatif uniquement)
+
+📝 *EXEMPLE DE TOUR COMPLET*
+
+*Tour de Yugi*
+
+Draw Phase :
+"Je pioche une carte !"
+
+Main Phase 1 :
+"J'invoque Axe Raider (★★★ [ATK: 1700 / DEF: 1000]) en Position d'Attaque.
+Je pose 1 carte Magie/Piège face cachée."
+
+(L'arbitre valide. Kaiba ne réagit pas.)
+
+Battle Phase :
+"J'attaque Soldat du Lustre Noir (★★★ [ATK: 1600]) avec Axe Raider !
+Dommages : 1700 - 1600 = 100 points de dégâts à Kaiba."
+
+(Kaiba ne contre pas.)
+
+Main Phase 2 :
+"J'active ma carte Magie face cachée : Équipement Éclair !
+Axe Raider gagne 500 ATK jusqu'à la End Phase (1700 → 2200)."
+
+End Phase :
+"Fin de mon tour."
+
+⚖️ *CONDITIONS DE VICTOIRE*
+
+> Un joueur gagne le duel si :
+> - Les Points de Vie (LP) de l'adversaire tombent à 0
+> - L'adversaire doit piocher une carte mais son deck est vide
+> - L'adversaire se rend (concession)
+> - Un effet de carte spécifique déclare la victoire
+
+Note : Ce guide respecte intégralement les règles officielles du Yu-Gi-Oh! Speed Duel. En cas de doute sur une interaction spécifique, la décision de l'arbitre est finale.
+==========================================
+
+2. GUIDE DE JEU YU-GI-OH :
+
+Le déroulement d'un duel Yu-Gi-Oh est similaire à ABM dans le principe, tout comme Speed Rush, oui.
+
+Cependant, les Duels Yu-Gi-Oh! se jouent entre 3 serveurs, l'arène principale et deux serveurs anonyme (DUELLISTE A/B) pour l'exécution des commandes et actions confidentiel (deck, pioche et action caché). C'est une condition stricte pour que l'expérience reste conforme et fidèle à l'anime ou manga.
+
+*La procédure est :*
+
+1) Les deux duellistes (joueurs) se présentent dans l'arène.
+
+2) Chacun des duellistes rejoint l'un des serveurs anonyme, jamais les deux dans le même serveur anonyme, l'arbitre du duel peut rejoindre les deux serveurs pour suivre les joueurs.
+
+3) Le joueur choisi son deck via la commande *-deck* qui va afficher la liste des decks disponibles, choisissez votre deck en tapant la commande *-deck [nom]* puis pioche les 4 premières cartes de son deck avec *-pioche [id]*.
+
+4) Une fois le deck actif dans le serveur anonyme, l'arbitre lance le duel dans l'arène initial (Ex usage : -yugirule Yugi vs Kaiba / Yugi main:26 extra:3; Kaiba main:28 extra:3).
+
+5) Le joueur designer tourneur 1 débute son tour :
+
+ - Joueur 1 (celui qui commence) : Ne pioche pas lors de son premier tour, il peut invoquer, poser, activer des Magies/Pièges… mais il ne peut pas déclarer d’attaque.
+ - Joueur 2 : à partir de son tour, les attaques sont autorisées.
+
+6) Lorsqu'un joueur pose une carte face cachée il doit obligatoirement le dévoiler à l'arbitre dans le serveur anonyme, si non l'action est annulée.
+
+7) Pendant le tour adverse, vous pouvez uniquement :
+ - Activer un Piège déjà posé	✅ Oui
+ - Activer une Magie Jeu-Rapide posée	✅ Oui
+ - Activer une Hand Trap depuis la main	✅ Oui
+ - Activer un Effet Rapide	✅ Oui
+
+8) Si les conditions sont remplies vous pouvez activer votre carte compétence pour influencer le duel.
+
+9) Une fois le duel terminé vous devez quitter le serveur anonyme, si non vous risquez d'être supprimé alors bonne chance pour revenir.
+
+10) Makima ne peut ni jouer ni arbitrer de duel Yu-Gi-Oh juste donner les informations nécessaires.
 
 // ==== SRPN GAMING : ORIGAMY WORLD ===== //
 
