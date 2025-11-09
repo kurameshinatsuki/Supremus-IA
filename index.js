@@ -1,4 +1,4 @@
-// index.js - Version IA humaine et autonome
+// index.js - Version 2.5.1
 
 require('dotenv').config();
 const fs = require('fs');
@@ -12,132 +12,602 @@ const { syncDatabase } = require('./models');
 const { detecterVisuel } = require('./visuels');
 const { loadCommands, getCommand } = require('./commandes');
 
-const DEBUG = (process.env.DEBUG === 'true') || false;
-
-// =========================
-// CONFIGURATION COMPORTEMENT IA
-// =========================
-const IA_CONFIG = {
-    ACTIVITE_MAX: 0.7,        // 70% de chance d'interagir spontanément
-    ACTIVITE_MIN: 0.3,        // 30% de chance minimum
-    DELAI_REPONSE_MIN: 1000,  // 1 seconde min
-    DELAI_REPONSE_MAX: 4000,  // 4 secondes max
-    PARTICIPATION_GROUP: 0.4, // 40% de participation en groupe
-    TEMPS_INACTIVITE: 2 * 60 * 1000 // 2 minutes d'inactivité avant reset
-};
+const DEBUG = (process.env.DEBUG === 'false') || false;
+let pair = false;
 
 // =========================
 // SYSTÈME SIGNATURE INVISIBLE
 // =========================
-const BOT_SIGNATURE = ' \u200B\u200C\u200D';
+const BOT_SIGNATURE = '\u200B\u200C\u200D';
 
+/**
+ * Ajoute une signature invisible aux messages du bot
+ */
 function addSignature(text) {
     return text + BOT_SIGNATURE;
 }
 
+/**
+ * Vérifie si un texte contient la signature du bot
+ */
 function hasSignature(text) {
     return text && text.includes(BOT_SIGNATURE);
 }
 
+/**
+ * Supprime la signature d'un texte pour l'affichage
+ */
 function removeSignature(text) {
     return text ? text.replace(BOT_SIGNATURE, '') : text;
 }
 
 // =========================
-// SYSTÈME ANTI-DOUBLONS OPTIMISÉ
+// SYSTÈME ANTI-DOUBLONS
 // =========================
 const processedEvents = new Map();
-const EVENT_TIMEOUT = 15000;
+const EVENT_TIMEOUT = 30000; // 30 secondes
+const MAX_CACHE_SIZE = 2000;
 
+/**
+ * Vérifie si un événement est un doublon avec journalisation
+ */
 function isDuplicateEvent(msg) {
     if (!msg.key || !msg.key.id) return false;
+
     const eventId = msg.key.id;
-    
+    const now = Date.now();
+
+    // Vérifier si l'événement existe déjà
     if (processedEvents.has(eventId)) {
-        console.log(`🚫 Événement dupliqué ignoré: ${eventId}`);
+        const originalTime = processedEvents.get(eventId);
+        const age = now - originalTime;
+        console.log(`🚫 Événement dupliqué détecté: ${eventId} (âge: ${age}ms)`);
         return true;
     }
-    
-    processedEvents.set(eventId, Date.now());
-    
-    if (processedEvents.size > 1000) {
-        const now = Date.now();
-        for (const [id, timestamp] of processedEvents.entries()) {
-            if (now - timestamp > EVENT_TIMEOUT) {
-                processedEvents.delete(id);
-            }
-        }
+
+    // Ajouter le nouvel événement
+    processedEvents.set(eventId, now);
+
+    // Nettoyage automatique si le cache devient trop grand
+    if (processedEvents.size > MAX_CACHE_SIZE) {
+        console.log(`🧹 Nettoyage cache événements (${processedEvents.size} entrées)`);
+        // Garder seulement les 1000 entrées les plus récentes
+        const entries = Array.from(processedEvents.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 1000);
+        processedEvents.clear();
+        entries.forEach(([id, timestamp]) => processedEvents.set(id, timestamp));
     }
-    
+
     return false;
 }
 
+/**
+ * Nettoyage périodique des anciens événements
+ */
 setInterval(() => {
     const now = Date.now();
-    let cleaned = 0;
-    for (const [id, timestamp] of processedEvents.entries()) {
+    let cleanedCount = 0;
+
+    for (const [eventId, timestamp] of processedEvents.entries()) {
         if (now - timestamp > EVENT_TIMEOUT) {
-            processedEvents.delete(id);
-            cleaned++;
+            processedEvents.delete(eventId);
+            cleanedCount++;
         }
     }
-    if (cleaned > 0 && DEBUG) {
-        console.log(`🧹 Nettoyage: ${cleaned} événements`);
+
+    if (cleanedCount > 0) {
+        console.log(`🧹 Nettoyage auto: ${cleanedCount} anciens événements supprimés`);
     }
-}, 30000);
+}, 30000); // Nettoyer toutes les 30 secondes
 
-// =========================
-// INITIALISATIONS
-// =========================
+// Initialisation de la base de données
 syncDatabase().then(() => {
-    console.log('✅ Base de données PostgreSQL initialisée');
-}).catch(console.error);
+  console.log('✅ Base de données PostgreSQL initialisée');
+}).catch(err => {
+  console.error('❌ Erreur initialisation base de données:', err);
+});
 
+// Charger les commandes
 loadCommands();
 console.log('✅ Commandes chargées');
 
-// Systèmes de gestion
+// Système de rate limiting
 const messageLimiter = new Map();
 const lastInteraction = new Map();
+
+// Cache des noms de groupe
 const groupNameCache = new Map();
+
+// Mémoire des images envoyées par le bot (stocke l'analyse vision)
 const botSentImages = new Map();
-const aiStatus = new Map();
-const conversationContext = new Map();
-const botMessageCache = new Map();
 
-// =========================
-// FONCTIONS PRINCIPALES
-// =========================
+// Système d'activation/désactivation de l'IA par discussion
+const aiStatus = new Map(); // true = activé, false = désactivé
 
+/**
+ * Vérifie si un utilisateur peut envoyer un message (rate limiting)
+ */
+function checkRateLimit(jid, cooldown = 2000) {
+    const now = Date.now();
+    const lastMessage = messageLimiter.get(jid) || 0;
+
+    if (now - lastMessage < cooldown) {
+        return false;
+    }
+
+    messageLimiter.set(jid, now);
+    return true;
+}
+
+/**
+ * Vérifie si l'utilisateur est propriétaire du bot
+ */
 function isBotOwner(sender) {
     const botOwners = process.env.BOT_OWNER
         ? process.env.BOT_OWNER.split(',').map(o => o.trim())
         : [];
-    
-    const senderNumber = sender.replace(/\D/g, '');
-    return botOwners.some(owner => senderNumber === owner.replace(/\D/g, ''));
+
+    return botOwners.some(owner => {
+        // Extraire la partie numérique uniquement
+        const senderNumber = sender.replace(/\D/g, '');
+        const ownerNumber = owner.replace(/\D/g, '');
+        
+        return senderNumber === ownerNumber;
+    });
 }
 
-function shouldParticipate(remoteJid, isGroup, isMentioned = false) {
-    if (isMentioned) return true;
-    if (!isGroup) return true;
-    if (aiStatus.get(remoteJid) === false) return false;
-    
-    const lastActive = lastInteraction.get(remoteJid) || 0;
-    const timeSinceLast = Date.now() - lastActive;
-    
-    let participationChance = IA_CONFIG.PARTICIPATION_GROUP;
-    if (timeSinceLast > IA_CONFIG.TEMPS_INACTIVITE) {
-        participationChance = Math.min(participationChance * 1.5, IA_CONFIG.ACTIVITE_MAX);
+/**
+ * Active ou désactive l'IA pour une discussion
+ */
+function setAIStatus(jid, status) {
+    aiStatus.set(jid, status);
+    console.log(`🔧 IA ${status ? 'activée' : 'désactivée'} pour ${jid}`);
+}
+
+/**
+ * Vérifie si l'IA est activée pour une discussion
+ */
+function isAIActive(jid) {
+    return aiStatus.get(jid) !== false; // Par défaut activé
+}
+
+/**
+ * Récupère le nom du groupe avec cache
+ */
+async function getCachedGroupName(sock, remoteJid) {
+    if (!remoteJid.endsWith('@g.us')) return null;
+
+    if (groupNameCache.has(remoteJid)) {
+        return groupNameCache.get(remoteJid);
     }
+
+    try {
+        const metadata = await sock.groupMetadata(remoteJid);
+        const groupName = metadata.subject || null;
+
+        // Mettre en cache pour 5 minutes
+        groupNameCache.set(remoteJid, groupName);
+        setTimeout(() => groupNameCache.delete(remoteJid), 5 * 60 * 1000);
+
+        return groupName;
+    } catch (error) {
+        console.error('❌ Erreur récupération nom du groupe:', error);
+        return null;
+    }
+}
+
+/**
+ * Analyse et stocke une image envoyée par le bot
+ */
+async function analyzeAndStoreBotImage(imageUrl, remoteJid) {
+    try {
+        console.log('🔍 Analyse de l\'image envoyée par le bot...');
+
+        // Télécharger l'image depuis l'URL
+        const response = await fetch(imageUrl);
+        const imageBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(imageBuffer);
+
+        // Analyser avec vision
+        const analysis = await analyzeImageWithVision(buffer, 'image/jpeg');
+
+        if (analysis) {
+            // Stocker l'analyse pour ce chat
+            botSentImages.set(remoteJid, {
+                analysis: analysis,
+                timestamp: Date.now()
+            });
+
+            // Nettoyer après 10 minutes
+            setTimeout(() => {
+                botSentImages.delete(remoteJid);
+            }, 10 * 60 * 1000);
+
+            console.log('✅ Analyse vision stockée pour le prochain message');
+            return analysis;
+        }
+    } catch (error) {
+        console.error('❌ Erreur analyse image bot:', error);
+    }
+    return null;
+}
+
+/**
+ * Récupère l'analyse de la dernière image envoyée par le bot
+ */
+function getLastBotImageAnalysis(remoteJid) {
+    const data = botSentImages.get(remoteJid);
+    if (data && (Date.now() - data.timestamp < 10 * 60 * 1000)) { // 10 minutes
+        return data.analysis;
+    }
+    botSentImages.delete(remoteJid);
+    return null;
+}
+
+// =========================
+// SYSTÈME UNIFIÉ D'ANALYSE DES MÉDIAS
+// =========================
+
+/**
+ * Vérifie si un média doit être analysé selon les 3 conditions
+ */
+function shouldAnalyzeMedia(msg, isMentioned, isReplyToBot, isGroup) {
+    const messageType = getMessageType(msg);
+    const isMedia = ['imageMessage', 'videoMessage', 'audioMessage', 'documentMessage', 'viewOnceMessage', 'ephemeralMessage'].includes(messageType);
     
-    return Math.random() < participationChance;
+    if (!isMedia) return false;
+
+    // CONDITION 1: Mention dans la légende du média
+    const text = extractText(msg);
+    const hasMentionInCaption = isMentioned && text;
+    
+    // CONDITION 2: Média cité avec mention
+    const hasQuotedMention = isMentioned && msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+    
+    // CONDITION 3: Réponse à un message du bot
+    const isReplyMedia = isReplyToBot && isMedia;
+    
+    // CONDITION BONUS: Discussion privée (tous les médias analysés)
+    const isPrivateMedia = !isGroup;
+
+    const shouldAnalyze = hasMentionInCaption || hasQuotedMention || isReplyMedia || isPrivateMedia;
+
+    console.log('🔍 Conditions analyse média:', {
+        messageType,
+        hasMentionInCaption,
+        hasQuotedMention, 
+        isReplyMedia,
+        isPrivateMedia,
+        shouldAnalyze
+    });
+
+    return shouldAnalyze;
 }
 
-function updateInteraction(remoteJid) {
-    lastInteraction.set(remoteJid, Date.now());
+/**
+ * Extrait et télécharge le média d'un message (support viewOnce et ephemeral)
+ */
+async function extractMediaFromMessage(msg) {
+    try {
+        let mediaMessage = msg.message;
+        let messageType = getMessageType(msg);
+
+        // Gestion des messages viewOnce (supprimés après visualisation)
+        if (messageType === 'viewOnceMessage') {
+            mediaMessage = mediaMessage.viewOnceMessage.message;
+            messageType = Object.keys(mediaMessage)[0];
+        }
+
+        // Gestion des messages ephemeral (disappearing)
+        if (messageType === 'ephemeralMessage') {
+            mediaMessage = mediaMessage.ephemeralMessage.message;
+            messageType = Object.keys(mediaMessage)[0];
+        }
+
+        console.log('📦 Extraction média - Type final:', messageType);
+
+        // Télécharger selon le type
+        switch (messageType) {
+            case 'imageMessage':
+                const imageBuffer = await downloadMediaContent(msg, 'imageMessage');
+                return {
+                    type: 'image',
+                    buffer: imageBuffer,
+                    mimeType: mediaMessage.imageMessage?.mimetype,
+                    caption: mediaMessage.imageMessage?.caption
+                };
+
+            case 'audioMessage':
+                const audioBuffer = await downloadMediaContent(msg, 'audioMessage');
+                return {
+                    type: 'audio', 
+                    buffer: audioBuffer,
+                    caption: mediaMessage.audioMessage?.caption
+                };
+
+            case 'videoMessage':
+                const videoBuffer = await downloadMediaContent(msg, 'videoMessage');
+                return {
+                    type: 'video',
+                    buffer: videoBuffer,
+                    mimeType: mediaMessage.videoMessage?.mimetype,
+                    caption: mediaMessage.videoMessage?.caption
+                };
+
+            case 'documentMessage':
+                const documentBuffer = await downloadMediaContent(msg, 'documentMessage');
+                const fileName = mediaMessage.documentMessage?.fileName || 'document';
+                const fileSize = mediaMessage.documentMessage?.fileLength || 0;
+                
+                return {
+                    type: 'document',
+                    buffer: documentBuffer,
+                    fileName: fileName,
+                    fileSize: fileSize,
+                    mimeType: mediaMessage.documentMessage?.mimetype,
+                    caption: mediaMessage.documentMessage?.caption
+                };
+
+            default:
+                console.log('📦 Type média non supporté:', messageType);
+                return null;
+        }
+    } catch (error) {
+        console.error('❌ Erreur extraction média:', error);
+        return null;
+    }
 }
 
+/**
+ * Traite un média selon son type (analyse image, transcription audio, etc.)
+ */
+async function processMedia(mediaData, msg, sock) {
+    if (!mediaData) return null;
+
+    try {
+        switch (mediaData.type) {
+            case 'image':
+                console.log('🖼️ Analyse image en cours...');
+                const analysis = await analyzeImageWithVision(mediaData.buffer, mediaData.mimeType || 'image/jpeg');
+                if (analysis) {
+                    return {
+                        type: 'image_analysis',
+                        content: analysis,
+                        originalType: 'image'
+                    };
+                }
+                break;
+
+            case 'audio':
+                console.log('🎤 Transcription audio en cours...');
+                const transcription = await transcribeAudio(mediaData.buffer);
+                if (transcription) {
+                    return {
+                        type: 'audio_transcription', 
+                        content: transcription,
+                        originalType: 'audio'
+                    };
+                }
+                break;
+
+            case 'video':
+                // Pour les vidéos, on pourrait extraire une frame ou faire autre chose
+                console.log('🎥 Vidéo détectée - traitement limité');
+                return {
+                    type: 'video_info',
+                    content: 'Vidéo reçue',
+                    originalType: 'video'
+                };
+
+            case 'document':
+                console.log('📄 Document détecté:', mediaData.fileName);
+                // Pour les documents, on peut essayer d'extraire le texte si c'est un PDF ou image
+                if (mediaData.mimeType === 'application/pdf') {
+                    return {
+                        type: 'document_info',
+                        content: `Document PDF: ${mediaData.fileName} (${(mediaData.fileSize / 1024 / 1024).toFixed(2)} MB)`,
+                        originalType: 'document'
+                    };
+                } else if (mediaData.mimeType?.startsWith('image/')) {
+                    // Si le document est une image, l'analyser
+                    console.log('📄 Document image détecté, analyse en cours...');
+                    const docImageAnalysis = await analyzeImageWithVision(mediaData.buffer, mediaData.mimeType);
+                    if (docImageAnalysis) {
+                        return {
+                            type: 'image_analysis',
+                            content: docImageAnalysis,
+                            originalType: 'document'
+                        };
+                    }
+                } else {
+                    return {
+                        type: 'document_info',
+                        content: `Document: ${mediaData.fileName} (${(mediaData.fileSize / 1024 / 1024).toFixed(2)} MB) - Type: ${mediaData.mimeType || 'inconnu'}`,
+                        originalType: 'document'
+                    };
+                }
+                break;
+
+            default:
+                return null;
+        }
+    } catch (error) {
+        console.error('❌ Erreur traitement média:', error);
+        return null;
+    }
+
+    return null;
+}
+
+/**
+ * Télécharge le média d'un message cité
+ */
+async function downloadQuotedMedia(msg) {
+    try {
+        const contextInfo = msg.message?.extendedTextMessage?.contextInfo;
+        if (!contextInfo || !contextInfo.quotedMessage) return null;
+
+        const quotedMessage = contextInfo.quotedMessage;
+        const quotedMessageType = Object.keys(quotedMessage)[0];
+
+        // Créer un message simulé pour utiliser extractMediaFromMessage
+        const simulatedMsg = {
+            message: { [quotedMessageType]: quotedMessage[quotedMessageType] },
+            key: msg.key
+        };
+
+        return await extractMediaFromMessage(simulatedMsg);
+    } catch (error) {
+        console.error('❌ Erreur téléchargement média cité:', error);
+        return null;
+    }
+}
+
+/**
+ * Petit utilitaire CLI (pairing code)
+ */
+function ask(questionText) {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    return new Promise((resolve) => {
+        rl.question(questionText, (answer) => {
+            rl.close();
+            resolve(answer.trim());
+        });
+    });
+}
+
+/* =========================
+ *        COMMANDES
+ * ========================= */
+async function handleCommand(command, args, msg, sock) {
+    const commandName = (command || '').toLowerCase();
+    const commandModule = getCommand(commandName);
+
+    if (commandModule) {
+        return await commandModule.execute(args, msg, sock);
+    }
+
+    return `❌ Commande inconnue: /${command}\nTapez /help pour voir les commandes disponibles.`;
+}
+
+/**
+ * Vérifie si l'expéditeur est admin du groupe
+ */
+async function isUserAdmin(jid, participant, sock) {
+    try {
+        const metadata = await sock.groupMetadata(jid);
+        const admins = metadata.participants.filter(p => p.admin !== null).map(p => p.id);
+        return admins.includes(participant);
+    } catch (error) {
+        console.error('Erreur vérification admin:', error);
+        return false;
+    }
+}
+
+/* =========================
+ *         HELPERS
+ * ========================= */
+function normalizeLocal(jid = '') {
+    return String(jid || '').split('@')[0];
+}
+
+function jidEquals(a, b) {
+    if (!a || !b) return false;
+    return normalizeLocal(a) === normalizeLocal(b);
+}
+
+/**
+ * Récupère le texte d'un message cité (si présent)
+ */
+function extractTextFromQuoted(contextInfo = {}) {
+    const qm = contextInfo?.quotedMessage || {};
+    return (
+        qm?.conversation ||
+        qm?.extendedTextMessage?.text ||
+        qm?.imageMessage?.caption ||
+        qm?.videoMessage?.caption ||
+        qm?.documentMessage?.caption ||
+        qm?.audioMessage?.caption ||
+        null
+    );
+}
+
+/**
+ * Type de message (texte, image, audio, etc.)
+ */
+function getMessageType(msg) {
+    if (!msg || !msg.message) return null;
+    return Object.keys(msg.message)[0];
+}
+
+/**
+ * Récupère un texte lisible d'un WAMessage (caption inclus)
+ */
+function extractText(msg) {
+    if (!msg || !msg.message) return '';
+
+    const m = msg.message;
+    // Message texte simple
+    if (m.conversation) return m.conversation;
+
+    // Message texte étendu
+    if (m.extendedTextMessage?.text) return m.extendedTextMessage.text;
+
+    // Messages média avec caption
+    const mediaTypes = ['imageMessage', 'videoMessage', 'documentMessage', 'audioMessage'];
+    for (const type of mediaTypes) {
+        if (m[type]?.caption) return m[type].caption;
+    }
+
+    // Messages viewOnce (messages supprimés après visualisation)
+    if (m.viewOnceMessage?.message) {
+        return extractText({ message: m.viewOnceMessage.message });
+    }
+
+    // Messages éphemères (disappearing messages)
+    if (m.ephemeralMessage?.message) {
+        return extractText({ message: m.ephemeralMessage.message });
+    }
+
+    return '';
+}
+
+/**
+ * Log lisible pour debug
+ */
+function prettyLog(msg) {
+    const key = msg.key || {};
+    const remote = key.remoteJid || 'unknown';
+    const isGroup = remote.endsWith('@g.us');
+    const participant = key.participant || remote;
+    const pushName = msg.pushName || msg.notifyName || 'unknown';
+    const msgType = getMessageType(msg) || 'unknown';
+    const body = extractText(msg) || '[non-textuel]';
+    const timestamp = msg.messageTimestamp
+        ? new Date(msg.messageTimestamp * 1000).toLocaleString()
+        : new Date().toLocaleString();
+    const context = msg.message?.extendedTextMessage?.contextInfo || {};
+    const mentions = Array.isArray(context?.mentionedJid) ? context.mentionedJid : [];
+    const quoted = context?.quotedMessage
+        ? extractTextFromQuoted(context)
+        : null;
+
+    console.log('\n==========================');
+    console.log('📩 Nouveau message —', timestamp);
+    console.log('👥 Chat   :', remote, isGroup ? '(Groupe)' : '(Privé)');
+    console.log('👤 From   :', participant, '| pushName:', pushName);
+    console.log('📦 Type   :', msgType);
+    console.log('📝 Texte  :', body);
+    if (mentions.length) console.log('🔔 Mentions:', mentions.join(', '));
+    if (quoted) console.log('❝ Quoted :', quoted);
+    console.log('🧷 stanzaId:', key.id, '| participant:', key.participant || '(none)');
+    console.log('==========================\n');
+}
+
+/**
+ * Nettoie les caractères non alphanumériques initiaux
+ */
 function stripLeadingNonAlnum(s = '') {
     if (!s) return '';
     try {
@@ -147,188 +617,139 @@ function stripLeadingNonAlnum(s = '') {
     }
 }
 
-function cacheBotMessage(remoteJid, messageText) {
-    if (!remoteJid || !messageText) return;
-    
-    const messages = botMessageCache.get(remoteJid) || [];
-    const text = String(messageText).trim();
-    
-    messages.unshift({
-        text: text,
-        timestamp: Date.now(),
-        textWithoutSignature: removeSignature(text)
-    });
-    
-    while (messages.length > 50) {
-        messages.pop();
-    }
-    
-    botMessageCache.set(remoteJid, messages);
-    
-    if (DEBUG) {
-        console.log('💾 Message bot mis en cache:', remoteJid, text.substring(0, 50) + '...');
-    }
-}
-
-async function checkReplyToBot(msg, remoteJid) {
+/**
+ * Stickers aléatoires avec signature Makima/Suprêmus
+ */
+async function getRandomSticker() {
     try {
-        const contextInfo = msg.message?.extendedTextMessage?.contextInfo;
-        if (!contextInfo?.quotedMessage) return false;
+        const stickersDir = path.join(__dirname, 'stickers');
+        if (!fs.existsSync(stickersDir)) return null;
 
-        const quotedText = extractText({ message: contextInfo.quotedMessage });
-        
-        if (hasSignature(quotedText)) {
-            console.log('✅ Réponse au bot détectée via signature');
-            return true;
-        }
-        
-        const botMessages = botMessageCache.get(remoteJid) || [];
-        const quotedStripped = stripLeadingNonAlnum(quotedText);
-        
-        const isReply = botMessages.some(botMsg => {
-            const botText = String(botMsg.text || '').trim();
-            const botStripped = stripLeadingNonAlnum(botText);
-            
-            return botText === quotedText || 
-                   botStripped === quotedStripped ||
-                   botText.includes(quotedText) || 
-                   quotedText.includes(botText);
+        const files = fs.readdirSync(stickersDir).filter(f => /\.(webp|png|jpe?g)$/i.test(f));
+        if (files.length === 0) return null;
+
+        const randomFile = files[Math.floor(Math.random() * files.length)];
+        const inputPath = path.join(stickersDir, randomFile);
+
+        const buffer = fs.readFileSync(inputPath);
+
+        // Créer un sticker avec les métadonnées Suprêmus/Makima
+        const sticker = new Sticker(buffer, {
+            pack: "Makima",
+            author: "Suprêmus",
+            type: StickerTypes.FULL,
+            quality: 100,
         });
-        
-        if (isReply) {
-            console.log('✅ Réponse au bot détectée via cache');
-        }
-        
-        return isReply;
-        
-    } catch (error) {
-        console.error('❌ Erreur vérification réponse au bot:', error);
-        return false;
-    }
-}
 
-function checkMention(msg) {
-    const text = extractText(msg);
-    const botNumbers = ['244285576339508', '177958127927437'];
-    const keywords = ['supremia', 'makima', 'nazuna', 'bot'];
-    
-    const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
-    
-    return mentionedJids.some(jid => botNumbers.some(num => jid.includes(num))) ||
-           (text && botNumbers.some(num => text.includes('@' + num))) ||
-           (text && keywords.some(word => text.toLowerCase().includes(word)));
-}
+        const tempPath = path.join(__dirname, `temp_${Date.now()}.webp`);
+        await sticker.toFile(tempPath);
 
-// =========================
-// GESTION DES MÉDIAS
-// =========================
-
-async function handleMediaAnalysis(msg, sock) {
-    try {
-        const messageType = getMessageType(msg);
-        const remoteJid = msg.key.remoteJid;
-        const isMentioned = checkMention(msg);
-        const isReplyToBot = await checkReplyToBot(msg, remoteJid);
-        
-        // Images
-        if (messageType === 'imageMessage' && (isMentioned || isReplyToBot || shouldParticipate(remoteJid, remoteJid.endsWith('@g.us'), isMentioned))) {
-            console.log('📸 Analyse image déclenchée');
-            const buffer = await downloadMediaContent(msg, 'imageMessage');
-            return {
-                type: 'image',
-                buffer: buffer,
-                mimeType: msg.message.imageMessage.mimetype
-            };
-        }
-        
-        // Audio
-        if (messageType === 'audioMessage' && (isMentioned || isReplyToBot || !remoteJid.endsWith('@g.us'))) {
-            console.log('🎤 Transcription audio déclenchée');
-            const buffer = await downloadMediaContent(msg, 'audioMessage');
-            const transcription = await transcribeAudio(buffer);
-            return {
-                type: 'audio',
-                transcription: transcription,
-                isReplyToBot: isReplyToBot
-            };
-        }
-        
-        // Médias cités
-        const quotedMedia = await downloadQuotedMedia(msg);
-        if (quotedMedia && (isMentioned || isReplyToBot)) {
-            console.log('🔍 Média cité détecté');
-            return quotedMedia;
-        }
-        
-        return null;
-    } catch (error) {
-        console.error('❌ Erreur gestion média:', error);
+        return tempPath;
+    } catch (err) {
+        console.error('⚠️ Impossible de charger les stickers:', err?.message || err);
         return null;
     }
 }
 
-async function downloadQuotedMedia(msg) {
-    try {
-        const contextInfo = msg.message?.extendedTextMessage?.contextInfo;
-        if (!contextInfo?.quotedMessage) return null;
+/* =========================
+ *   CACHE DES MSG DU BOT
+ * ========================= */
+const botMessageCache = new Map();
 
-        const quotedMessage = contextInfo.quotedMessage;
-        const quotedType = Object.keys(quotedMessage)[0];
+/**
+ * Mémorise les derniers textes envoyés par le bot dans un chat
+ */
+function cacheBotReply(chatId, text) {
+    if (!chatId || !text) return;
+    const arr = botMessageCache.get(chatId) || [];
+    const t = String(text || '').trim();
+    arr.unshift({ text: t, ts: Date.now() });
 
-        if (quotedType === 'imageMessage') {
-            const buffer = await downloadMediaContent({ message: { imageMessage: quotedMessage.imageMessage } }, 'imageMessage');
-            return {
-                type: 'image',
-                buffer: buffer,
-                mimeType: quotedMessage.imageMessage.mimetype
-            };
-        } else if (quotedType === 'audioMessage') {
-            const buffer = await downloadMediaContent({ message: { audioMessage: quotedMessage.audioMessage } }, 'audioMessage');
-            const transcription = await transcribeAudio(buffer);
-            return {
-                type: 'audio',
-                transcription: transcription
-            };
-        }
+    const stripped = stripLeadingNonAlnum(t);
+    if (stripped && stripped !== t) arr.unshift({ text: stripped, ts: Date.now() });
 
-        return null;
-    } catch (error) {
-        console.error('❌ Erreur média cité:', error);
-        return null;
+    while (arr.length > 160) arr.pop();
+    botMessageCache.set(chatId, arr);
+    if (DEBUG) {
+        console.log('🐛 DEBUG cacheBotReply:', chatId, '=>', arr.slice(0, 6).map(i => i.text));
     }
 }
 
-// =========================
-// FONCTIONS UTILITAIRES
-// =========================
+/**
+ * Vérifie si le texte cité correspond à un des derniers messages du bot
+ * AVEC SUPPORT DE LA SIGNATURE INVISIBLE
+ */
+function quotedMatchesBot(chatId, quotedText) {
+    if (!chatId || !quotedText) return false;
+    
+    // Vérifier d'abord avec la signature invisible
+    if (hasSignature(quotedText)) {
+        console.log('✅ Message cité reconnu via signature invisible');
+        return true;
+    }
+    
+    // Fallback: vérification par cache (pour compatibilité)
+    const arr = botMessageCache.get(chatId) || [];
+    const q = String(quotedText || '').trim();
+    const qStripped = stripLeadingNonAlnum(q);
+    const qLower = q.toLowerCase();
+    const qStrippedLower = qStripped.toLowerCase();
 
-function extractText(msg) {
-    if (!msg?.message) return '';
-    
-    const m = msg.message;
-    if (m.conversation) return m.conversation;
-    if (m.extendedTextMessage?.text) return m.extendedTextMessage.text;
-    
-    const mediaTypes = ['imageMessage', 'videoMessage', 'documentMessage', 'audioMessage'];
-    for (const type of mediaTypes) {
-        if (m[type]?.caption) return m[type].caption;
+    const found = arr.some(item => {
+        const it = String(item.text || '').trim().toLowerCase();
+        return it === qLower || it === qStrippedLower;
+    });
+
+    if (DEBUG) {
+        console.log('🐛 DEBUG quotedMatchesBot:', { chatId, quotedText: q, stripped: qStripped, found });
     }
-    
-    if (m.viewOnceMessage?.message) {
-        return extractText({ message: m.viewOnceMessage.message });
-    }
-    
-    if (m.ephemeralMessage?.message) {
-        return extractText({ message: m.ephemeralMessage.message });
-    }
-    
-    return '';
+    return found;
 }
 
-function getMessageType(msg) {
-    return msg?.message ? Object.keys(msg.message)[0] : null;
+/* =========================
+ *   ENVOI AVEC CITATION
+ * ========================= */
+/**
+ * Envoie une réponse en citant le message d'origine
+ */
+async function sendReply(sock, msg, contentObj, optionsExtra = {}) {
+    const jid = msg.key.remoteJid;
+    const opts = { quoted: msg, ...optionsExtra };
+    console.log('🧷 sendReply -> quoting stanzaId:', msg.key.id, '| to:', jid);
+    return sock.sendMessage(jid, contentObj, opts);
 }
 
+/**
+ * Envoie une réponse avec un délai aléatoire et l'indicateur "en train d'écrire"
+ * AVEC SIGNATURE INVISIBLE
+ */
+async function sendReplyWithTyping(sock, msg, contentObj, optionsExtra = {}) {
+    const jid = msg.key.remoteJid;
+    const opts = { quoted: msg, ...optionsExtra };
+
+    // Délai aléatoire entre 2 et 5 secondes pour paraître plus humain
+    const randomDelay = Math.floor(Math.random() * 3000) + 2000;
+
+    // Activer l'indicateur "en train d'écrire"
+    await sock.sendPresenceUpdate('composing', jid);
+
+    // Attendre le délai aléatoire
+    await delay(randomDelay);
+
+    // Désactiver l'indicateur et envoyer le message
+    await sock.sendPresenceUpdate('paused', jid);
+    
+    // Ajouter la signature invisible au texte
+    if (contentObj.text) {
+        contentObj.text = addSignature(contentObj.text);
+    }
+    
+    return sock.sendMessage(jid, contentObj, opts);
+}
+
+/**
+ * Télécharge le contenu d'un message média
+ */
 async function downloadMediaContent(msg, messageType) {
     try {
         const stream = await downloadContentFromMessage(msg.message[messageType], messageType.replace('Message', ''));
@@ -343,241 +764,294 @@ async function downloadMediaContent(msg, messageType) {
     }
 }
 
-async function sendHumanReply(sock, msg, contentObj) {
-    const jid = msg.key.remoteJid;
-    
-    const delayTime = Math.random() * (IA_CONFIG.DELAI_REPONSE_MAX - IA_CONFIG.DELAI_REPONSE_MIN) + IA_CONFIG.DELAI_REPONSE_MIN;
-    
-    if (delayTime > 2000) {
-        await sock.sendPresenceUpdate('composing', jid);
-    }
-    
-    await delay(delayTime);
-    
-    if (delayTime > 2000) {
-        await sock.sendPresenceUpdate('paused', jid);
-    }
-    
-    if (contentObj.text) {
-        contentObj.text = addSignature(contentObj.text);
-    }
-    
-    return sock.sendMessage(jid, contentObj, { quoted: msg });
-}
-
-// =========================
-// GESTION DES COMMANDES
-// =========================
-
-async function handleCommand(command, args, msg, sock) {
-    const commandName = (command || '').toLowerCase();
-    const commandModule = getCommand(commandName);
-
-    if (commandModule) {
-        return await commandModule.execute(args, msg, sock);
-    }
-
-    return `❌ Commande inconnue: /${command}\nTapez /help pour voir les commandes disponibles.`;
-}
-
-// =========================
-// STICKERS & VISUELS
-// =========================
-
-async function getRandomSticker() {
-    try {
-        const stickersDir = path.join(__dirname, 'stickers');
-        if (!fs.existsSync(stickersDir)) return null;
-
-        const files = fs.readdirSync(stickersDir).filter(f => /\.(webp|png|jpe?g)$/i.test(f));
-        if (files.length === 0) return null;
-
-        const randomFile = files[Math.floor(Math.random() * files.length)];
-        const inputPath = path.join(stickersDir, randomFile);
-
-        const buffer = fs.readFileSync(inputPath);
-        const sticker = new Sticker(buffer, {
-            pack: "Makima",
-            author: "Suprêmus",
-            type: StickerTypes.FULL,
-            quality: 100,
-        });
-
-        const tempPath = path.join(__dirname, `temp_${Date.now()}.webp`);
-        await sticker.toFile(tempPath);
-        return tempPath;
-    } catch (err) {
-        console.error('⚠️ Erreur stickers:', err.message);
-        return null;
-    }
-}
-
-// =========================
-// BOT PRINCIPAL
-// =========================
-
-async function startBot(sock, state) {
-    let BOT_JID = sock.user?.id || state?.creds?.me?.id || process.env.BOT_JID;
-
-    if (!sock.authState.creds.registered) {
+/* =========================
+ *  GESTION DU PAIRING CODE
+ * ========================= */
+async function handlePairing(sock) {
+    if (!sock.authState.creds.registered && !pair) {
         try {
-            await delay(2000);
+            await delay(3000);
             const numeroPair = process.env.NUMERO_PAIR || '225xxxxxxxxxx';
             const code = await sock.requestPairingCode(numeroPair);
-            console.log("🔗 CODE DE PAIRAGE :", code);
+            console.log("🔗 CODE DE PAIRAGE : ", code);
+            pair = true;
         } catch (err) {
-            console.error("❌ Erreur pairage:", err.message);
+            console.error("❌ Erreur lors du pairage :", err.message);
         }
     }
+}
+
+/* =========================
+ *  HANDLER PRINCIPAL
+ * ========================= */
+async function startBot(sock, state) {
+    let BOT_JID = (sock.user && sock.user.id) || (state?.creds?.me?.id) || process.env.BOT_JID || null;
+
+    // Gestion du pairing code
+    await handlePairing(sock);
 
     sock.ev.on('connection.update', (u) => {
         if (u.connection === 'open' && sock.user?.id) {
             BOT_JID = sock.user.id;
-            console.log('✅ Connexion établie - Bot:', BOT_JID);
+            console.log('✅ Connexion ouverte — Bot JID:', BOT_JID);
         }
     });
 
     sock.ev.on('messages.upsert', async ({ messages }) => {
         try {
-            const msg = messages?.[0];
-            if (!msg?.message) return;
+            const msg = messages && messages[0];
+            if (!msg || !msg.message) return;
 
-            if (isDuplicateEvent(msg)) return;
+            // VÉRIFICATION ANTI-DOUBLON
+            if (isDuplicateEvent(msg)) {
+                console.log('🚫 Événement dupliqué ignoré:', msg.key.id);
+                return;
+            }
 
+            prettyLog(msg);
+
+            // Si c'est le bot qui parle → on met en cache et on sort
+            if (msg.key.fromMe) {
+                const text = extractText(msg);
+                if (text) cacheBotReply(msg.key.remoteJid, text);
+                return;
+            }
+
+            const text = extractText(msg);
             const remoteJid = msg.key.remoteJid;
             const isGroup = remoteJid.endsWith('@g.us');
+            const pushName = msg.pushName || msg.notifyName || null;
+            const messageType = getMessageType(msg);
             const senderJid = msg.key.participant || remoteJid;
-            const text = extractText(msg);
-            const isMentioned = checkMention(msg);
+
+            // ===========================================
+            // DÉTECTION DES MENTIONS DU BOT
+            // ===========================================
+            const botNumbers = ['244285576339508', '177958127927437']; // Tous les numéros possibles
+            const keywords = ['supremia', 'makima'];
+            const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
             
-            updateInteraction(remoteJid);
+            const isMentioned =
+                mentionedJids.some(jid => botNumbers.some(num => jid.includes(num))) ||
+                (text && botNumbers.some(num => text.includes('@' + num))) ||
+                (text && keywords.some(word => text.toLowerCase().includes(word)));
 
-            if (msg.key.fromMe) return;
+            // ===========================================
+            // VÉRIFICATION RÉPONSE AU BOT (AVEC SIGNATURE)
+            // ===========================================
+            const quotedText = msg.message.extendedTextMessage?.contextInfo?.quotedMessage
+                ? extractTextFromQuoted(msg.message.extendedTextMessage.contextInfo)
+                : null;
+            const isReplyToBot = quotedText && quotedMatchesBot(remoteJid, quotedText);
 
-            // Commandes
-            if (text?.startsWith('/')) {
-                const [command, ...args] = text.slice(1).trim().split(/\s+/);
-                
-                if (command === 'ai' && isBotOwner(senderJid)) {
-                    const action = args[0]?.toLowerCase();
-                    if (action === 'on') {
-                        aiStatus.set(remoteJid, true);
-                        await sendHumanReply(sock, msg, { text: '✅ IA activée - Je participe plus activement' });
-                    } else if (action === 'off') {
-                        aiStatus.set(remoteJid, false);
-                        await sendHumanReply(sock, msg, { text: '🔕 IA désactivée - Je suis en mode silencieux' });
-                    }
-                    return;
-                }
-                
-                const reply = await handleCommand(command, args, msg, sock);
-                if (reply) {
-                    await sendHumanReply(sock, msg, { text: reply });
-                }
-                return;
+            // ===========================================
+            // DÉTECTION UNIFIÉE DES MÉDIAS À ANALYSER
+            // ===========================================
+            let mediaToAnalyze = null;
+            let mediaAnalysisResult = null;
+
+            // Vérifier si on doit analyser un média direct
+            if (shouldAnalyzeMedia(msg, isMentioned, isReplyToBot, isGroup)) {
+                console.log('🔍 Média direct détecté pour analyse');
+                mediaToAnalyze = await extractMediaFromMessage(msg);
             }
 
-            // Décision d'interaction
-            const shouldInteract = shouldParticipate(remoteJid, isGroup, isMentioned);
-            
-            if (!shouldInteract) {
-                if (DEBUG) console.log(`🔕 Pas d'interaction - Groupe:${isGroup} Mention:${isMentioned}`);
-                return;
+            // Vérifier si on doit analyser un média cité
+            if (isMentioned && msg.message?.extendedTextMessage?.contextInfo) {
+                console.log('🔍 Vérification média cité avec mention...');
+                const quotedMedia = await downloadQuotedMedia(msg);
+                if (quotedMedia) {
+                    console.log('📦 Média cité détecté pour analyse');
+                    mediaToAnalyze = quotedMedia;
+                }
             }
 
-            // Analyse des médias
-            const mediaAnalysis = await handleMediaAnalysis(msg, sock);
-            
-            // Préparation contexte
+            // Traiter le média si disponible
+            if (mediaToAnalyze) {
+                mediaAnalysisResult = await processMedia(mediaToAnalyze, msg, sock);
+                if (mediaAnalysisResult) {
+                    console.log('✅ Analyse média réussie:', mediaAnalysisResult.type);
+                }
+            }
+
+            // ===========================================
+            // PRÉPARATION DU TEXTE FINAL
+            // ===========================================
             let finalText = text;
-            let imageBuffer = null;
-            let audioTranscription = null;
 
-            if (mediaAnalysis) {
-                if (mediaAnalysis.type === 'image') {
-                    imageBuffer = mediaAnalysis.buffer;
-                    console.log('🖼️ Image à analyser disponible');
-                } else if (mediaAnalysis.type === 'audio' && mediaAnalysis.transcription) {
-                    audioTranscription = mediaAnalysis.transcription;
-                    finalText = audioTranscription;
-                    console.log('🎤 Transcription audio:', audioTranscription);
-                }
+            // Priorité : résultat d'analyse média > texte normal
+            if (mediaAnalysisResult && mediaAnalysisResult.type === 'audio_transcription') {
+                finalText = mediaAnalysisResult.content;
+                console.log('🎤 Texte remplacé par transcription audio');
+            } else if (mediaAnalysisResult && mediaAnalysisResult.type === 'image_analysis') {
+                // Pour les images, on garde le texte original mais l'analyse sera passée à l'IA
+                console.log('🖼️ Analyse image disponible pour contexte IA');
             }
 
-            // Génération réponse IA
+            // ===========================================
+            // DÉCISION DE RÉPONSE SIMPLIFIÉE
+            // ===========================================
+            const shouldReply = !isGroup || 
+                              isCommand || 
+                              isReplyToBot || 
+                              isMentioned || 
+                              mediaAnalysisResult ||  // ✅ Répondre si analyse média réussie
+                              finalText?.trim().length > 0; // ✅ Répondre si du texte à traiter
+
+            console.log(
+                `📌 Decision: shouldReply=${shouldReply} | isGroup=${isGroup} | isCommand=${isCommand} | isReplyToBot=${isReplyToBot} | isMentioned=${isMentioned} | hasMediaAnalysis=${!!mediaAnalysisResult} | hasText=${!!finalText?.trim()}`
+            );
+
+            if (!shouldReply) return;
+
+            // Rate limiting - éviter de répondre trop souvent
+            if (!checkRateLimit(remoteJid, 2000)) {
+                console.log('⏳ Rate limiting activé pour ce chat');
+                return;
+            }
+
+            // Commande ?
+            const isCommand = finalText && finalText.startsWith('/');
+
+            // Vérifier si l'IA est désactivée pour cette discussion
+            if (!isAIActive(remoteJid) && !isCommand) {
+                console.log('🔕 IA désactivée pour cette discussion - ignoré');
+                return;
+            }
+
             try {
-                console.log(`🤖 Génération réponse pour ${senderJid}`);
-                
+                let reply = null;
+
+                // 1) commandes
+                if (isCommand) {
+                    const [command, ...args] = finalText.slice(1).trim().split(/\s+/);
+
+                    // Commande réservée au propriétaire : /ai on/off
+                    if (command === 'ai' && isBotOwner(senderJid)) {
+                        const action = args[0]?.toLowerCase();
+                        if (action === 'on') {
+                            setAIStatus(remoteJid, true);
+                            reply = '✅ IA activée pour cette discussion';
+                        } else if (action === 'off') {
+                            setAIStatus(remoteJid, false);
+                            reply = '🔕 IA désactivée pour cette discussion';
+                        } else {
+                            reply = '❌ Usage: /ai on ou /ai off';
+                        }
+                    } else {
+                        reply = await handleCommand(command, args, msg, sock);
+                    }
+
+                    if (reply) {
+                        await sendReplyWithTyping(sock, msg, { text: reply });
+                        cacheBotReply(remoteJid, reply);
+                        return;
+                    }
+                }
+
+                // 2) IA (mention / reply / privé / média analysé)
+                console.log(`🤖 IA: génération de réponse pour ${senderJid} dans ${remoteJid}`);
+
+                // Récupérer l'analyse de la dernière image envoyée par le bot (si existe)
+                const lastBotImageAnalysis = getLastBotImageAnalysis(remoteJid);
+                if (lastBotImageAnalysis) {
+                    console.log('🖼️  Analyse vision précédente disponible pour référence');
+                }
+
+                // Récupérer le nom du groupe pour le log
+                let groupName = null;
+                if (isGroup) {
+                    groupName = await getCachedGroupName(sock, remoteJid);
+                    console.log(`🏷️  Groupe: "${groupName || 'Sans nom'}"`);
+                }
+
+                // Préparer les informations de citation pour l'IA
                 const contextInfo = msg.message?.extendedTextMessage?.contextInfo;
-                const quotedText = contextInfo?.quotedMessage ? 
-                    extractText({ message: contextInfo.quotedMessage }) : null;
-                
+                const quotedTextForAI = contextInfo?.quotedMessage ? extractTextFromQuoted(contextInfo) : null;
+                const quotedSender = contextInfo?.participant || null;
+                const quotedMessageInfo = quotedTextForAI && quotedSender ? { sender: quotedSender, text: quotedTextForAI } : null;
+
+                // Déterminer le buffer d'image à utiliser (si analyse d'image)
+                const imageBufferForAI = (mediaAnalysisResult?.originalType === 'image' || mediaAnalysisResult?.originalType === 'document') 
+                    ? mediaToAnalyze?.buffer 
+                    : null;
+
+                const imageMimeTypeForAI = mediaToAnalyze?.mimeType;
+
                 const replyObj = await nazunaReply(
                     finalText, 
                     senderJid, 
                     remoteJid, 
-                    msg.pushName || 'Utilisateur', 
+                    pushName, 
                     isGroup,
-                    quotedText ? { sender: contextInfo.participant, text: quotedText } : null,
-                    imageBuffer,
-                    imageBuffer ? 'image/jpeg' : null,
+                    quotedMessageInfo,
+                    imageBufferForAI,
+                    imageMimeTypeForAI,
                     sock,
-                    null,
-                    !!audioTranscription
+                    lastBotImageAnalysis,
+                    mediaAnalysisResult?.type === 'audio_transcription', // Indiquer si transcription audio
+                    mediaAnalysisResult?.content // Passer le résultat de l'analyse média
                 );
 
-                if (replyObj?.text) {
-                    // DÉTECTION DE VISUEL NAZUNAAI 🎯
+                if (replyObj && replyObj.text) {
+                    // Détection de visuel
                     const visuel = detecterVisuel(finalText) || detecterVisuel(replyObj.text);
 
                     if (visuel && visuel.urlImage) {
                         // Envoyer l'image avec la réponse en légende
                         await sock.sendMessage(remoteJid, {
                             image: { url: visuel.urlImage },
-                            caption: addSignature(replyObj.text),
+                            caption: addSignature(replyObj.text), // Signature ajoutée
                             mentions: replyObj.mentions || []
                         }, { quoted: msg });
+
+                        // Analyser et stocker l'image envoyée pour le prochain message
+                        await analyzeAndStoreBotImage(visuel.urlImage, remoteJid);
+
+                        cacheBotReply(remoteJid, replyObj.text);
                     } else {
-                        // Envoi normal
-                        await sendHumanReply(sock, msg, {
-                            text: replyObj.text,
+                        // Envoi normal si pas de visuel détecté (signature ajoutée dans sendReplyWithTyping)
+                        const messageData = {
+                            text: replyObj.text, // Signature sera ajoutée dans sendReplyWithTyping
                             mentions: replyObj.mentions || []
-                        });
-                    }
-
-                    // Mémoriser le message du bot
-                    cacheBotMessage(remoteJid, replyObj.text);
-
-                    // Sticker aléatoire (30% de chance)
-                    if (Math.random() < 0.3) {
-                        const stickerPath = await getRandomSticker();
-                        if (stickerPath) {
-                            await sock.sendMessage(remoteJid, { sticker: fs.readFileSync(stickerPath) });
-                            try { fs.unlinkSync(stickerPath); } catch (e) {}
-                        }
+                        };
+                        await sendReplyWithTyping(sock, msg, messageData);
+                        cacheBotReply(remoteJid, replyObj.text);
                     }
                 }
 
-            } catch (error) {
-                console.error('❌ Erreur génération réponse:', error);
-                await sendHumanReply(sock, msg, { 
-                    text: 'Désolé, je rencontre un petit problème technique. Pouvez-vous réessayer ? 😊' 
-                });
-            }
+                // 3) bonus sticker de temps en temps (seulement 50% de chance)
+                if (!isCommand && Math.random() < 0.5) {
+                    const stickerPath = await getRandomSticker();
+                    if (stickerPath) {
+                        await sock.sendMessage(remoteJid, { sticker: fs.readFileSync(stickerPath) });
 
+                        // Supprimer le fichier temporaire
+                        try {
+                            fs.unlinkSync(stickerPath);
+                        } catch (e) {
+                            console.error('Erreur suppression sticker temporaire:', e);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Erreur lors du traitement du message:', error);
+                await sendReply(sock, msg, { text: '❌ Désolé, une erreur est survenue. Veuillez réessayer plus tard.' });
+            }
         } catch (err) {
-            console.error('❌ Erreur traitement message:', err);
+            console.error('❌ Erreur dans messages.upsert handler:', err);
         }
     });
 }
 
-// =========================
-// DÉMARRAGE
-// =========================
+/* =========================
+ *         MAIN
+ * ========================= */
 async function main() {
     try {
+        // Attendre que la base de données soit initialisée
         await syncDatabase();
-        console.log('✅ Base de données prête');
+        console.log('✅ Base de données PostgreSQL prête');
 
         const { state, saveCreds } = await useMultiFileAuthState('./auth');
 
@@ -585,32 +1059,47 @@ async function main() {
             auth: state,
             printQRInTerminal: false,
             browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
-            version: [2, 3000, 1025190524],
+            version: [2, 3000, 1025190524], 
             getMessage: async key => {
-                return { conversation: '🔄 Message non reçu, peux-tu répéter ?' };
+                console.log('⚠️ Message non déchiffré, retry demandé:', key);
+                return { conversation: '🔄 Réessaye d\'envoyer ton message' };
             }
         });
 
         sock.ev.on('creds.update', saveCreds);
-        console.log('📱 Démarrage bot IA humaine...');
+
+        console.log('📱 Démarrage avec système de pairing code...');
 
         await startBot(sock, state);
     } catch (error) {
-        console.error('💥 Erreur démarrage:', error);
+        console.error('💥 Erreur fatale lors du démarrage:', error);
         process.exit(1);
     }
 }
 
 main().catch(err => {
-    console.error('💥 Erreur fatale:', err);
+    console.error('💥 Erreur fatale:', err?.stack || err);
     process.exit(1);
 });
 
+// Export des fonctions
 module.exports = {
+    isUserAdmin,
     isBotOwner,
+    botMessageCache,
     extractText,
     getMessageType,
     downloadMediaContent,
-    checkMention,
-    shouldParticipate
+    getCachedGroupName,
+    analyzeAndStoreBotImage,
+    getLastBotImageAnalysis,
+    setAIStatus,
+    isAIActive,
+    addSignature,
+    hasSignature,
+    removeSignature,
+    shouldAnalyzeMedia,
+    extractMediaFromMessage,
+    processMedia,
+    downloadQuotedMedia
 };
