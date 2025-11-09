@@ -891,6 +891,10 @@ async function startBot(sock, state) {
             // ===========================================
             // DÉCISION DE RÉPONSE SIMPLIFIÉE
             // ===========================================
+            
+            // CORRECTION : Déclarer isCommand AVANT de l'utiliser
+            const isCommand = finalText && finalText.startsWith('/');
+            
             const shouldReply = !isGroup || 
                               isCommand || 
                               isReplyToBot || 
@@ -909,9 +913,6 @@ async function startBot(sock, state) {
                 console.log('⏳ Rate limiting activé pour ce chat');
                 return;
             }
-
-            // Commande ?
-            const isCommand = finalText && finalText.startsWith('/');
 
             // Vérifier si l'IA est désactivée pour cette discussion
             if (!isAIActive(remoteJid) && !isCommand) {
