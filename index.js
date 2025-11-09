@@ -18,7 +18,7 @@ let pair = false;
 // =========================
 // SYSTÈME SIGNATURE INVISIBLE
 // =========================
-const BOT_SIGNATURE = '\u200B\u200C\u200D';
+const BOT_SIGNATURE = ' \u200B\u200C\u200D';
 
 /**
  * Ajoute une signature invisible aux messages du bot
