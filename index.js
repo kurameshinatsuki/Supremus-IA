@@ -45,7 +45,7 @@ fonction supprimerSignature(texte) {
 // SYSTÈME ANTI-DOUBLONS
 // =========================
 const processedEvents = new Map();
-const EVENT_TIMEOUT = 30 000 ; // 30 secondes
+const EVENT_TIMEOUT = 300000; // 5 minutes
 const MAX_CACHE_SIZE = 2000;
 
 /**
