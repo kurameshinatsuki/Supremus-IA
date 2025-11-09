@@ -1,4 +1,4 @@
-// index.js - Version 2.5.1
+// index.js - Version avec support audio
 
 require('dotenv').config();
 const fs = require('fs');
@@ -18,7 +18,7 @@ let pair = false;
 // =========================
 // SYSTÈME SIGNATURE INVISIBLE
 // =========================
-const BOT_SIGNATURE = ' \u200B\u200C\u200D';
+const BOT_SIGNATURE = '\u200B\u200C\u200D';
 
 /**
  * Ajoute une signature invisible aux messages du bot
@@ -245,199 +245,26 @@ function getLastBotImageAnalysis(remoteJid) {
     return null;
 }
 
-// =========================
-// SYSTÈME UNIFIÉ D'ANALYSE DES MÉDIAS
-// =========================
-
 /**
- * Vérifie si un média doit être analysé selon les 3 conditions
+ * Convertit un message audio en texte
  */
-function shouldAnalyzeMedia(msg, isMentioned, isReplyToBot, isGroup) {
-    const messageType = getMessageType(msg);
-    const isMedia = ['imageMessage', 'videoMessage', 'audioMessage', 'documentMessage', 'viewOnceMessage', 'ephemeralMessage'].includes(messageType);
-    
-    if (!isMedia) return false;
-
-    // CONDITION 1: Mention dans la légende du média
-    const text = extractText(msg);
-    const hasMentionInCaption = isMentioned && text;
-    
-    // CONDITION 2: Média cité avec mention
-    const hasQuotedMention = isMentioned && msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-    
-    // CONDITION 3: Réponse à un message du bot
-    const isReplyMedia = isReplyToBot && isMedia;
-    
-    // CONDITION BONUS: Discussion privée (tous les médias analysés)
-    const isPrivateMedia = !isGroup;
-
-    const shouldAnalyze = hasMentionInCaption || hasQuotedMention || isReplyMedia || isPrivateMedia;
-
-    console.log('🔍 Conditions analyse média:', {
-        messageType,
-        hasMentionInCaption,
-        hasQuotedMention, 
-        isReplyMedia,
-        isPrivateMedia,
-        shouldAnalyze
-    });
-
-    return shouldAnalyze;
-}
-
-/**
- * Extrait et télécharge le média d'un message (support viewOnce et ephemeral)
- */
-async function extractMediaFromMessage(msg) {
+async function transcribeAudioMessage(msg) {
     try {
-        let mediaMessage = msg.message;
-        let messageType = getMessageType(msg);
-
-        // Gestion des messages viewOnce (supprimés après visualisation)
-        if (messageType === 'viewOnceMessage') {
-            mediaMessage = mediaMessage.viewOnceMessage.message;
-            messageType = Object.keys(mediaMessage)[0];
+        console.log('🎤 Transcription audio en cours...');
+        const audioBuffer = await downloadMediaContent(msg, 'audioMessage');
+        
+        if (!audioBuffer) {
+            console.log('❌ Impossible de télécharger l\'audio');
+            return null;
         }
 
-        // Gestion des messages ephemeral (disappearing)
-        if (messageType === 'ephemeralMessage') {
-            mediaMessage = mediaMessage.ephemeralMessage.message;
-            messageType = Object.keys(mediaMessage)[0];
-        }
-
-        console.log('📦 Extraction média - Type final:', messageType);
-
-        // Télécharger selon le type
-        switch (messageType) {
-            case 'imageMessage':
-                const imageBuffer = await downloadMediaContent(msg, 'imageMessage');
-                return {
-                    type: 'image',
-                    buffer: imageBuffer,
-                    mimeType: mediaMessage.imageMessage?.mimetype,
-                    caption: mediaMessage.imageMessage?.caption
-                };
-
-            case 'audioMessage':
-                const audioBuffer = await downloadMediaContent(msg, 'audioMessage');
-                return {
-                    type: 'audio', 
-                    buffer: audioBuffer,
-                    caption: mediaMessage.audioMessage?.caption
-                };
-
-            case 'videoMessage':
-                const videoBuffer = await downloadMediaContent(msg, 'videoMessage');
-                return {
-                    type: 'video',
-                    buffer: videoBuffer,
-                    mimeType: mediaMessage.videoMessage?.mimetype,
-                    caption: mediaMessage.videoMessage?.caption
-                };
-
-            case 'documentMessage':
-                const documentBuffer = await downloadMediaContent(msg, 'documentMessage');
-                const fileName = mediaMessage.documentMessage?.fileName || 'document';
-                const fileSize = mediaMessage.documentMessage?.fileLength || 0;
-                
-                return {
-                    type: 'document',
-                    buffer: documentBuffer,
-                    fileName: fileName,
-                    fileSize: fileSize,
-                    mimeType: mediaMessage.documentMessage?.mimetype,
-                    caption: mediaMessage.documentMessage?.caption
-                };
-
-            default:
-                console.log('📦 Type média non supporté:', messageType);
-                return null;
-        }
+        const transcription = await transcribeAudio(audioBuffer);
+        console.log('✅ Transcription audio terminée:', transcription);
+        return transcription;
     } catch (error) {
-        console.error('❌ Erreur extraction média:', error);
+        console.error('❌ Erreur transcription audio:', error);
         return null;
     }
-}
-
-/**
- * Traite un média selon son type (analyse image, transcription audio, etc.)
- */
-async function processMedia(mediaData, msg, sock) {
-    if (!mediaData) return null;
-
-    try {
-        switch (mediaData.type) {
-            case 'image':
-                console.log('🖼️ Analyse image en cours...');
-                const analysis = await analyzeImageWithVision(mediaData.buffer, mediaData.mimeType || 'image/jpeg');
-                if (analysis) {
-                    return {
-                        type: 'image_analysis',
-                        content: analysis,
-                        originalType: 'image'
-                    };
-                }
-                break;
-
-            case 'audio':
-                console.log('🎤 Transcription audio en cours...');
-                const transcription = await transcribeAudio(mediaData.buffer);
-                if (transcription) {
-                    return {
-                        type: 'audio_transcription', 
-                        content: transcription,
-                        originalType: 'audio'
-                    };
-                }
-                break;
-
-            case 'video':
-                // Pour les vidéos, on pourrait extraire une frame ou faire autre chose
-                console.log('🎥 Vidéo détectée - traitement limité');
-                return {
-                    type: 'video_info',
-                    content: 'Vidéo reçue',
-                    originalType: 'video'
-                };
-
-            case 'document':
-                console.log('📄 Document détecté:', mediaData.fileName);
-                // Pour les documents, on peut essayer d'extraire le texte si c'est un PDF ou image
-                if (mediaData.mimeType === 'application/pdf') {
-                    return {
-                        type: 'document_info',
-                        content: `Document PDF: ${mediaData.fileName} (${(mediaData.fileSize / 1024 / 1024).toFixed(2)} MB)`,
-                        originalType: 'document'
-                    };
-                } else if (mediaData.mimeType?.startsWith('image/')) {
-                    // Si le document est une image, l'analyser
-                    console.log('📄 Document image détecté, analyse en cours...');
-                    const docImageAnalysis = await analyzeImageWithVision(mediaData.buffer, mediaData.mimeType);
-                    if (docImageAnalysis) {
-                        return {
-                            type: 'image_analysis',
-                            content: docImageAnalysis,
-                            originalType: 'document'
-                        };
-                    }
-                } else {
-                    return {
-                        type: 'document_info',
-                        content: `Document: ${mediaData.fileName} (${(mediaData.fileSize / 1024 / 1024).toFixed(2)} MB) - Type: ${mediaData.mimeType || 'inconnu'}`,
-                        originalType: 'document'
-                    };
-                }
-                break;
-
-            default:
-                return null;
-        }
-    } catch (error) {
-        console.error('❌ Erreur traitement média:', error);
-        return null;
-    }
-
-    return null;
 }
 
 /**
@@ -451,13 +278,24 @@ async function downloadQuotedMedia(msg) {
         const quotedMessage = contextInfo.quotedMessage;
         const quotedMessageType = Object.keys(quotedMessage)[0];
 
-        // Créer un message simulé pour utiliser extractMediaFromMessage
-        const simulatedMsg = {
-            message: { [quotedMessageType]: quotedMessage[quotedMessageType] },
-            key: msg.key
-        };
+        if (quotedMessageType === 'imageMessage') {
+            console.log('📸 Image citée détectée, téléchargement...');
+            const buffer = await downloadMediaContent({ message: { imageMessage: quotedMessage.imageMessage } }, 'imageMessage');
+            return {
+                type: 'image',
+                buffer: buffer,
+                mimeType: quotedMessage.imageMessage.mimetype
+            };
+        } else if (quotedMessageType === 'audioMessage') {
+            console.log('🎤 Audio cité détecté, téléchargement...');
+            const buffer = await downloadMediaContent({ message: { audioMessage: quotedMessage.audioMessage } }, 'audioMessage');
+            return {
+                type: 'audio',
+                buffer: buffer
+            };
+        }
 
-        return await extractMediaFromMessage(simulatedMsg);
+        return null;
     } catch (error) {
         console.error('❌ Erreur téléchargement média cité:', error);
         return null;
@@ -845,68 +683,113 @@ async function startBot(sock, state) {
             const isReplyToBot = quotedText && quotedMatchesBot(remoteJid, quotedText);
 
             // ===========================================
-            // DÉTECTION UNIFIÉE DES MÉDIAS À ANALYSER
+            // NOUVELLE FONCTIONNALITÉ : ANALYSE DES MÉDIAS CITÉS
             // ===========================================
-            let mediaToAnalyze = null;
-            let mediaAnalysisResult = null;
+            let quotedMediaBuffer = null;
+            let quotedMediaType = null;
+            let quotedMediaMimeType = null;
+            let transcribedQuotedAudio = null;
 
-            // Vérifier si on doit analyser un média direct
-            if (shouldAnalyzeMedia(msg, isMentioned, isReplyToBot, isGroup)) {
-                console.log('🔍 Média direct détecté pour analyse');
-                mediaToAnalyze = await extractMediaFromMessage(msg);
-            }
-
-            // Vérifier si on doit analyser un média cité
+            // Vérifier si l'utilisateur mentionne le bot sur un média cité
             if (isMentioned && msg.message?.extendedTextMessage?.contextInfo) {
-                console.log('🔍 Vérification média cité avec mention...');
+                console.log('🔍 Mention détectée sur message cité, vérification média...');
                 const quotedMedia = await downloadQuotedMedia(msg);
+                
                 if (quotedMedia) {
-                    console.log('📦 Média cité détecté pour analyse');
-                    mediaToAnalyze = quotedMedia;
+                    if (quotedMedia.type === 'image') {
+                        console.log('📸 Image citée détectée avec mention - analyse déclenchée');
+                        quotedMediaBuffer = quotedMedia.buffer;
+                        quotedMediaType = 'image';
+                        quotedMediaMimeType = quotedMedia.mimeType;
+                    } else if (quotedMedia.type === 'audio') {
+                        console.log('🎤 Audio cité détecté avec mention - transcription déclenchée');
+                        try {
+                            transcribedQuotedAudio = await transcribeAudio(quotedMedia.buffer);
+                            if (transcribedQuotedAudio) {
+                                console.log('✅ Transcription audio citée réussie:', transcribedQuotedAudio);
+                            } else {
+                                console.log('❌ Échec transcription audio cité');
+                            }
+                        } catch (error) {
+                            console.error('❌ Erreur transcription audio cité:', error);
+                        }
+                    }
                 }
             }
 
-            // Traiter le média si disponible
-            if (mediaToAnalyze) {
-                mediaAnalysisResult = await processMedia(mediaToAnalyze, msg, sock);
-                if (mediaAnalysisResult) {
-                    console.log('✅ Analyse média réussie:', mediaAnalysisResult.type);
+            // ===========================================
+            // GESTION DES MESSAGES AUDIO DIRECTS
+            // ===========================================
+            let transcribedAudioText = null;
+            if (messageType === 'audioMessage') {
+                // Condition audio : mention OU réponse au bot
+                const shouldTranscribeAudio = isMentioned || isReplyToBot || !isGroup;
+                
+                if (shouldTranscribeAudio) {
+                    console.log('🎤 Message audio détecté, transcription en cours...');
+                    transcribedAudioText = await transcribeAudioMessage(msg);
+                    
+                    if (transcribedAudioText) {
+                        console.log('✅ Transcription audio réussie:', transcribedAudioText);
+                    } else {
+                        console.log('❌ Échec de la transcription audio');
+                        await sendReply(sock, msg, { 
+                            text: '❌ Désolé, je n\'ai pas pu comprendre le message audio. Pouvez-vous réessayer ou taper votre message ?' 
+                        });
+                        return;
+                    }
+                } else {
+                    console.log('🎤 Audio ignoré - Aucune condition de transcription remplie');
                 }
             }
 
             // ===========================================
-            // PRÉPARATION DU TEXTE FINAL
+            // ANALYSE D'IMAGES CONDITIONNELLE CORRIGÉE
             // ===========================================
-            let finalText = text;
+            let imageBuffer = null;
+            let imageMimeType = null;
 
-            // Priorité : résultat d'analyse média > texte normal
-            if (mediaAnalysisResult && mediaAnalysisResult.type === 'audio_transcription') {
-                finalText = mediaAnalysisResult.content;
-                console.log('🎤 Texte remplacé par transcription audio');
-            } else if (mediaAnalysisResult && mediaAnalysisResult.type === 'image_analysis') {
-                // Pour les images, on garde le texte original mais l'analyse sera passée à l'IA
-                console.log('🖼️ Analyse image disponible pour contexte IA');
+            if (messageType === 'imageMessage') {
+                // CONDITION 1: Image avec mention dans la légende
+                const imageHasMention = isMentioned;
+                
+                // CONDITION 2: Réponse à un message du bot AVEC image
+                const isReplyToBotWithImage = isReplyToBot && messageType === 'imageMessage';
+                
+                // CONDITION 3: Discussion privée (toutes les images analysées)
+                const isPrivateImage = !isGroup;
+                
+                const shouldAnalyzeImage = imageHasMention || isReplyToBotWithImage || isPrivateImage;
+                
+                if (shouldAnalyzeImage) {
+                    console.log('📸 Analyse image directe déclenchée - Conditions:', {
+                        imageHasMention,
+                        isReplyToBotWithImage, 
+                        isPrivateImage
+                    });
+                    imageBuffer = await downloadMediaContent(msg, 'imageMessage');
+                    imageMimeType = msg.message.imageMessage.mimetype;
+                    console.log('📸 Image téléchargée, taille:', imageBuffer?.length || 0, 'bytes');
+                } else {
+                    console.log('📸 Image directe ignorée - Aucune condition d\'analyse remplie');
+                }
             }
 
             // ===========================================
-            // DÉCISION DE RÉPONSE SIMPLIFIÉE
+            // TEXTE FINAL À TRAITER
             // ===========================================
-            
-            // CORRECTION : Déclarer isCommand AVANT de l'utiliser
-            const isCommand = finalText && finalText.startsWith('/');
-            
-            const shouldReply = !isGroup || 
-                              isCommand || 
-                              isReplyToBot || 
-                              isMentioned || 
-                              mediaAnalysisResult ||  // ✅ Répondre si analyse média réussie
-                              finalText?.trim().length > 0; // ✅ Répondre si du texte à traiter
+            // Priorité : transcription audio citée > transcription audio directe > texte normal
+            const finalText = transcribedQuotedAudio || transcribedAudioText || text;
 
-            console.log(
-                `📌 Decision: shouldReply=${shouldReply} | isGroup=${isGroup} | isCommand=${isCommand} | isReplyToBot=${isReplyToBot} | isMentioned=${isMentioned} | hasMediaAnalysis=${!!mediaAnalysisResult} | hasText=${!!finalText?.trim()}`
-            );
-
-            if (!shouldReply) return;
+            // Vérifier si c'est un message avec média mais sans texte
+            if (!finalText && !imageBuffer && !quotedMediaBuffer) {
+                // Si c'est un message média sans légende, on ne le traite pas
+                const isMedia = ['imageMessage', 'videoMessage', 'documentMessage', 'audioMessage'].includes(messageType);
+                if (isMedia && !transcribedAudioText && !transcribedQuotedAudio) {
+                    console.log('📸 Message média sans légende - ignoré');
+                    return;
+                }
+            }
 
             // Rate limiting - éviter de répondre trop souvent
             if (!checkRateLimit(remoteJid, 2000)) {
@@ -914,11 +797,35 @@ async function startBot(sock, state) {
                 return;
             }
 
+            // Commande ?
+            const isCommand = finalText && finalText.startsWith('/');
+
             // Vérifier si l'IA est désactivée pour cette discussion
             if (!isAIActive(remoteJid) && !isCommand) {
                 console.log('🔕 IA désactivée pour cette discussion - ignoré');
                 return;
             }
+
+            // ===========================================
+            // DÉCISION DE RÉPONSE AMÉLIORÉE
+            // ===========================================
+            // Nouveaux critères : média cité avec mention
+            const hasQuotedMediaWithMention = isMentioned && (quotedMediaBuffer || transcribedQuotedAudio);
+            
+            const shouldReply = !isGroup || 
+                              isCommand || 
+                              isReplyToBot || 
+                              isMentioned || 
+                              (imageBuffer && (isMentioned || isReplyToBot || !isGroup)) || 
+                              transcribedAudioText ||
+                              transcribedQuotedAudio ||
+                              hasQuotedMediaWithMention;
+
+            console.log(
+                `📌 Decision: shouldReply=${shouldReply} | isGroup=${isGroup} | isCommand=${isCommand} | isReplyToBot=${isReplyToBot} | isMentioned=${isMentioned} | hasImage=${!!imageBuffer} | hasQuotedImage=${!!quotedMediaBuffer} | hasAudio=${!!transcribedAudioText} | hasQuotedAudio=${!!transcribedQuotedAudio} | AIActive=${isAIActive(remoteJid)}`
+            );
+
+            if (!shouldReply) return;
 
             try {
                 let reply = null;
@@ -950,7 +857,7 @@ async function startBot(sock, state) {
                     }
                 }
 
-                // 2) IA (mention / reply / privé / média analysé)
+                // 2) IA (mention / reply / privé / image conditionnelle / audio / média cité)
                 console.log(`🤖 IA: génération de réponse pour ${senderJid} dans ${remoteJid}`);
 
                 // Récupérer l'analyse de la dernière image envoyée par le bot (si existe)
@@ -972,12 +879,9 @@ async function startBot(sock, state) {
                 const quotedSender = contextInfo?.participant || null;
                 const quotedMessageInfo = quotedTextForAI && quotedSender ? { sender: quotedSender, text: quotedTextForAI } : null;
 
-                // Déterminer le buffer d'image à utiliser (si analyse d'image)
-                const imageBufferForAI = (mediaAnalysisResult?.originalType === 'image' || mediaAnalysisResult?.originalType === 'document') 
-                    ? mediaToAnalyze?.buffer 
-                    : null;
-
-                const imageMimeTypeForAI = mediaToAnalyze?.mimeType;
+                // Déterminer le buffer d'image à utiliser (image directe OU image citée)
+                const finalImageBuffer = quotedMediaBuffer || imageBuffer;
+                const finalImageMimeType = quotedMediaMimeType || imageMimeType;
 
                 const replyObj = await nazunaReply(
                     finalText, 
@@ -986,12 +890,11 @@ async function startBot(sock, state) {
                     pushName, 
                     isGroup,
                     quotedMessageInfo,
-                    imageBufferForAI,
-                    imageMimeTypeForAI,
+                    finalImageBuffer,
+                    finalImageMimeType,
                     sock,
                     lastBotImageAnalysis,
-                    mediaAnalysisResult?.type === 'audio_transcription', // Indiquer si transcription audio
-                    mediaAnalysisResult?.content // Passer le résultat de l'analyse média
+                    transcribedAudioText || transcribedQuotedAudio ? true : false // Indiquer si c'est une transcription audio
                 );
 
                 if (replyObj && replyObj.text) {
@@ -1057,15 +960,15 @@ async function main() {
         const { state, saveCreds } = await useMultiFileAuthState('./auth');
 
         const sock = makeWASocket({
-            auth: state,
-            printQRInTerminal: false,
-            browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
-            version: [2, 3000, 1025190524], 
-            getMessage: async key => {
-                console.log('⚠️ Message non déchiffré, retry demandé:', key);
-                return { conversation: '🔄 Réessaye d\'envoyer ton message' };
-            }
-        });
+    auth: state,
+    printQRInTerminal: false,
+    browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
+    version: [2, 3000, 1025190524], 
+    getMessage: async key => {
+        console.log('⚠️ Message non déchiffré, retry demandé:', key);
+        return { conversation: '🔄 Réessaye d\'envoyer ton message' };
+    }
+});
 
         sock.ev.on('creds.update', saveCreds);
 
@@ -1099,8 +1002,6 @@ module.exports = {
     addSignature,
     hasSignature,
     removeSignature,
-    shouldAnalyzeMedia,
-    extractMediaFromMessage,
-    processMedia,
+    transcribeAudioMessage,
     downloadQuotedMedia
 };
