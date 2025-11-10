@@ -18,7 +18,7 @@ let pair = false;
 // =========================
 // SYSTÈME SIGNATURE INVISIBLE
 // =========================
-const BOT_SIGNATURE = '\u200B\u200C\u200D';
+const BOT_SIGNATURE = ' \u200B\u200C\u200D';
 
 /**
  * Ajoute une signature invisible aux messages du bot
@@ -45,7 +45,7 @@ function removeSignature(text) {
 // SYSTÈME ANTI-DOUBLONS
 // =========================
 const processedEvents = new Map();
-const EVENT_TIMEOUT = 30000; // 30 secondes
+const EVENT_TIMEOUT = 300000; // 5 minutes
 const MAX_CACHE_SIZE = 2000;
 
 /**
