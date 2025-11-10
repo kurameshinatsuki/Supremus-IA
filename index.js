@@ -1,105 +1,105 @@
-// index.js - Version avec support audio et améliorations
+// index.js - Version avec support audio
 
 require('dotenv').config();
 const fs = require('fs');
-const chemin = require('chemin');
+const path = require('path');
 const readline = require('readline');
 const sharp = require('sharp');
 const { default: makeWASocket, useMultiFileAuthState, delay, downloadContentFromMessage, DisconnectReason } = require('@whiskeysockets/baileys');
 const { nazunaReply, resetConversationMemory, analyzeImageWithVision, transcribeAudio } = require('./nazunaAI');
 const { Sticker, StickerTypes } = require('wa-sticker-formatter');
 const { syncDatabase } = require('./models');
-const { détecterVisuel } = require('./visuels');
-const {loadCommands, getCommand } = require('./commandes');
+const { detecterVisuel } = require('./visuels');
+const { loadCommands, getCommand } = require('./commandes');
 
 const DEBUG = (process.env.DEBUG === 'false') || false;
-soit paire = faux;
+let pair = false;
 
 // =========================
 // SYSTÈME SIGNATURE INVISIBLE
 // =========================
-const BOT_SIGNATURE = ' \u200B\u200C\u200D';
+const BOT_SIGNATURE = '\u200B\u200C\u200D';
 
 /**
- * Ajout d'une signature invisible aux messages du bot
+ * Ajoute une signature invisible aux messages du bot
  */
-fonction ajouterSignature(texte) {
-    renvoyer le texte + BOT_SIGNATURE ;
+function addSignature(text) {
+    return text + BOT_SIGNATURE;
 }
 
 /**
- * Vérifiez si un texte contient la signature du bot
+ * Vérifie si un texte contient la signature du bot
  */
-fonction aSignature(texte) {
-    retourner le texte && texte.includes(BOT_SIGNATURE);
+function hasSignature(text) {
+    return text && text.includes(BOT_SIGNATURE);
 }
 
 /**
  * Supprime la signature d'un texte pour l'affichage
  */
-fonction supprimerSignature(texte) {
-    retourner le texte ? texte.remplacer(BOT_SIGNATURE, '') : texte ;
+function removeSignature(text) {
+    return text ? text.replace(BOT_SIGNATURE, '') : text;
 }
 
 // =========================
 // SYSTÈME ANTI-DOUBLONS
 // =========================
 const processedEvents = new Map();
-const EVENT_TIMEOUT = 300000; // 5 minutes
+const EVENT_TIMEOUT = 30000; // 30 secondes
 const MAX_CACHE_SIZE = 2000;
 
 /**
- * Vérifie si un événement est un double avec journalisation
+ * Vérifie si un événement est un doublon avec journalisation
  */
-fonction isDuplicateEvent(msg) {
-    si (!msg.key || !msg.key.id) retourner faux ;
+function isDuplicateEvent(msg) {
+    if (!msg.key || !msg.key.id) return false;
 
     const eventId = msg.key.id;
-    const maintenant = Date.maintenant();
+    const now = Date.now();
 
     // Vérifier si l'événement existe déjà
-    si (processedEvents.has(eventId)) {
+    if (processedEvents.has(eventId)) {
         const originalTime = processedEvents.get(eventId);
-        const âge = maintenant - tempsoriginal;
+        const age = now - originalTime;
         console.log(`🚫 Événement dupliqué détecté: ${eventId} (âge: ${age}ms)`);
-        renvoyer vrai ;
+        return true;
     }
 
     // Ajouter le nouvel événement
-    processedEvents.set(eventId, maintenant);
+    processedEvents.set(eventId, now);
 
     // Nettoyage automatique si le cache devient trop grand
-    si (processedEvents.size > MAX_CACHE_SIZE) {
+    if (processedEvents.size > MAX_CACHE_SIZE) {
         console.log(`🧹 Nettoyage cache événements (${processedEvents.size} entrées)`);
         // Garder seulement les 1000 entrées les plus récentes
         const entries = Array.from(processedEvents.entries())
             .sort((a, b) => b[1] - a[1])
-            .tranche(0, 1000);
+            .slice(0, 1000);
         processedEvents.clear();
         entries.forEach(([id, timestamp]) => processedEvents.set(id, timestamp));
     }
 
-    renvoyer faux ;
+    return false;
 }
 
 /**
  * Nettoyage périodique des anciens événements
  */
-définirInterval(() => {
-    const maintenant = Date.maintenant();
-    soit cleanedCount = 0 ;
+setInterval(() => {
+    const now = Date.now();
+    let cleanedCount = 0;
 
-    pour (const [eventId, timestamp] de processedEvents.entries()) {
-        si (maintenant - horodatage > EVENT_TIMEOUT) {
+    for (const [eventId, timestamp] of processedEvents.entries()) {
+        if (now - timestamp > EVENT_TIMEOUT) {
             processedEvents.delete(eventId);
-            nettoyéCount++;
+            cleanedCount++;
         }
     }
 
-    si (cleanedCount > 0) {
+    if (cleanedCount > 0) {
         console.log(`🧹 Nettoyage auto: ${cleanedCount} anciens événements supprimés`);
     }
-}, 30 000); // Nettoyer toutes les 30 secondes
+}, 30000); // Nettoyer toutes les 30 secondes
 
 // Initialisation de la base de données
 syncDatabase().then(() => {
@@ -109,12 +109,12 @@ syncDatabase().then(() => {
 });
 
 // Charger les commandes
-chargerCommandes();
+loadCommands();
 console.log('✅ Commandes chargées');
 
-// Système de limitation de débit
+// Système de rate limiting
 const messageLimiter = new Map();
-const dernièreInteraction = nouvelle Map();
+const lastInteraction = new Map();
 
 // Cache des noms de groupe
 const groupNameCache = new Map();
@@ -123,100 +123,100 @@ const groupNameCache = new Map();
 const botSentImages = new Map();
 
 // Système d'activation/désactivation de l'IA par discussion
-const aiStatus = new Map(); // vrai = activé, faux = désactivé
+const aiStatus = new Map(); // true = activé, false = désactivé
 
 /**
- * Vérifie si un utilisateur peut envoyer un message (limitation de débit)
+ * Vérifie si un utilisateur peut envoyer un message (rate limiting)
  */
-fonction checkRateLimit(jid, cooldown = 2000) {
-    const maintenant = Date.maintenant();
+function checkRateLimit(jid, cooldown = 2000) {
+    const now = Date.now();
     const lastMessage = messageLimiter.get(jid) || 0;
 
-    si (maintenant - dernierMessage < délai de refroidissement) {
-        renvoyer faux ;
+    if (now - lastMessage < cooldown) {
+        return false;
     }
 
-    messageLimiter.set(jid, maintenant);
-    renvoyer vrai ;
+    messageLimiter.set(jid, now);
+    return true;
 }
 
 /**
- * Vérifie si l'utilisateur est propriétaire du bot
+ * Vérifie si l'utilisateur est propriétaire du bot (support JID et LID)
  */
-fonction isBotOwner(expéditeur) {
+function isBotOwner(sender) {
     const botOwners = process.env.BOT_OWNER
         ? process.env.BOT_OWNER.split(',').map(o => o.trim())
         : [];
 
     return botOwners.some(owner => {
-        // Extraire la partie numérique uniquement
-        const senderNumber = sender.replace(/\D/g, '');
-        const ownerNumber = owner.replace(/\D/g, '');
+        // Extraire la partie numérique uniquement (supprimer @lid, @s.whatsapp.net, etc.)
+        const senderNumber = sender.replace(/@.*|\D/g, '');
+        const ownerNumber = owner.replace(/@.*|\D/g, '');
         
-        renvoyer senderNumber === ownerNumber;
+        return senderNumber === ownerNumber;
     });
 }
 
 /**
- * Activer ou désactiver l'IA pour une discussion
+ * Active ou désactive l'IA pour une discussion
  */
-fonction setAIStatus(jid, statut) {
-    aiStatus.set(jid, statut);
+function setAIStatus(jid, status) {
+    aiStatus.set(jid, status);
     console.log(`🔧 IA ${status ? 'activée' : 'désactivée'} pour ${jid}`);
 }
 
 /**
- * Vérifiez si l'IA est activé pour une discussion
+ * Vérifie si l'IA est activée pour une discussion
  */
-fonction isAIActive(jid) {
+function isAIActive(jid) {
     return aiStatus.get(jid) !== false; // Par défaut activé
 }
 
 /**
  * Récupère le nom du groupe avec cache
  */
-fonction asynchrone getCachedGroupName(sock, remoteJid) {
-    si (!remoteJid.endsWith('@g.us')) retourner null;
+async function getCachedGroupName(sock, remoteJid) {
+    if (!remoteJid.endsWith('@g.us')) return null;
 
-    si (groupNameCache.has(remoteJid)) {
-        retourner groupNameCache.get(remoteJid);
+    if (groupNameCache.has(remoteJid)) {
+        return groupNameCache.get(remoteJid);
     }
 
-    essayer {
+    try {
         const metadata = await sock.groupMetadata(remoteJid);
         const groupName = metadata.subject || null;
 
-        // Mettre en cache pendant 5 minutes
+        // Mettre en cache pour 5 minutes
         groupNameCache.set(remoteJid, groupName);
         setTimeout(() => groupNameCache.delete(remoteJid), 5 * 60 * 1000);
 
-        renvoyer groupName;
-    } attraper (erreur) {
+        return groupName;
+    } catch (error) {
         console.error('❌ Erreur récupération nom du groupe:', error);
-        renvoyer null ;
+        return null;
     }
 }
 
 /**
- * Analyser et stocker une image envoyée par le bot
+ * Analyse et stocke une image envoyée par le bot
  */
-fonction asynchrone analyzeAndStoreBotImage(imageUrl, remoteJid) {
-    essayer {
+async function analyzeAndStoreBotImage(imageUrl, remoteJid) {
+    try {
         console.log('🔍 Analyse de l\'image envoyée par le bot...');
 
         // Télécharger l'image depuis l'URL
-        const réponse = await fetch(imageUrl);
+        const response = await fetch(imageUrl);
         const imageBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(imageBuffer);
 
         // Analyser avec vision
-        const analyse = await analyzeImageWithVision(buffer, 'image/jpeg');
+        const analysis = await analyzeImageWithVision(buffer, 'image/jpeg');
 
-        si (analyse) {
+        if (analysis) {
             // Stocker l'analyse pour ce chat
             botSentImages.set(remoteJid, {
-                analyse : analyse,
-                horodatage : Date.now()
+                analysis: analysis,
+                timestamp: Date.now()
             });
 
             // Nettoyer après 10 minutes
@@ -224,248 +224,269 @@ fonction asynchrone analyzeAndStoreBotImage(imageUrl, remoteJid) {
                 botSentImages.delete(remoteJid);
             }, 10 * 60 * 1000);
 
-            console.log('✅ Analyser la vision stockée pour le prochain message');
-            analyse des retours ;
+            console.log('✅ Analyse vision stockée pour le prochain message');
+            return analysis;
         }
-    } attraper (erreur) {
-        console.error('❌ Erreur analyser l'image bot:', erreur);
+    } catch (error) {
+        console.error('❌ Erreur analyse image bot:', error);
     }
-    renvoyer null ;
+    return null;
 }
 
 /**
  * Récupère l'analyse de la dernière image envoyée par le bot
  */
-fonction getLastBotImageAnalysis(remoteJid) {
+function getLastBotImageAnalysis(remoteJid) {
     const data = botSentImages.get(remoteJid);
     if (data && (Date.now() - data.timestamp < 10 * 60 * 1000)) { // 10 minutes
-        renvoyer les données.analyse ;
+        return data.analysis;
     }
     botSentImages.delete(remoteJid);
-    renvoyer null ;
+    return null;
 }
 
 /**
- * Convertir un message audio en texte
+ * Convertit un message audio en texte
  */
-fonction asynchrone transcrireMessageAudio(msg) {
-    essayer {
+async function transcribeAudioMessage(msg) {
+    try {
         console.log('🎤 Transcription audio en cours...');
         const audioBuffer = await downloadMediaContent(msg, 'audioMessage');
         
-        si (!audioBuffer) {
+        if (!audioBuffer) {
             console.log('❌ Impossible de télécharger l\'audio');
-            renvoyer null ;
+            return null;
         }
 
         const transcription = await transcribeAudio(audioBuffer);
-        console.log('✅ Transcription audio terminée :', transcription);
-        retour transcription ;
-    } attraper (erreur) {
-        console.error('❌ Erreur de transcription audio :', erreur);
-        renvoyer null ;
+        console.log('✅ Transcription audio terminée:', transcription);
+        return transcription;
+    } catch (error) {
+        console.error('❌ Erreur transcription audio:', error);
+        return null;
     }
 }
 
 /**
- * Télécharge le média d'un message cité
+ * Télécharge le média d'un message cité (support étendu pour viewOnce et documents)
  */
-fonction asynchrone downloadQuotedMedia(msg) {
-    essayer {
+async function downloadQuotedMedia(msg) {
+    try {
         const contextInfo = msg.message?.extendedTextMessage?.contextInfo;
-        si (!contextInfo || !contextInfo.quotedMessage) retourner null ;
+        if (!contextInfo || !contextInfo.quotedMessage) return null;
 
         const quotedMessage = contextInfo.quotedMessage;
         const quotedMessageType = Object.keys(quotedMessage)[0];
 
-        si (quotedMessageType === 'imageMessage') {
-            console.log('📸 Image citée détectée, téléchargement...');
-            const buffer = await downloadMediaContent({ message: { imageMessage: quotedMessage.imageMessage } }, 'imageMessage');
-            retour {
-                type: 'image',
-                tampon : tampon,
-                mimeType: quotedMessage.imageMessage.mimetype
-            };
-        } sinon si (quotedMessageType === 'audioMessage') {
-            console.log('🎤 Audio cité détectée, téléchargement...');
-            const buffer = await downloadMediaContent({ message: { audioMessage: quotedMessage.audioMessage } }, 'audioMessage');
-            retour {
-                type: 'audio',
-                tampon : tampon
+        console.log(`📥 Type de média cité détecté: ${quotedMessageType}`);
+
+        // Gestion des messages viewOnce (supprimés après visualisation)
+        if (quotedMessageType === 'viewOnceMessage') {
+            const viewOnceContent = quotedMessage.viewOnceMessage?.message;
+            if (!viewOnceContent) return null;
+            
+            const viewOnceType = Object.keys(viewOnceContent)[0];
+            console.log(`👀 ViewOnce message de type: ${viewOnceType}`);
+            
+            if (viewOnceType === 'imageMessage') {
+                console.log('📸 Image viewOnce citée détectée, téléchargement...');
+                const buffer = await downloadMediaContent({ message: { imageMessage: viewOnceContent.imageMessage } }, 'imageMessage');
+                return {
+                    type: 'image',
+                    buffer: buffer,
+                    mimeType: viewOnceContent.imageMessage.mimetype
+                };
+            } else if (viewOnceType === 'videoMessage') {
+                console.log('🎥 Vidéo viewOnce citée détectée, téléchargement...');
+                const buffer = await downloadMediaContent({ message: { videoMessage: viewOnceContent.videoMessage } }, 'videoMessage');
+                return {
+                    type: 'video',
+                    buffer: buffer
+                };
+            }
+        }
+
+        // Gestion des documents
+        if (quotedMessageType === 'documentMessage') {
+            console.log('📄 Document cité détecté, téléchargement...');
+            const buffer = await downloadMediaContent({ message: { documentMessage: quotedMessage.documentMessage } }, 'documentMessage');
+            return {
+                type: 'document',
+                buffer: buffer,
+                mimeType: quotedMessage.documentMessage.mimetype,
+                fileName: quotedMessage.documentMessage.fileName
             };
         }
 
-        renvoyer null ;
-    } attraper (erreur) {
+        // Types de médias standards (existant)
+        if (quotedMessageType === 'imageMessage') {
+            console.log('📸 Image citée détectée, téléchargement...');
+            const buffer = await downloadMediaContent({ message: { imageMessage: quotedMessage.imageMessage } }, 'imageMessage');
+            return {
+                type: 'image',
+                buffer: buffer,
+                mimeType: quotedMessage.imageMessage.mimetype
+            };
+        } else if (quotedMessageType === 'audioMessage') {
+            console.log('🎤 Audio cité détecté, téléchargement...');
+            const buffer = await downloadMediaContent({ message: { audioMessage: quotedMessage.audioMessage } }, 'audioMessage');
+            return {
+                type: 'audio',
+                buffer: buffer
+            };
+        } else if (quotedMessageType === 'videoMessage') {
+            console.log('🎥 Vidéo citée détectée, téléchargement...');
+            const buffer = await downloadMediaContent({ message: { videoMessage: quotedMessage.videoMessage } }, 'videoMessage');
+            return {
+                type: 'video',
+                buffer: buffer
+            };
+        }
+
+        return null;
+    } catch (error) {
         console.error('❌ Erreur téléchargement média cité:', error);
-        renvoyer null ;
+        return null;
     }
 }
 
 /**
- * Extrait le contenu des messages viewOnce (vues uniques)
+ * Petit utilitaire CLI (pairing code)
  */
-fonction extraireViewOnceContent(msg) {
-    si (!msg || !ms.message) retourner null ;
-    
-    const viewOnceMessage = msg.message.viewOnceMessage;
-    si (!viewOnceMessage) retourner null ;
-    
-    const innerMessage = viewOnceMessage.message;
-    si (!innerMessage) retourner null ;
-    
-    // Extraire le type de média
-    const mediaType = Object.keys(innerMessage)[0];
-    
-    // Extraire le texte (légende) si présent
-    const caption = innerMessage[mediaType]?.caption || '';
-    
-    retour {
-        type : type de média,
-        légende : légende,
-        message: innerMessage[mediaType]
-    };
-}
-
-/**
- * Petit utilitaire CLI (code d'appairage)
- */
-fonction demander(texte de la question) {
+function ask(questionText) {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    retourner une nouvelle promesse((résolu) => {
+    return new Promise((resolve) => {
         rl.question(questionText, (answer) => {
             rl.close();
-            résoudre(réponse.trim());
+            resolve(answer.trim());
         });
     });
 }
 
 /* =========================
- * COMMANDES
+ *        COMMANDES
  * ========================= */
-fonction asynchrone handleCommand(commande, args, msg, sock) {
+async function handleCommand(command, args, msg, sock) {
     const commandName = (command || '').toLowerCase();
     const commandModule = getCommand(commandName);
 
-    si (commandModule) {
+    if (commandModule) {
         return await commandModule.execute(args, msg, sock);
     }
 
-    return `❌ inconnue Commande: /${command}\nTapez /help pour voir les commandes disponibles.`;
+    return `❌ Commande inconnue: /${command}\nTapez /help pour voir les commandes disponibles.`;
 }
 
 /**
  * Vérifie si l'expéditeur est admin du groupe
  */
-fonction asynchrone isUserAdmin(jid, participant, sock) {
-    essayer {
-        const métadonnées = await sock.groupMetadata(jid);
+async function isUserAdmin(jid, participant, sock) {
+    try {
+        const metadata = await sock.groupMetadata(jid);
         const admins = metadata.participants.filter(p => p.admin !== null).map(p => p.id);
-        retourner admins.includes(participant);
-    } attraper (erreur) {
-        console.error('Erreur vérification admin:', erreur);
-        renvoyer faux ;
+        return admins.includes(participant);
+    } catch (error) {
+        console.error('Erreur vérification admin:', error);
+        return false;
     }
 }
 
 /* =========================
- * AIDE
+ *         HELPERS
  * ========================= */
-fonction normalizeLocal(jid = '') {
-    retourner String(jid || '').split('@')[0];
+function normalizeLocal(jid = '') {
+    return String(jid || '').split('@')[0];
 }
 
-fonction jidEquals(a, b) {
-    si (!a || !b) retourner faux ;
-    retourner normalizeLocal(a) === normalizeLocal(b);
+function jidEquals(a, b) {
+    if (!a || !b) return false;
+    return normalizeLocal(a) === normalizeLocal(b);
 }
 
 /**
  * Récupère le texte d'un message cité (si présent)
  */
-fonction extraireTexteDeQuoted(contextInfo = {}) {
+function extractTextFromQuoted(contextInfo = {}) {
     const qm = contextInfo?.quotedMessage || {};
-    retour (
+    return (
         qm?.conversation ||
-        qm?.extendedTextMessage?.texte ||
+        qm?.extendedTextMessage?.text ||
         qm?.imageMessage?.caption ||
         qm?.videoMessage?.caption ||
         qm?.documentMessage?.caption ||
         qm?.audioMessage?.caption ||
-        nul
+        null
     );
 }
 
 /**
  * Type de message (texte, image, audio, etc.)
  */
-fonction getMessageType(msg) {
-    si (!msg || !ms.message) retourner null ;
-    renvoie Object.keys(msg.message)[0];
+function getMessageType(msg) {
+    if (!msg || !msg.message) return null;
+    return Object.keys(msg.message)[0];
 }
 
 /**
- * Récupère un texte lisible d'un WAMessage (légende incluse)
+ * Récupère un texte lisible d'un WAMessage (caption inclus)
  */
-fonction extraireTexte(msg) {
-    si (!msg || !msg.message) retourner '';
+function extractText(msg) {
+    if (!msg || !msg.message) return '';
 
     const m = msg.message;
-    
-    // Vérifiez les messages viewOnce en premier
-    const viewOnceContent = extractViewOnceContent(msg);
-    si (viewOnceContent && viewOnceContent.caption) {
-        retourner viewOnceContent.caption;
-    }
-    
     // Message texte simple
-    si (m.conversation) retourner m.conversation;
+    if (m.conversation) return m.conversation;
 
     // Message texte étendu
-    si (m.extendedTextMessage?.text) retourner m.extendedTextMessage.text ;
+    if (m.extendedTextMessage?.text) return m.extendedTextMessage.text;
 
-    // Messages média avec légende
+    // Messages média avec caption
     const mediaTypes = ['imageMessage', 'videoMessage', 'documentMessage', 'audioMessage'];
-    pour (const type de mediaTypes) {
-        si (m[type]?.caption) retourner m[type].caption;
+    for (const type of mediaTypes) {
+        if (m[type]?.caption) return m[type].caption;
     }
 
-    // Messages éphémères (disappearing messages)
-    si (m.ephemeralMessage?.message) {
+    // Messages viewOnce (messages supprimés après visualisation)
+    if (m.viewOnceMessage?.message) {
+        return extractText({ message: m.viewOnceMessage.message });
+    }
+
+    // Messages éphemères (disappearing messages)
+    if (m.ephemeralMessage?.message) {
         return extractText({ message: m.ephemeralMessage.message });
     }
 
-    retour '';
+    return '';
 }
 
 /**
- * Journal disponible pour le débogage
+ * Log lisible pour debug
  */
-fonction prettyLog(msg) {
-    const clé = msg.clé || {};
-    const remote = key.remoteJid || 'inconnu';
+function prettyLog(msg) {
+    const key = msg.key || {};
+    const remote = key.remoteJid || 'unknown';
     const isGroup = remote.endsWith('@g.us');
-    const participant = clé.participant || distant;
-    const pushName = msg.pushName || msg.notifyName || 'inconnu';
-    const msgType = getMessageType(msg) || 'inconnu';
-    const corps = extraitTexte(msg) || '[non textuel]';
+    const participant = key.participant || remote;
+    const pushName = msg.pushName || msg.notifyName || 'unknown';
+    const msgType = getMessageType(msg) || 'unknown';
+    const body = extractText(msg) || '[non-textuel]';
     const timestamp = msg.messageTimestamp
         ? new Date(msg.messageTimestamp * 1000).toLocaleString()
-        : nouvelle Date().toLocaleString();
-    const contexte = msg.message?.extendedTextMessage?.contextInfo || {};
+        : new Date().toLocaleString();
+    const context = msg.message?.extendedTextMessage?.contextInfo || {};
     const mentions = Array.isArray(context?.mentionedJid) ? context.mentionedJid : [];
     const quoted = context?.quotedMessage
-        ? extraireTexteDeCitation(contexte)
-        : nul;
+        ? extractTextFromQuoted(context)
+        : null;
 
     console.log('\n==========================');
     console.log('📩 Nouveau message —', timestamp);
-    console.log('👥 Chat :', remote, isGroup ? '(Groupe)' : '(Privé)');
-    console.log('👤 De :', participant, '| pushName:', pushName);
-    console.log('📦 Type :', msgType);
-    console.log('📝 Texte :', body);
+    console.log('👥 Chat   :', remote, isGroup ? '(Groupe)' : '(Privé)');
+    console.log('👤 From   :', participant, '| pushName:', pushName);
+    console.log('📦 Type   :', msgType);
+    console.log('📝 Texte  :', body);
     if (mentions.length) console.log('🔔 Mentions:', mentions.join(', '));
-    if (quoted) console.log('❝ Cité :', quoted);
+    if (quoted) console.log('❝ Quoted :', quoted);
     console.log('🧷 stanzaId:', key.id, '| participant:', key.participant || '(none)');
     console.log('==========================\n');
 }
@@ -473,71 +494,69 @@ fonction prettyLog(msg) {
 /**
  * Nettoie les caractères non alphanumériques initiaux
  */
-fonction stripLeadingNonAlnum(s = '') {
-    si (!s) retourner '';
-    essayer {
+function stripLeadingNonAlnum(s = '') {
+    if (!s) return '';
+    try {
         return String(s).replace(/^[^\p{L}\p{N}]+/u, '').trim();
-    } attraper (e) {
+    } catch (e) {
         return String(s).replace(/^[^a-zA-Z0-9]+/, '').trim();
     }
 }
 
 /**
- * Autocollants aléatoires avec signature Makima/Suprêmus
+ * Stickers aléatoires avec signature Makima/Suprêmus
  */
-fonction asynchrone getRandomSticker() {
-    essayer {
+async function getRandomSticker() {
+    try {
         const stickersDir = path.join(__dirname, 'stickers');
         if (!fs.existsSync(stickersDir)) return null;
 
-        const fichiers = fs.readdirSync(stickersDir).filter(f => /\.(webp|png|jpe?g)$/i.test(f));
-        si (files.length === 0) retourner null ;
+        const files = fs.readdirSync(stickersDir).filter(f => /\.(webp|png|jpe?g)$/i.test(f));
+        if (files.length === 0) return null;
 
-        const fichier_aléatoire = fichiers[Math.floor(Math.random() * fichiers.length)];
+        const randomFile = files[Math.floor(Math.random() * files.length)];
         const inputPath = path.join(stickersDir, randomFile);
 
         const buffer = fs.readFileSync(inputPath);
 
-        // Créer un sticker avec les métadonnées Suprêmus/Makima ET signature invisible
-        const stickerMetadata = "Makima - Suprêmus" + BOT_SIGNATURE;
-        
+        // Créer un sticker avec les métadonnées Suprêmus/Makima
         const sticker = new Sticker(buffer, {
-            pack : "Makima",
-            auteur : stickerMetadata, // Signature invisible incluse
+            pack: "Makima",
+            author: "Suprêmus",
             type: StickerTypes.FULL,
-            qualité : 100,
+            quality: 100,
         });
 
         const tempPath = path.join(__dirname, `temp_${Date.now()}.webp`);
-        attendre sticker.toFile(tempPath);
+        await sticker.toFile(tempPath);
 
-        renvoyer tempPath;
-    } attraper (erreur) {
+        return tempPath;
+    } catch (err) {
         console.error('⚠️ Impossible de charger les stickers:', err?.message || err);
-        renvoyer null ;
+        return null;
     }
 }
 
 /* =========================
- * CACHE DES MSG DU BOT
+ *   CACHE DES MSG DU BOT
  * ========================= */
 const botMessageCache = new Map();
 
 /**
- * Mémorisez les derniers textes envoyés par le bot dans un chat
+ * Mémorise les derniers textes envoyés par le bot dans un chat
  */
-fonction cacheBotReply(chatId, texte) {
-    si (!chatId || !text) retourner;
+function cacheBotReply(chatId, text) {
+    if (!chatId || !text) return;
     const arr = botMessageCache.get(chatId) || [];
-    const t = String(texte || '').trim();
+    const t = String(text || '').trim();
     arr.unshift({ text: t, ts: Date.now() });
 
     const stripped = stripLeadingNonAlnum(t);
     if (stripped && stripped !== t) arr.unshift({ text: stripped, ts: Date.now() });
 
-    tant que (arr.length > 160) arr.pop();
+    while (arr.length > 160) arr.pop();
     botMessageCache.set(chatId, arr);
-    si (DEBUG) {
+    if (DEBUG) {
         console.log('🐛 DEBUG cacheBotReply:', chatId, '=>', arr.slice(0, 6).map(i => i.text));
     }
 }
@@ -546,51 +565,51 @@ fonction cacheBotReply(chatId, texte) {
  * Vérifie si le texte cité correspond à un des derniers messages du bot
  * AVEC SUPPORT DE LA SIGNATURE INVISIBLE
  */
-fonction quotedMatchesBot(chatId, quotedText) {
-    si (!chatId || !quotedText) retourner faux ;
+function quotedMatchesBot(chatId, quotedText) {
+    if (!chatId || !quotedText) return false;
     
     // Vérifier d'abord avec la signature invisible
-    si (hasSignature(quotedText)) {
+    if (hasSignature(quotedText)) {
         console.log('✅ Message cité reconnu via signature invisible');
-        renvoyer vrai ;
+        return true;
     }
     
-    // Fallback : vérification par cache (pour compatibilité)
+    // Fallback: vérification par cache (pour compatibilité)
     const arr = botMessageCache.get(chatId) || [];
     const q = String(quotedText || '').trim();
     const qStripped = stripLeadingNonAlnum(q);
     const qLower = q.toLowerCase();
     const qStrippedLower = qStripped.toLowerCase();
 
-    const trouvé = arr.some(item => {
+    const found = arr.some(item => {
         const it = String(item.text || '').trim().toLowerCase();
-        retourner il === qLower || il === qStrippedLower;
+        return it === qLower || it === qStrippedLower;
     });
 
-    si (DEBUG) {
+    if (DEBUG) {
         console.log('🐛 DEBUG quotedMatchesBot:', { chatId, quotedText: q, stripped: qStripped, found });
     }
-    retour trouvé ;
+    return found;
 }
 
 /* =========================
- * ENVOI AVEC CITATION
+ *   ENVOI AVEC CITATION
  * ========================= */
 /**
  * Envoie une réponse en citant le message d'origine
  */
-fonction asynchrone sendReply(sock, msg, contentObj, optionsExtra = {}) {
+async function sendReply(sock, msg, contentObj, optionsExtra = {}) {
     const jid = msg.key.remoteJid;
     const opts = { quoted: msg, ...optionsExtra };
-    console.log('🧷 sendReply -> citation stanzaId:', msg.key.id, '| à:', jid);
-    renvoie sock.sendMessage(jid, contentObj, opts);
+    console.log('🧷 sendReply -> quoting stanzaId:', msg.key.id, '| to:', jid);
+    return sock.sendMessage(jid, contentObj, opts);
 }
 
 /**
  * Envoie une réponse avec un délai aléatoire et l'indicateur "en train d'écrire"
  * AVEC SIGNATURE INVISIBLE
  */
-fonction asynchrone sendReplyWithTyping(sock, msg, contentObj, optionsExtra = {}) {
+async function sendReplyWithTyping(sock, msg, contentObj, optionsExtra = {}) {
     const jid = msg.key.remoteJid;
     const opts = { quoted: msg, ...optionsExtra };
 
@@ -598,96 +617,96 @@ fonction asynchrone sendReplyWithTyping(sock, msg, contentObj, optionsExtra = {}
     const randomDelay = Math.floor(Math.random() * 3000) + 2000;
 
     // Activer l'indicateur "en train d'écrire"
-    attendre sock.sendPresenceUpdate('composing', jid);
+    await sock.sendPresenceUpdate('composing', jid);
 
     // Attendre le délai aléatoire
-    attendre délai(délai aléatoire);
+    await delay(randomDelay);
 
     // Désactiver l'indicateur et envoyer le message
-    attendre sock.sendPresenceUpdate('paused', jid);
+    await sock.sendPresenceUpdate('paused', jid);
     
     // Ajouter la signature invisible au texte
-    si (contentObj.text) {
-        contentObj.text = ajouterSignature(contentObj.text);
+    if (contentObj.text) {
+        contentObj.text = addSignature(contentObj.text);
     }
     
-    renvoie sock.sendMessage(jid, contentObj, opts);
+    return sock.sendMessage(jid, contentObj, opts);
 }
 
 /**
- * Télécharger le contenu d'un message média
+ * Télécharge le contenu d'un message média
  */
-fonction asynchrone downloadMediaContent(msg, messageType) {
-    essayer {
+async function downloadMediaContent(msg, messageType) {
+    try {
         const stream = await downloadContentFromMessage(msg.message[messageType], messageType.replace('Message', ''));
         const chunks = [];
         for await (const chunk of stream) {
             chunks.push(chunk);
         }
-        renvoie Buffer.concat(chunks);
-    } attraper (erreur) {
+        return Buffer.concat(chunks);
+    } catch (error) {
         console.error('❌ Erreur téléchargement média:', error);
-        renvoyer null ;
+        return null;
     }
 }
 
 /* =========================
- * GESTION DU CODE D'APPARITION
+ *  GESTION DU PAIRING CODE
  * ========================= */
-fonction asynchrone handlePairing(sock) {
-    si (!sock.authState.creds.registered && !pair) {
-        essayer {
-            attendre délai(3000);
+async function handlePairing(sock) {
+    if (!sock.authState.creds.registered && !pair) {
+        try {
+            await delay(3000);
             const numeroPair = process.env.NUMERO_PAIR || '225xxxxxxxxxx';
             const code = await sock.requestPairingCode(numeroPair);
             console.log("🔗 CODE DE PAIRAGE : ", code);
-            paire = vrai;
-        } attraper (erreur) {
-            console.error("❌ Erreur lors du couplage :", err.message);
+            pair = true;
+        } catch (err) {
+            console.error("❌ Erreur lors du pairage :", err.message);
         }
     }
 }
 
 /* =========================
- * PRINCIPAL DU MANIPULATEUR
+ *  HANDLER PRINCIPAL
  * ========================= */
-fonction asynchrone startBot(sock, état) {
-    soit BOT_JID = (sock.user && sock.user.id) || (state?.creds?.me?.id) || process.env.BOT_JID || null;
+async function startBot(sock, state) {
+    let BOT_JID = (sock.user && sock.user.id) || (state?.creds?.me?.id) || process.env.BOT_JID || null;
 
-    // Gestion du code de pairing
-    attendre handlePairing(sock);
+    // Gestion du pairing code
+    await handlePairing(sock);
 
     sock.ev.on('connection.update', (u) => {
-        si (u.connection === 'open' && sock.user?.id) {
+        if (u.connection === 'open' && sock.user?.id) {
             BOT_JID = sock.user.id;
             console.log('✅ Connexion ouverte — Bot JID:', BOT_JID);
         }
     });
 
     sock.ev.on('messages.upsert', async ({ messages }) => {
-        essayer {
+        try {
             const msg = messages && messages[0];
-            si (!msg || !ms.message) retourner;
+            if (!msg || !msg.message) return;
 
             // VÉRIFICATION ANTI-DOUBLON
-            si (isDuplicateEvent(msg)) {
+            if (isDuplicateEvent(msg)) {
                 console.log('🚫 Événement dupliqué ignoré:', msg.key.id);
-                retour;
+                return;
             }
 
-            joliLog(msg);
+            prettyLog(msg);
 
             // Si c'est le bot qui parle → on met en cache et on sort
-            si (msg.key.fromMe) {
-                const texte = extraireTexte(msg);
-                si (texte) cacheBotReply(msg.key.remoteJid, texte);
-                retour;
+            if (msg.key.fromMe) {
+                const text = extractText(msg);
+                if (text) cacheBotReply(msg.key.remoteJid, text);
+                return;
             }
 
-            const texte = extraireTexte(msg);
+            const text = extractText(msg);
             const remoteJid = msg.key.remoteJid;
             const isGroup = remoteJid.endsWith('@g.us');
-            const pushName = msg.pushName || msg.notifyName || nul;
+            const pushName = msg.pushName || msg.notifyName || null;
             const messageType = getMessageType(msg);
             const senderJid = msg.key.participant || remoteJid;
 
@@ -695,131 +714,118 @@ fonction asynchrone startBot(sock, état) {
             // DÉTECTION DES MENTIONS DU BOT
             // ===========================================
             const botNumbers = ['244285576339508', '177958127927437']; // Tous les numéros possibles
-            const mots-clés = ['supremia', 'makima'];
+            const keywords = ['supremia', 'makima'];
             const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
             
             const isMentioned =
                 mentionedJids.some(jid => botNumbers.some(num => jid.includes(num))) ||
                 (text && botNumbers.some(num => text.includes('@' + num))) ||
-                (texte && mots-clés.some(mot => texte.toLowerCase().includes(mot)));
+                (text && keywords.some(word => text.toLowerCase().includes(word)));
 
             // ===========================================
             // VÉRIFICATION RÉPONSE AU BOT (AVEC SIGNATURE)
             // ===========================================
             const quotedText = msg.message.extendedTextMessage?.contextInfo?.quotedMessage
-                ? extraireTexteDeCitation(msg.message.extendedTextMessage.contextInfo)
-                : nul;
+                ? extractTextFromQuoted(msg.message.extendedTextMessage.contextInfo)
+                : null;
             const isReplyToBot = quotedText && quotedMatchesBot(remoteJid, quotedText);
 
-            // NOUVEAU : Vérifier si c'est une réponse à un autocollant du bot
-            const quotedSticker = msg.message.extendedTextMessage?.contextInfo?.quotedMessage?.stickerMessage;
-            const isReplyToBotSticker = quotedSticker && isReplyToBot;
-
             // ===========================================
-            // NOUVELLE FONCTIONNALITÉ : ANALYZE DES MÉDIAS CITÉS
+            // NOUVELLE FONCTIONNALITÉ : ANALYSE DES MÉDIAS CITÉS
             // ===========================================
-            soit quotedMediaBuffer = null;
-            soit quotedMediaType = null ;
-            soit quotedMediaMimeType = null ;
-            soit transcribedQuotedAudio = null ;
+            let quotedMediaBuffer = null;
+            let quotedMediaType = null;
+            let quotedMediaMimeType = null;
+            let transcribedQuotedAudio = null;
 
             // Vérifier si l'utilisateur mentionne le bot sur un média cité
-            si (isMentioned && msg.message?.extendedTextMessage?.contextInfo) {
+            if (isMentioned && msg.message?.extendedTextMessage?.contextInfo) {
                 console.log('🔍 Mention détectée sur message cité, vérification média...');
                 const quotedMedia = await downloadQuotedMedia(msg);
                 
-                si (quotedMedia) {
-                    si (quotedMedia.type === 'image') {
-                        console.log('📸 Image citée détectée avec mention - analyser démarrer');
+                if (quotedMedia) {
+                    if (quotedMedia.type === 'image') {
+                        console.log('📸 Image citée détectée avec mention - analyse déclenchée');
                         quotedMediaBuffer = quotedMedia.buffer;
                         quotedMediaType = 'image';
                         quotedMediaMimeType = quotedMedia.mimeType;
-                    } sinon si (quotedMedia.type === 'audio') {
-                        console.log('🎤 Audio cité détectée avec mention - transcription démarre');
-                        essayer {
-                            transcriptionAudioCité = await transcriptionAudio(médiaCité.buffer);
-                            si (transcribedQuotedAudio) {
-                                console.log('✅ Transcription audio citée réussie :', transcritQuotedAudio);
-                            } autre {
-                                console.log('❌Échec transcription audio cité');
+                    } else if (quotedMedia.type === 'audio') {
+                        console.log('🎤 Audio cité détecté avec mention - transcription déclenchée');
+                        try {
+                            transcribedQuotedAudio = await transcribeAudio(quotedMedia.buffer);
+                            if (transcribedQuotedAudio) {
+                                console.log('✅ Transcription audio citée réussie:', transcribedQuotedAudio);
+                            } else {
+                                console.log('❌ Échec transcription audio cité');
                             }
-                        } attraper (erreur) {
+                        } catch (error) {
                             console.error('❌ Erreur transcription audio cité:', error);
                         }
                     }
+                    // NOUVEAU : Gestion des documents cités avec mention
+                    else if (quotedMedia.type === 'document') {
+                        console.log('📄 Document cité détecté avec mention - traitement...');
+                        // Pour les documents, on peut extraire le texte si c'est un fichier texte/PDF
+                        // ou simplement informer l'utilisateur du type de document
+                        quotedMediaBuffer = quotedMedia.buffer;
+                        quotedMediaType = 'document';
+                        quotedMediaMimeType = quotedMedia.mimeType;
+                    }
                 }
             }
 
-            // ===========================================
-            // DÉTECTION DES VUES UNIQUES (VIEW UNE FOIS)
-            // ===========================================
-            soit viewOnceContent = null;
-            si (messageType === 'viewOnceMessage') {
-                viewOnceContent = extraireViewOnceContent(msg);
-                console.log('👁️ Message viewUne fois détecté :', {
-                    type : viewOnceContent?.type,
-                    légende : viewOnceContent?.caption
-                });
+            // NOUVELLE SECTION : Analyse des médias cités en réponse au bot (sans mention)
+            if (isReplyToBot && !isMentioned && msg.message?.extendedTextMessage?.contextInfo) {
+                console.log('🔍 Réponse au bot détectée, vérification média cité...');
+                const quotedMedia = await downloadQuotedMedia(msg);
                 
-                // Conditions pour traiter les vues uniques :
-                // - Mention OU réponse au bot OU privé
-                const devraitProcessViewOnce = estMentionné || estRépondreAuBot || estÉtiquetteRépondreAuBot || !estGroupe;
-                
-                si (devraitTraiterViewOnce && viewOnceContent) {
-                    console.log('📸 ViewOnce image à analyser - Conditions remplies');
-                    
-                    // Télécharger l'image viewOnce
-                    si (viewOnceContent.type === 'imageMessage') {
-                        essayer {
-                            const stream = await downloadContentFromMessage(
-                                viewOnceContent.message,
-                                'image'
-                            );
-                            const chunks = [];
-                            for await (const chunk of stream) {
-                                chunks.push(chunk);
+                if (quotedMedia) {
+                    if (quotedMedia.type === 'image') {
+                        console.log('📸 Image citée en réponse au bot - analyse déclenchée');
+                        quotedMediaBuffer = quotedMedia.buffer;
+                        quotedMediaType = 'image';
+                        quotedMediaMimeType = quotedMedia.mimeType;
+                    } else if (quotedMedia.type === 'audio') {
+                        console.log('🎤 Audio cité en réponse au bot - transcription déclenchée');
+                        try {
+                            transcribedQuotedAudio = await transcribeAudio(quotedMedia.buffer);
+                            if (transcribedQuotedAudio) {
+                                console.log('✅ Transcription audio citée réussie:', transcribedQuotedAudio);
                             }
-                            imageBuffer = Buffer.concat(chunks);
-                            imageMimeType = viewOnceContent.message.mimetype;
-                            console.log('📸 Image viewOnce téléchargée, taille:', imageBuffer?.length || 0, 'bytes');
-                        } attraper (erreur) {
-                            console.error('❌ Erreur de téléchargement de l'image viewOnce:', error);
+                        } catch (error) {
+                            console.error('❌ Erreur transcription audio cité:', error);
                         }
+                    } else if (quotedMedia.type === 'document') {
+                        console.log('📄 Document cité en réponse au bot - traitement...');
+                        quotedMediaBuffer = quotedMedia.buffer;
+                        quotedMediaType = 'document';
+                        quotedMediaMimeType = quotedMedia.mimeType;
                     }
                 }
             }
 
             // ===========================================
-            // GESTION DES MESSAGES DIRECTS AUDIO AVEC CONDITIONS AMÉLIORÉES
+            // GESTION DES MESSAGES AUDIO DIRECTS
             // ===========================================
-            soit transcribedAudioText = null ;
-            si (messageType === 'audioMessage') {
-                // CONDITIONS AUDIO ÉTENDUES :
-                // - Mentionnez OU
-                // - Réponse au bot (texte) OU
-                // - Réponse à un autocollant du bot OU
-                // - Discussion privée
-                const devraitTranscribeAudio = estMentionné || estRépondreAuBot || estÉtiquetteRépondreAuBot || !estGroupe;
+            let transcribedAudioText = null;
+            if (messageType === 'audioMessage') {
+                // Condition audio : mention OU réponse au bot
+                const shouldTranscribeAudio = isMentioned || isReplyToBot || !isGroup;
                 
-                si (devraitTranscribeAudio) {
-                    console.log('🎤 Message audio détecté, transcription en cours... Conditions :', {
-                        est mentionné,
-                        estRépondreAuBot,
-                        estRépondreAuBotSticker,
-                        isPrivate: !isGroup
-                    });
-                    texteAudiotranscripté = await transcribeAudioMessage(msg);
+                if (shouldTranscribeAudio) {
+                    console.log('🎤 Message audio détecté, transcription en cours...');
+                    transcribedAudioText = await transcribeAudioMessage(msg);
                     
-                    si (texteaudio transcrit) {
-                        console.log('✅ Transcription audio réussie :', transcribeAudioText);
-                    } autre {
+                    if (transcribedAudioText) {
+                        console.log('✅ Transcription audio réussie:', transcribedAudioText);
+                    } else {
                         console.log('❌ Échec de la transcription audio');
-                        attendre sendReply(sock, msg, {
-                            text: '❌ Désolé, je n\'ai pas pu comprendre le message audio. Pourriez-vous réessayer ou taper votre message ?'
+                        await sendReply(sock, msg, { 
+                            text: '❌ Désolé, je n\'ai pas pu comprendre le message audio. Pouvez-vous réessayer ou taper votre message ?' 
                         });
-                        retour;
+                        return;
                     }
-                } autre {
+                } else {
                     console.log('🎤 Audio ignoré - Aucune condition de transcription remplie');
                 }
             }
@@ -827,165 +833,134 @@ fonction asynchrone startBot(sock, état) {
             // ===========================================
             // ANALYSE D'IMAGES CONDITIONNELLE CORRIGÉE
             // ===========================================
-            soit imageBuffer = null;
-            soit imageMimeType = null;
+            let imageBuffer = null;
+            let imageMimeType = null;
 
             if (messageType === 'imageMessage') {
-                // CONDITION 1 : Image avec mention dans la légende
+                // CONDITION 1: Image avec mention dans la légende
                 const imageHasMention = isMentioned;
                 
-                // CONDITION 2 : Réponse à un message du bot AVEC image
+                // CONDITION 2: Réponse à un message du bot AVEC image
                 const isReplyToBotWithImage = isReplyToBot && messageType === 'imageMessage';
                 
-                // CONDITION 3 : Discussion privée (toutes les images analysées)
+                // CONDITION 3: Discussion privée (toutes les images analysées)
                 const isPrivateImage = !isGroup;
                 
-                const devraitAnalyserImage = imageHasMention || isReplyToBotWithImage || isPrivateImage;
+                const shouldAnalyzeImage = imageHasMention || isReplyToBotWithImage || isPrivateImage;
                 
-                si (devraitAnalyserImage) {
-                    console.log('📸 Analyser l'image directement déclenchée - Conditions :', {
+                if (shouldAnalyzeImage) {
+                    console.log('📸 Analyse image directe déclenchée - Conditions:', {
                         imageHasMention,
-                        estRépondreAuBotAvecImage,
+                        isReplyToBotWithImage, 
                         isPrivateImage
                     });
                     imageBuffer = await downloadMediaContent(msg, 'imageMessage');
                     imageMimeType = msg.message.imageMessage.mimetype;
                     console.log('📸 Image téléchargée, taille:', imageBuffer?.length || 0, 'bytes');
-                } autre {
+                } else {
                     console.log('📸 Image directe ignorée - Aucune condition d\'analyse remplie');
                 }
-            }
-
-            // ===========================================
-            // GESTION DES STICKERS
-            // ===========================================
-            const isStickerMessage = messageType === 'stickerMessage';
-            const isReplyWithSticker = isStickerMessage && (isReplyToBot || isMentioned || !isGroup);
-
-            // Si l'utilisateur envoie un autocollant en réponse au bot, répondre par un autocollant
-            si (isReplyWithSticker) {
-                console.log('🎨 Réponse par autocollant déclenche');
-                const stickerPath = attendre getRandomSticker();
-                si (stickerPath) {
-                    await sock.sendMessage(remoteJid, { sticker: fs.readFileSync(stickerPath) }, { quoted: msg });
-                    
-                    // Mettre en cache la "réponse" sticker pour la détection future
-                    cacheBotReply(remoteJid, "🎨 Autocollant envoyé");
-                    
-                    // Supprimer le fichier temporaire
-                    essayer {
-                        fs.unlinkSync(stickerPath);
-                    } attraper (e) {
-                        console.error('Erreur suppression sticker temporaire:', e);
-                    }
-                    retour; // Ne pas traiter plus loin
-                }
-            }
-
-            // Si simple sticker sans contexte, ignorer
-            si (isStickerMessage && !isReplyToBot && !isMentioned && isGroup) {
-                console.log('🎨 Autocollant simple ignoré en groupe');
-                retour;
             }
 
             // ===========================================
             // TEXTE FINAL À TRAITER
             // ===========================================
             // Priorité : transcription audio citée > transcription audio directe > texte normal
-            const finalText = transcritQuotedAudio || transcritAudioTexte || texte;
+            const finalText = transcribedQuotedAudio || transcribedAudioText || text;
 
             // Vérifier si c'est un message avec média mais sans texte
-            si (!finalText && !imageBuffer && !quotedMediaBuffer && !viewOnceContent) {
+            if (!finalText && !imageBuffer && !quotedMediaBuffer) {
                 // Si c'est un message média sans légende, on ne le traite pas
-                const isMedia = ['imageMessage', 'videoMessage', 'documentMessage', 'audioMessage', 'viewOnceMessage'].includes(messageType);
-                si (isMedia && !transcribedAudioText && !transcribedQuotedAudio) {
+                const isMedia = ['imageMessage', 'videoMessage', 'documentMessage', 'audioMessage'].includes(messageType);
+                if (isMedia && !transcribedAudioText && !transcribedQuotedAudio) {
                     console.log('📸 Message média sans légende - ignoré');
-                    retour;
+                    return;
                 }
             }
 
-            // Rate limitation - éviter de répondre trop souvent
-            si (!checkRateLimit(remoteJid, 2000)) {
-                console.log('⏳ Limitation de débit activée pour ce chat');
-                retour;
+            // Rate limiting - éviter de répondre trop souvent
+            if (!checkRateLimit(remoteJid, 2000)) {
+                console.log('⏳ Rate limiting activé pour ce chat');
+                return;
             }
 
             // Commande ?
             const isCommand = finalText && finalText.startsWith('/');
 
             // Vérifier si l'IA est désactivée pour cette discussion
-            si (!isAIActive(remoteJid) && !isCommand) {
+            if (!isAIActive(remoteJid) && !isCommand) {
                 console.log('🔕 IA désactivée pour cette discussion - ignoré');
-                retour;
+                return;
             }
 
             // ===========================================
             // DÉCISION DE RÉPONSE AMÉLIORÉE
             // ===========================================
-            // Nouveaux critères : média cité avec mention
+            // Nouveaux critères : média cité avec mention OU réponse au bot
             const hasQuotedMediaWithMention = isMentioned && (quotedMediaBuffer || transcribedQuotedAudio);
-            
-            const devraitRépondre = !isGroup ||
-                              estCommande ||
-                              estRépondreAuBot ||
-                              isReplyToBotSticker || //NOUVEAU
-                              est mentionné ||
-                              (imageBuffer && (isMentioned || isReplyToBot || !isGroup)) ||
-                              Transcription audio/texte ||
-                              Transcription de la citation audio ||
-                              a cité des médias avec mention ||
-                              (viewOnceContent && (isMentioned || isReplyToBot || !isGroup)); //NOUVEAU
+            // NOUVELLE CONDITION : Réponse au bot avec média cité (sans mention nécessaire)
+            const isReplyToBotWithQuotedMedia = isReplyToBot && (quotedMediaBuffer || transcribedQuotedAudio);
+
+            const shouldReply = !isGroup || 
+                              isCommand || 
+                              isReplyToBot || 
+                              isMentioned || 
+                              (imageBuffer && (isMentioned || isReplyToBot || !isGroup)) || 
+                              transcribedAudioText ||
+                              transcribedQuotedAudio ||
+                              hasQuotedMediaWithMention ||
+                              isReplyToBotWithQuotedMedia; // NOUVELLE CONDITION
 
             console.log(
-                `📌 Décision : devraitRépondre=${shouldReply} | estGroupe=${isGroup} | estCommande=${isCommand} | estRépondreAuBot=${isReplyToBot} | estÉtiquetteRépondreAuBot=${isReplyToBotSticker} | estMentionné=${isMentioned} | aImage=${!!imageBuffer} | aVuUneFois=${!!viewOnceContent} | aImageCitée=${!!quotedMediaBuffer} | aAudio=${!!transcribedAudioText} | aAudioCité=${!!transcribedQuotedAudio} | IAActive=${isAIActive(remoteJid)}`
+                `📌 Decision: shouldReply=${shouldReply} | isGroup=${isGroup} | isCommand=${isCommand} | isReplyToBot=${isReplyToBot} | isMentioned=${isMentioned} | hasImage=${!!imageBuffer} | hasQuotedImage=${!!quotedMediaBuffer} | hasAudio=${!!transcribedAudioText} | hasQuotedAudio=${!!transcribedQuotedAudio} | AIActive=${isAIActive(remoteJid)} | isReplyToBotWithQuotedMedia=${isReplyToBotWithQuotedMedia}`
             );
 
-            si (!devraitRépondre) retourner;
+            if (!shouldReply) return;
 
-            essayer {
-                laisser la réponse = null ;
+            try {
+                let reply = null;
 
                 // 1) commandes
-                si (estCommande) {
-                    const [commande, ...args] = finalText.slice(1).trim().split(/\s+/);
+                if (isCommand) {
+                    const [command, ...args] = finalText.slice(1).trim().split(/\s+/);
 
                     // Commande réservée au propriétaire : /ai on/off
-                    si (commande === 'ai' && isBotOwner(senderJid)) {
+                    if (command === 'ai' && isBotOwner(senderJid)) {
                         const action = args[0]?.toLowerCase();
-                        si (action === 'on') {
-                            définir AIStatus(remoteJid, vrai);
-                            réponse = '✅ IA activée pour cette discussion';
-                        } sinon si (action === 'off') {
+                        if (action === 'on') {
+                            setAIStatus(remoteJid, true);
+                            reply = '✅ IA activée pour cette discussion';
+                        } else if (action === 'off') {
                             setAIStatus(remoteJid, false);
-                            réponse = '🔕 IA désactivée pour cette discussion';
-                        } autre {
-                            réponse = '❌ Utilisation : /ai on ou /ai off';
+                            reply = '🔕 IA désactivée pour cette discussion';
+                        } else {
+                            reply = '❌ Usage: /ai on ou /ai off';
                         }
-                    } autre {
-                        réponse = await handleCommand(commande, args, msg, sock);
+                    } else {
+                        reply = await handleCommand(command, args, msg, sock);
                     }
 
-                    si (réponse) {
+                    if (reply) {
                         await sendReplyWithTyping(sock, msg, { text: reply });
-                        cacheBotReply(remoteJid, réponse);
-                        retour;
+                        cacheBotReply(remoteJid, reply);
+                        return;
                     }
                 }
 
-                // 2) IA (mention / réponse / privé / image conditionnelle / audio / média cité)
+                // 2) IA (mention / reply / privé / image conditionnelle / audio / média cité)
                 console.log(`🤖 IA: génération de réponse pour ${senderJid} dans ${remoteJid}`);
 
                 // Récupérer l'analyse de la dernière image envoyée par le bot (si existe)
                 const lastBotImageAnalysis = getLastBotImageAnalysis(remoteJid);
-                si (lastBotImageAnalysis) {
-                    console.log('🖼️ Analyse vision précédente disponible pour référence');
+                if (lastBotImageAnalysis) {
+                    console.log('🖼️  Analyse vision précédente disponible pour référence');
                 }
 
                 // Récupérer le nom du groupe pour le log
-                soit groupName = null;
-                si (estGroupe) {
-                    nomGroupe = await getCachedGroupName(sock, remoteJid);
-                    console.log(`🏷️ Groupe: "${groupName || 'Sans nom'}"`);
+                let groupName = null;
+                if (isGroup) {
+                    groupName = await getCachedGroupName(sock, remoteJid);
+                    console.log(`🏷️  Groupe: "${groupName || 'Sans nom'}"`);
                 }
 
                 // Préparer les informations de citation pour l'IA
@@ -994,94 +969,94 @@ fonction asynchrone startBot(sock, état) {
                 const quotedSender = contextInfo?.participant || null;
                 const quotedMessageInfo = quotedTextForAI && quotedSender ? { sender: quotedSender, text: quotedTextForAI } : null;
 
-                // Déterminer le buffer d'image à utiliser (image directe OU image citée OU viewOnce)
+                // Déterminer le buffer d'image à utiliser (image directe OU image citée)
                 const finalImageBuffer = quotedMediaBuffer || imageBuffer;
                 const finalImageMimeType = quotedMediaMimeType || imageMimeType;
 
-                const réponseObj = attendre nazunaReply(
-                    Texte final,
-                    expéditeurJid,
-                    Jid distant,
-                    pushName,
-                    estGroupe,
+                const replyObj = await nazunaReply(
+                    finalText, 
+                    senderJid, 
+                    remoteJid, 
+                    pushName, 
+                    isGroup,
                     quotedMessageInfo,
-                    tampon d'image final,
-                    typeMime de l'image finale,
-                    chaussette,
-                    dernièreAnalyse d'image du robot,
-                    transcritAudioTexte || transcritQuotedAudio ? true : false // Indiquer si c'est une transcription audio
+                    finalImageBuffer,
+                    finalImageMimeType,
+                    sock,
+                    lastBotImageAnalysis,
+                    transcribedAudioText || transcribedQuotedAudio ? true : false // Indiquer si c'est une transcription audio
                 );
 
-                si (replyObj && replyObj.text) {
+                if (replyObj && replyObj.text) {
                     // Détection de visuel
-                    const visuel = detectorVisuel(finalText) || détecterVisuel(replyObj.text);
+                    const visuel = detecterVisuel(finalText) || detecterVisuel(replyObj.text);
 
                     if (visuel && visuel.urlImage) {
                         // Envoyer l'image avec la réponse en légende
-                        attendre sock.sendMessage(remoteJid, {
-                            image : { url : visuel.urlImage },
-                            légende : addSignature(replyObj.text), // Signature ajoutée
-                            mentions : replyObj.mentions || []
-                        }, { cité: msg });
+                        await sock.sendMessage(remoteJid, {
+                            image: { url: visuel.urlImage },
+                            caption: addSignature(replyObj.text), // Signature ajoutée
+                            mentions: replyObj.mentions || []
+                        }, { quoted: msg });
 
                         // Analyser et stocker l'image envoyée pour le prochain message
-                        attendre analyzeAndStoreBotImage(visuel.urlImage, remoteJid);
+                        await analyzeAndStoreBotImage(visuel.urlImage, remoteJid);
 
                         cacheBotReply(remoteJid, replyObj.text);
-                    } autre {
+                    } else {
                         // Envoi normal si pas de visuel détecté (signature ajoutée dans sendReplyWithTyping)
                         const messageData = {
-                            text: ReplyObj.text, // La signature sera ajoutée dans sendReplyWithTyping
-                            mentions : replyObj.mentions || []
+                            text: replyObj.text, // Signature sera ajoutée dans sendReplyWithTyping
+                            mentions: replyObj.mentions || []
                         };
-                        attendre sendReplyWithTyping(sock, msg, messageData);
+                        await sendReplyWithTyping(sock, msg, messageData);
                         cacheBotReply(remoteJid, replyObj.text);
                     }
                 }
 
                 // 3) bonus sticker de temps en temps (seulement 50% de chance)
-                si (!isCommand && Math.random() < 0.5) {
-                    const stickerPath = attendre getRandomSticker();
-                    si (stickerPath) {
+                if (!isCommand && Math.random() < 0.5) {
+                    const stickerPath = await getRandomSticker();
+                    if (stickerPath) {
                         await sock.sendMessage(remoteJid, { sticker: fs.readFileSync(stickerPath) });
 
                         // Supprimer le fichier temporaire
-                        essayer {
+                        try {
                             fs.unlinkSync(stickerPath);
-                        } attraper (e) {
+                        } catch (e) {
                             console.error('Erreur suppression sticker temporaire:', e);
                         }
                     }
                 }
-            } attraper (erreur) {
-                console.error('❌ Erreur lors du traitement du message :', error);
-                wait sendReply(sock, msg, { text: '❌ Désolé, une erreur est survenue. Veuillez réessayer plus tard.' });
+            } catch (error) {
+                console.error('❌ Erreur lors du traitement du message:', error);
+                await sendReply(sock, msg, { text: '❌ Désolé, une erreur est survenue. Veuillez réessayer plus tard.' });
             }
-        } attraper (erreur) {
+        } catch (err) {
             console.error('❌ Erreur dans messages.upsert handler:', err);
         }
     });
 }
 
 /* =========================
- * PRINCIPAL
+ *         MAIN
  * ========================= */
-fonction asynchrone main() {
-    essayer {
+async function main() {
+    try {
         // Attendre que la base de données soit initialisée
-        attendre la synchronisation de la base de données();
+        await syncDatabase();
         console.log('✅ Base de données PostgreSQL prête');
 
-        const { état, enregistrer les identifiants } = await utiliserMultiFileAuthState('./auth');
+        const { state, saveCreds } = await useMultiFileAuthState('./auth');
 
         const sock = makeWASocket({
-    auth: état,
-    printQRInTerminal : faux,
-    navigateur : ['Ubuntu', 'Chrome', '128.0.6613.86'],
-    version : [2, 3000, 1025190524],
-    getMessage: clé asynchrone => {
+    auth: state,
+    printQRInTerminal: false,
+    browser: ['Ubuntu', 'Chrome', '128.0.6613.86'],
+    version: [2, 3000, 1025190524], 
+    getMessage: async key => {
         console.log('⚠️ Message non déchiffré, retry demandé:', key);
-        return { conversation: '🔄 Réessayez d\'envoyer ton message' };
+        return { conversation: '🔄 Réessaye d\'envoyer ton message' };
     }
 });
 
@@ -1089,35 +1064,34 @@ fonction asynchrone main() {
 
         console.log('📱 Démarrage avec système de pairing code...');
 
-        attendre startBot(sock, état);
-    } attraper (erreur) {
+        await startBot(sock, state);
+    } catch (error) {
         console.error('💥 Erreur fatale lors du démarrage:', error);
-        processus.sortie(1);
+        process.exit(1);
     }
 }
 
 main().catch(err => {
-    console.error('💥 Erreur fatale :', err?.stack || err);
-    processus.sortie(1);
+    console.error('💥 Erreur fatale:', err?.stack || err);
+    process.exit(1);
 });
 
-// Exporter des fonctions
+// Export des fonctions
 module.exports = {
-    est AdministrateurUtilisateur,
-    estPropriétaireDuBot,
-    Cache de messages du bot,
-    extraireTexte,
-    obtenirTypeDeMessage,
-    téléchargerMediaContent,
-    obtenir le nom du groupe mis en cache,
-    analyserEtStockerBotImage,
+    isUserAdmin,
+    isBotOwner,
+    botMessageCache,
+    extractText,
+    getMessageType,
+    downloadMediaContent,
+    getCachedGroupName,
+    analyzeAndStoreBotImage,
     getLastBotImageAnalysis,
-    définir l'état de l'IA,
-    estIAActive,
-    ajouterSignature,
-    a une signature,
-    supprimer la signature,
-    transcrireMessageAudio,
-    téléchargerQuotedMedia,
-    extraire le contenu d'affichage unique
+    setAIStatus,
+    isAIActive,
+    addSignature,
+    hasSignature,
+    removeSignature,
+    transcribeAudioMessage,
+    downloadQuotedMedia
 };
