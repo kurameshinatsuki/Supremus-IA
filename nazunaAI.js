@@ -454,7 +454,6 @@ async function nazunaReply(userText, sender, remoteJid, pushName = null, isGroup
 const prompt = `${training}\n\n${participantsList}${userMentionsInfo}${conversationContext}${contexteVisuel}${previousImageContext}${audioContext}
 ${imageAnalysis ? `\n=== ANALYSE DE L'IMAGE REÇUE ===\n${imageAnalysis}\n==============================\n` : ''}
 
-
 > SUPPORT MULTIMODAL AUDIO <
 
 ${isAudioTranscription ? `
@@ -464,7 +463,6 @@ ${isAudioTranscription ? `
 - Ne fais pas référence à la transcription elle-même dans ta réponse.
 - Traite le contenu normalement, avec ton style habituel.
 ` : ''}
-
 
 > CONTEXTE ACTUEL <
 
@@ -493,7 +491,6 @@ ${imageAnalysis ? `
 MÉMOIRE COURTE :
 - Prends en compte les **10 derniers messages** de l'utilisateur actuel (@${userNumber}).
 - Ignore les messages anciens ou venant d'autres joueurs, sauf en supervision de groupe (ex : Origamy World).
-
 
 > CONVERSATION ACTUELLE <
 
