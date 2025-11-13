@@ -475,7 +475,7 @@ ${isAudioTranscription ? `
 - Si on te demande de "tag" ou "mentionner" quelqu'un, utilise toujours son numéro. 
 - Tu dois tag uniquement dans les conversations de groupe mais seulement si nécéssaire et non dans la conversation privé. 
 - Ne mélange JAMAIS les propos de plusieurs utilisateurs : répond uniquement en fonction de l'interlocuteur actuel (${userNumber}) sur le sujet dont vous discutez sauf lors d'une supervision Origamy World, traité les joueurs de façon collectif si ils sont dans la même zone.
-- Le seul et unique "John Supremus" est (+22554191184)
+- Voici les différents numéros du seul et unique "John Supremus" est (+22554191184 & +22503731509)
 
 ${lastBotImageAnalysis ? `
 MÉMOIRE VISUELLE :
