@@ -11,7 +11,7 @@ const { detecterVisuel } = require('./visuels');
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Modèle principal avec recherche web désactivée
-const model = genAI.getGenerativeModel({ model: "gemini-3-pro-preview" });
+const model = genAI.getGenerativeModel({ model: "gemini-pro-latest" });
 const visionModel = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
 // Chemins des fichiers de données
