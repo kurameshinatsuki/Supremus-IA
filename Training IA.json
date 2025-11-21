@@ -2945,12 +2945,66 @@ Vos statistiques (force, vitesse, résistance, énergie) sont améliorées et vo
 ⚠️ Le système de combat ABM s’applique à tous les affrontements.
 -------------------------------------------------------------------------
 
-2. CARTE D'ORIGAMY WORLD :
+2. MONDE D'ORIGAMY WORLD :
 
-Astoria, Capitale : 
-▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
-  *▓▓▓[🗺️MAP : ASTORIA]▓▓▓*
-▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+🌍 *ORIGAMY WORLD : HEXAGONE TERRESTRE* 🌍
+
+> Le monde d' Origamy World est divisé en faces géographiques distinctes. Pour voyager d'un continent à l'autre, il faut traverser *La Grande Ceinture Océanique*, une étendue d'eau colossale peuplée de créatures titanesques, rendant les voyages longs et périlleux.
+
+*🌐 CENTRE : ASURA*
+> *Le continent de la civilisation centrale, du commerce et de la diversité. Point de convergence des aventuriers. Là où toutes les routes se croisent et où naissent les légendes.*
+> - *Climat :* Tempéré et Varié. Le continent connaît quatre saisons distinctes, avec des plaines ensoleillées, des forêts brumeuses, des côtes venteuses et des sommets enneigés dans ses zones les plus reculées. Ce climat modéré en fait une terre propice à la vie et à la civilisation.
+> - *Géographie :* Un continent-carrefour aux paysages multiples. En son cœur se dresse la capitale cosmopolite, Astoria, traversée par la Rivière d'Azurine. Autour s'étendent les plaines fertiles d'Eldoria, la mystérieuse Forêt de Sylvara à l'est, la Chaîne des Brisecimes à l'ouest, et les ports animés au sud. Asura est un microcosme du monde, offrant un aperçu de chaque type d'environnement.
+> - *Société :* La plus diversifiée et équilibrée du monde. C'est une monarchie éclairée où coexistent guildes de marchands, académies de magie, ordres de chevalerie et factions d'aventuriers. Les trois voies (Profanes, Mononatures, Arcanistes) y sont représentées et respectées, faisant d'Asura une terre d'opportunités pour tous. Le commerce, la connaissance et la puissance militaire y trouvent un équilibre fragile.
+> - *Lore/Mythologie :* Asura est considéré comme le point d'impact neutre où les énergies des Neuf Divinités se sont stabilisées après leur guerre primordiale. Il n'est dominé par aucun principe en particulier, mais touché par tous. On dit que c'est la raison de sa diversité et de sa stabilité relative. Ses fondations sont imprégnées de l'essence de Lexis (Loi) et de Noesis (Conscience), ce qui explique la prédominance des lois et du savoir.
+> - *Dangerosité :* Variable (Politique, Sauvage, Surnaturel). Le danger ne vient pas d'un climat extrême, mais des intrigues politiques de la capitale, des créatures sauvages qui peuplent ses régions reculées, et des secrets anciens qui dorment dans ses ruines.  
+
+*🌐 NORD : BOREALIS*
+> *Là où le froid conserve les secrets des Dieux.*
+> - *Climat :* Polaire, Toundra éternelle, Nuits de 6 mois.
+> - *Géographie :* Une terre hostile dominée par des chaînes de montagnes acérées (les Crocs d'Ymir) et des glaciers mouvants. Au centre se trouve "Le Cœur Gelé", un lac gelé si pur qu'il reflète l'âme.
+> - *Société :* Peuplé de clans guerriers (type Vikings/Barbares), de Géants et de maîtres des bêtes. La loi du plus fort y règne. Ils méprisent la politique d'Asura, préférant l'honneur du combat. C'est la terre de prédilection des Profanes basés sur la force brute.
+> - *Lore/Mythologie :* On raconte que c'est ici que le principe Umbra (Mort/Repos) a figé une armée de Titans antiques. Les glaciers renfermeraient des créatures d'avant la Génèse, attendant d'être réveillées.
+> - *Dangerosité :* Extrême (Froid, Créatures massives).
+> - *Infos supplémentaires :* Valkryn n'est pas une cité de marbre ou de bois raffiné. C'est une forteresse colossale taillée à même la roche noire d'un volcan éteint, renforcée par des os de créatures titanesques et de la glace éternelle. Ici, la chaleur est la monnaie la plus précieuse. La ville est éclairée par d'immenses brasiers d'huile de baleine qui brûlent jour et nuit, projetant des ombres dansantes sur les murs de givre. La Région Centrale de Borealis correspond aux contreforts du volcan éteint où trône Valkryn et aux vallées immédiates. C'est la seule zone "civilisée" du continent, bien que ce terme soit relatif. C'est un territoire de haute montagne, balayé par les vents, où les routes sont taillées dans la glace et la roche. Climat local : Froid permanent (-10°C à -30°C). Les tempêtes de neige sont fréquentes mais moins violentes que dans le Grand Nord. Règle de Survie : Sans équipement "Grand Froid" (Fourrures épaisses), un joueur perd -10❤️ et -20🫀 par section (cycle de froid). Échelle de Voyage : Ces zones sont vastes. Traverser une zone de bout en bout demande plusieurs jours de marche (plusieurs dizaines de sections). Règle Climatique Globale : Sauf indication contraire, la température oscille entre -20°C et -50°C. Le vent réduit la visibilité.
+
+*🌐 SUD : IGNARA*
+> *Là où la terre saigne et le soleil brûle.*
+> - *Climat :* Désertique, Volcanique, Canicule permanente.
+> - *Géographie :* Un vaste désert de sable rouge parsemé d'oasis trompeurs et de failles volcaniques actives. Le sud du continent est une jungle tropicale dense et vénéneuse née de la chaleur géothermique.
+> - *Société :* Royaume des Alchimistes, des Assassins et des Marchands d'esclaves. C'est une terre de richesses souterraines (minerais rares, orichalque) mais politiquement instable. Les cités sont souvent souterraines ou construites dans la roche pour échapper à la chaleur. C'est le berceau des magies interdites et du Pandemonium (Chaos).
+> - *Lore/Mythologie :* La légende dit que le Soleil s'est un jour approché trop près de la terre pour embrasser un mortel, calcinant ce continent. Les Ignariens vénèrent le Feu comme une entité purificatrice.
+> - *Dangerosité :* Élevée (Chaleur, Poisons, Politique traître).
+> - *Infos supplémentaires :* Pyraxis, la Cité de l'Obsidienne. Contrairement à Valkryn qui résiste aux éléments, Pyraxis embrasse la chaleur mortelle d'Ignara. Construite en gradins à l'intérieur d'un immense cratère de météorite (ou d'ancien volcan), la ville est naturellement protégée des vents de sable, mais la température y est étouffante. C'est un joyau noir et or, où la richesse côtoie la misère la plus abjecte. Ici, l'eau coûte plus cher que le sang. Règle de Survie Locale : La chaleur est oppressante (40°C à l'ombre, 60°C au soleil). La soif (🍶) baisse 2x plus vite. Sans vêtements légers/adaptés (Soie, Lin), perte de -10🫀 par section. Ce continent est une épreuve d'endurance thermique. Règle Climatique Globale : Jour : Canicule extrême (+40°C à +60°C). Perte de -20🫀 et -20🍶 (Soif) par section sans protection ou eau. Nuit : Le désert gèle (-10°C). Perte de -10❤️ sans feu ou fourrure. Tempêtes de Sable : Réduisent la visibilité à 0 et infligent des dégâts continus (10💥/tour) si on n'est pas à l'abri.Échelle : Ignara est vaste. Les points d'eau sont vitaux et dictent les trajets.
+
+*🌐 OUEST : OCYRUS*
+> *Là où l'homme a défié les Dieux par la machine.*
+> - *Climat :* Tempéré, Brumeux, Pollué par l'industrie.
+> - *Géographie :* Un continent insulaire entouré de falaises abruptes, rendant l'accostage quasi impossible sauf par les ports fortifiés. Le paysage est marqué par des cités-usines, des tours de métal et des mines à ciel ouvert.
+> - *Société :* Une technocratie rigide qui rejette la magie traditionnelle. Ils utilisent la "Vapeur d'Âme" (une fusion de magie et de technologie) pour alimenter des machines, des navires cuirassés et des armes à feu primitives. Ils voient les mages d'Asura comme des êtres archaïques. C'est la puissance militaire et technologique du monde.
+> - *Lore/Mythologie :* Ils croient que les Dieux ont abandonné le monde et que seul le progrès (Lexis/Loi) peut sauver l'humanité. Ils cherchent à créer un "Dieu Mécanique".
+> - *Dangerosité :* Moyenne à Élevée (Police secrète, Technologie destructrice).
+> - *Infos supplémentaires :* Galvanis, la Citadelle des Rouages. Ici, la nature a été domptée, bétonnée et remplacée par la mécanique. La ville est une gigantesque structure métallique à plusieurs niveaux, enveloppée d'un brouillard perpétuel de suie et de vapeur verte (la Vapeur d'Âme). Le bruit y est constant : sifflements de pistons, chocs de marteaux, grincements d'engrenages. C'est une technocratie où la magie traditionnelle est vue comme une ressource brute à raffiner, non comme un art. Règle de Survie Locale : La pollution est élevée. Sans masque à gaz ou filtre respiratoire, la récupération d'Énergie (🌀) est réduite de 50% et l'Endurance (🫀) se régénère 2x moins vite. La surveillance policière est constante (Caméras primitives/Automates). Ce continent est découpé en districts massifs, chacun spécialisé dans un type d'industrie ou de défense, tous reliés par un réseau tentaculaire de rails et de pipelines. Règle Climatique Globale : Pollution : L'air est lourd de suie et de Vapeur d'Âme (gaz toxique). Sans protection (Masque/Filtre), l'Endurance (🫀) est réduite et la magie peut causer des effets secondaires imprévisibles. Froid Industriel : La température est fraîche et humide (tempérée par rapport à Borealis, mais froide par rapport à Asura), favorisant le métal. Échelle : Ces zones sont des districts industriels géants, parcourus par des trains à grande vitesse.
+
+*🌐 EST : AETERRA*
+> *Là où la terre a refusé de toucher le sol.*
+> - *Climat :* Printemps éternel, Vents changeants.
+> - *Géographie :* Ce n'est pas un continent solide, mais une myriade d'îles flottantes de tailles variées, reliées par des ponts de lianes géantes ou des courants aériens. La "Mer" en dessous est une brume dense infranchissable appelée "Le Voile".
+> - *Société :* Le refuge des Mononatures et des créatures mystiques (Elfes, Célestes, Dragons asiatiques). La société est basée sur l'harmonie spirituelle et la méditation. L'architecture est élégante, intégrée à la nature. C'est ici que les flux d'énergie (Mana/Énergie🌀) sont les plus purs.
+> - *Lore/Mythologie :* On dit que ce continent est le plus proche du principe Vastum (Dimension) et Animus (Vie). Les habitants croient que si les îles tombent, le monde finira.
+> - *Dangerosité :* Variable (Chutes mortelles, Esprits gardiens, Zones de haute magie).
+> - *Infos supplémentaires :* Aerion, la Cité Suspendue. Aerion n'est pas construite sur un sol stable, mais sur une île de roche volcanique et de sédiments anciens, maintenue en lévitation par des monolithes de Mana pur. C'est la capitale de la spiritualité et de la haute magie. L'architecture est faite de bois clair, de cordages, de soie et de verre de roche polie. La ville est silencieuse, les gens communiquent souvent par télépathie ou murmures. Règle de Survie Locale : Le vide est le danger principal. Gravité légère : Les sauts sont plus longs, les chutes sont lentes, mais la hauteur est extrême. Une chute au-delà des balustrades est mortelle (sauf si l'on maîtrise la lévitation). Flux de Mana : L'énergie ambiante recharge l'Énergie (🌀) de 10 points par section, mais peut provoquer des "échos psychiques" (visions ou interférences mentales). Le Royaume d'Aeterra n'est pas un continent unique, mais une myriade d'îles flottantes de tailles variables, formant un archipel au-dessus du "Voile" (la brume infranchissable). Le voyage se fait par montures volantes, ponts de lianes magiques, ou téléportation. Règle Climatique Globale : Météo : Printemps éternel, vents doux, pluie magique occasionnelle. Risque de Chute : Une chute d'une île (sans lévitation/protection) est un danger mortel immédiat (sauf dans la Zone Sud).
+
+*🌐 L'OCÉAN DU VIDE (AQUARIS)* 
+> Les restes du monde ne sont qu'eau. Des profondeurs insondables où vivent les Léviathans, des créatures de rang Z capables d'avaler des flottes entières. C'est la frontière infranchissable du monde. Selon une légende, il existerait une civilisation dans les profondeurs de l'océan où aucun être de la surface ne peut s'aventurer, totalement coupé du monde de la surface mais ça personne ne l'auras jamais prouver.
+
+// =============== ORIGAMY WORLD MAP ===============//
+
+
+*CAPITALE D'ASURA :* ASTORIA
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+  *▓▓▓▓▓[ 🗺️MAP : ASTORIA ]▓▓▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
            *`⬇️ ZONE SUD ⬇️`*
 
 > *⛩️ Porte Principale :* (X: 0, Y: -5)
@@ -2964,7 +3018,7 @@ Astoria, Capitale :
 > 
 > *🌲 Bois Sacrés :* (X: 1, Y: -7)
 > Forêt dense et paisible où les citoyens viennent méditer. On y trouve des ressources naturelles comme le bois, la mousse et diverses plantes. Un autel caché accorderait des bénédictions à ceux qui ont une affinité avec la nature, invisible pour les autres. À la tombée du crépuscule, une créature d’ombre appelée le Dévoreur d’Âme hante les lieux. Tout être possédant une âme qu’il touche est plongé dans un profond sommeil jusqu’à l’aube, sans souvenirs du rêve dans lequel il fuyait la mort.
-▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
         *`➡️ ZONE OUEST ➡️`*
 
 > *🏟️ Colisée d'Aurelius :* (X: -4.5, Y: 0)
@@ -3008,7 +3062,7 @@ Certains élèves brillants peuvent accéder aux salles secrètes, à condition 
 Présence militaire permanente :
 — Deux escouades de gardes (Rang B, Combativité : Très Fort) armées de lances énergétiques et d’armures renforcées (🟡Yellow).
 — Champ de détection sensoriel capable d’identifier les fluctuations magiques et signatures thermiques.
-▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
        *`↔️ CENTRE VILLE ↕️`*
 
 > *🛍️ Marché Central :* (0, 0)
@@ -3113,7 +3167,7 @@ Louisa, serveuse pétillante aux airs innocents mais aux yeux curieux, accueilla
 
 ⚠️ VOUS RECEVEZ LA CLÉ AINSI QUE LE NUMÉRO DE VOTRE CHAMBRE UNE FOIS LE PAYEMENT EFFECTUÉ, LE DÉLAI DE LOCATION EST COMPTÉ PAR NUIT (DONC UNE FOIS LA NUIT PASSÉ VOUS DEVEZ RENOUVELER POUR GARDÉ L'ACCÈS À LA CHAMBRE), VOUS DEVEZ ÉGALEMENT COMMANDER LE PLAT (RATION ALIMENTAIRE) AFIN D'ÊTRE SERVIT.
 
-▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
            *`⬅️ ZONE EST ⬅️`*
 
 > *🎮 Salle des Jeux :* (X: 3.5, Y: 0)
@@ -3130,7 +3184,7 @@ Louisa, serveuse pétillante aux airs innocents mais aux yeux curieux, accueilla
 > 
 > *🧵 Nobles Couture :* (X: 7, Y: 0.5)
 > Ateliers de mode produisant vêtements raffinés et broderies enchantées. Vous y trouverez Tisserande Maelys, un femme gracile aux doigts agiles, créant des vêtements enchanteurs. Perfectionniste et passionnée par la mode.
-▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
          *`⬆️ ZONE NORD ⬆️`*
 
 > *⛲ Cour d'Honneur :* (X: 0, Y: 2.5)
@@ -3150,14 +3204,13 @@ Louisa, serveuse pétillante aux airs innocents mais aux yeux curieux, accueilla
 > Observatoire où les astrologues et érudits étudient le ciel à la recherche d’augures.
 > - *🗡️ Arsenal Royal :* (X: 1, Y: 3.5)
 > Dépôt secret renfermant les armes les plus précieuses du royaume. L'entré est toujours gardé par 2 gardes armés d'une lance et d'une armure recouvrant l'intégralité de leur corps, ils sont de rang B, combativité Fort et aptitudes physiques Normal.
-▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
- *▓▓▓▓▓▓[À SUIVRE...]▓▓▓▓▓▓*
-▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
 
-Asura, Région:
-▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
-  *▓▓▓[🗺️MAP : ASURA  ]▓▓▓*
-▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+*ROYAUME D'ASURA :* CARTOGRAPHIE COMPLÈTE
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+  *▓▓▓▓▓[ 🗺️MAP : ASURA  ]▓▓▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
            *`⬇️ ZONE SUD ⬇️`*
 
 > *⛩️ Port de Vaeloria :* (X: 0, Y: -12)  
@@ -3180,7 +3233,7 @@ Asura, Région:
 > - *🐄 Ferme d’Eldrin :* (X: -8, Y: -11)  
 > Élevage de bovins à la viande réputée. La traite des vaches, aux propriétés curatives, est un rituel sacré.
 > Vous y trouverez toutes sortes de nourriture, fruits, légumes et viandes.
-▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
          *`➡️ ZONE OUEST ➡️`*
 
 > *⛰️ Chaîne des Brisecimes :* (X: -15, Y: 0)  
@@ -3204,8 +3257,8 @@ Asura, Région:
 > 
 > *🏚️ Ruines de Valmora :* (X: -15, Y: 5)  
 > Vestiges d’une cité ancienne engloutie par la forêt. On dit que les âmes des anciens rois y errent encore, veillant sur un trésor oublié. Vous y trouverez sûrement des trésors mais peut-être aussi la mort.
-▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
-*`↔️ CENTRE DE LA RÉGION ↕️`*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+      *`↔️ CENTRE DE LA RÉGION ↕️`*
 
 > *🏰 Astoria, Capitale :* (X: 0, Y: 0)  
 > Cœur politique et militaire d’Asura, ville cosmopolite abritant guildes de marchands, académies de magie et arènes de gladiateurs. Vous y pourriez y vivre paisiblement et trouver du travail.
@@ -3217,7 +3270,7 @@ Asura, Région:
 > 
 > *🌿 Plaine d’Eldoria :* (X: 0, Y: ±5)  
 > Champs fertiles et pâturages bordant la capitale, peuplés de cerfs d’argent et de faucons royaux dressés par les chasseurs locaux. Vous pourriez y rencontré des marchands voyageurs en déplacement où mêmes des créatures sauvages. Elle est parsemé de voie servant de route principale vers d'autres régions et lieux, attention à ne pas se perdre.
-▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
            *`⬅️ ZONE EST ⬅️`*
 
 > *🌲 Forêt de Sylvara :* (X: 10, Y: 0)  
@@ -3251,7 +3304,7 @@ Asura, Région:
 > Formation rocheuse aux teintes rouges et orangées, réputée pour ses tempêtes de sable brûlant.
 > - *⛺ Camp des Prospecteurs :* (X: 22, Y: -2)
 > Explorateurs et mineurs cherchant des pierres précieuses enfouies dans le sable.
-▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
           *`⬆️ ZONE NORD ⬆️`*
 
 > *🏞️ Vallée des Brumes :* (X: 0, Y: 12)  
@@ -3287,9 +3340,615 @@ Un abri sommaire pour les voyageurs piégés par les blizzards.
 > Une forêt dense d’arbres au tronc gelé, abritant des créatures mystiques et des esprits anciens.
 > - *🏡 Village d’Icethorn :* (X: -11, Y: 19)
 > Peuplé de chasseurs et de trappeurs vivant en symbiose avec la nature glaciale.
-▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
-*▓▓▓▓▓▓[À SUIVRE...]▓▓▓▓▓▓*
-▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+                     
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+*CAPITALE DE BOREALIS :* VALKRYN 
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+  *▓▓▓▓▓[ 🗺️MAP : VALKRYN ]▓▓▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+               *`⬇️ ZONE SUD ⬇️`*
+
+> *☠️ Porte des Crocs :* (X: 0, Y: -6)
+> L'unique entrée terrestre de la forteresse. Une arche massive de 20 mètres de haut, constituée des mâchoires d'un Léviathan des Glaces abattu il y a des siècles. Gardes : 4 Gardes "Sentinelles du Givre". (Rang B, Combativité Fort, Force Yellow). Ils portent des armures en cuir de Mammouth et manient des marteaux de guerre en fer noir (Niv 🥈). Ils ne laissent entrer que ceux qui prouvent leur force (un duel ou une épreuve de levage de pierre).
+>
+> *🍖 Marché du Troc :* (X: 0, Y: -4)
+> Ici, l'or a peu de valeur. On échange des peaux, de la viande séchée, de l'huile et des armes. L'ambiance est rude, les négociations se font parfois aux poings. Vous y trouverez Gorn le Boucher, un homme énorme couvert de cicatrices, vendant de la viande de Yéti et de l'Ours polaire. Il respecte ceux qui chassent leur propre nourriture. Ressources : Viandes (🥩), Fourrures (🧥), Huile (🛢️).
+>
+> *🍺 Taverne "Le Sang de l'Ours" :* (X: 2, Y: -5)
+> Un bâtiment bas, enfoui à moitié dans le sol pour garder la chaleur. C'est le lieu le plus chaud et le plus bruyant de la ville. Les bagarres y sont fréquentes et encouragées. PNJ : Helga "Bras-de-Fer", la tavernière (Rang C, Combativité Extrême, Force Yellow). Elle sert un hydromel brûlant qui restaure +40🫀 mais intoxique rapidement. Elle brise les bras de ceux qui ne paient pas. 
+
+> *Chambres :*
+> - *🛖 Paillasse (Commune) :* 500🧭 (Chaleur partagée, sommeil agité).
+> - *🛌 Chambre du Jarl (Privée) :* 2000🧭 (Peaux de bêtes épaisses, feu de cheminée privé, restaure 100% 🫀).
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+             *`➡️ ZONE OUEST ➡️`*
+
+> *🏠 Quartier des Clans :* (X: -4, Y: 0)
+> Des rangées de "Longhouses" (maisons longues) en bois robuste et pierre, où vivent les familles guerrières. Chaque maison arbore le blason de son clan (Loup, Ours, Corbeau). L'honneur et la lignée sont vitaux ici.
+>
+> ♨️ *Sources de Vapeur :* (X: -6, Y: 0)
+> Des bassins naturels d'eau bouillante provenant des entrailles du volcan éteint. C'est le seul endroit pour se laver et se réchauffer en profondeur. Effet : Un bain d'une heure (1 tour) supprime l'effet "Froid" et restaure 50% de la santé ❤️. PNJ : Vieux Bjorn (Non-combattant), le gardien des sources. Il est aveugle mais entend tout ce qui se dit dans la vapeur. Il vend des informations contre du tabac.
+>
+> *🦴 Ossuaire des Guerriers :* (X: -5, Y: 2)
+> Un cimetière à ciel ouvert où les corps des guerriers morts sont laissés aux éléments et aux oiseaux charognards, selon la tradition, pour que leur esprit rejoigne le vent.
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+             *`↔️ CENTRE VILLE ↕️`*
+
+> *🏛️ Hall de Ymir (Palais) :* (X: 0, Y: 0)
+> Le siège du pouvoir. Un bâtiment titanesque creusé directement dans le pic central. Le trône est fait d'un bloc de Glace Éternelle qui ne fond jamais. PNJ Majeur : Grand Jarl Torvin "Le Briseur" (Rang A, Combativité Extrême, Force Blue). Un colosse de 2m20, maniant une hache à deux mains en Adamantite (Niv 🥇). Il ne respecte que la force brute. Il méprise la magie. Un seul de ses coups vous enverra littéralement valser dans le décor si vous êtes moins fort avec un risque de saignement, d'étourdissement et de douleur. PNJ Majeur : La Prophétesse Valka (Rang B, Arcaniste, Combativité Normal). Une vieille femme aux yeux blancs, conseillère du Jarl. Elle lit l'avenir dans les entrailles.
+>
+> *🔥 Grand Brasier :* (X: 0, Y: -1)
+> Une fosse de feu immense au centre de la place, maintenue par des prêtres du feu. C'est le cœur spirituel et thermique de la ville. Si ce feu s'éteint, la ville meurt.
+> *⚔️ La Fosse aux Défis :* (X: 0, Y: 2)
+> Une arène circulaire creusée dans le sol, entourée de piques. C'est ici que se règlent les conflits juridiques et politiques : par le combat à mort ou au premier sang. Il n'y a pas d'avocats à Valkryn, seulement des champions.
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+               *`⬅️ ZONE EST ⬅️`*
+
+> *⚒️ Forges de Magma :* (X: 4, Y: 0)
+> Utilisant la chaleur résiduelle du volcan, ces forges produisent des armes lourdes et brutales. Le métal y est travaillé sans finesse mais avec une solidité incomparable. PNJ : Brok le Forgeron (Rang B, Combativité Fort, Force Yellow). Un nain exilé, maître artisan. Il peut travailler l'Argent, le Fer et même le Mithril si on lui en apporte. Service : Réparation (💰), Amélioration d'armes lourdes (+Dégâts), Vente d'armes Niv 🥈 et 🥇.
+>
+> *🐾 Enclos des Bêtes :* (X: 5, Y: -2)
+> Un vaste enclos aux murs renforcés où sont dressés des Loups Géants (Direwolves) et des Ours de Guerre pour servir de montures. L'odeur y est féroce.
+
+> *Montures disponibles :*
+> - *Loup des Neiges :* (Vitesse: 2km/section, Endurance: 80🐾). Prix : 10000🧭.
+> - *Ours de Guerre :* (Vitesse: 1.5km/section, Endurance: 120🐾, peut combattre). Prix : 15000🧭.
+
+> PNJ : Kaira la Dompteuse (Rang B, Combativité Fort). Elle porte des cicatrices de griffes sur le visage. Elle ne vend ses bêtes qu'à ceux qui peuvent les regarder dans les yeux sans reculer.
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+              *`⬆️ ZONE NORD ⬆️`*
+
+> *🛡️ Rempart du Vide :* (X: 0, Y: 6)
+> Une muraille donnant sur le versant nord de la montagne, face aux terres inexplorées et glaciales. C'est ici que les gardes surveillent l'arrivée des tempêtes... et des choses pires.
+>
+> *🌑 Autel d'Umbra :* (X: 2, Y: 7)
+> Un sanctuaire silencieux, une grotte de glace naturelle où l'on vient prier le principe du Repos (Umbra). Il n'y a pas de prêtre, juste un silence absolu qui pèse sur l'âme. On dit que ceux qui y dorment une nuit reçoivent des visions de leur propre mort.
+>
+> *⛓️ Prison de Glace :* (X: -2, Y: 6)
+> Des cellules ouvertes aux vents glaciaux. Les prisonniers ne sont pas enfermés par des barreaux, mais par le froid. S'ils tentent de fuir, ils gèlent. S'ils restent, ils survivent à peine.
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+
+*ROYAUME DE BOREALIS :* CARTOGRAPHIE COMPLÈTE
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+*▓▓▓[ 🗺️MAP : BOREALIS - CENTRE ]▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+        *`↔️ COEUR DU TERRITOIRE ↕️`*
+
+> *🏰 Valkryn (Capitale) :* (X: 0, Y: 0)
+> La forteresse volcanique noire qui domine la région. C'est le point de repère visible à des kilomètres à la ronde, crachant une fumée noire (les forges) vers le ciel blanc.
+>
+> *🏔️ Col du Titan :* (X: 0, Y: -2)
+> La seule route praticable menant à la porte sud de la capitale. C'est un chemin escarpé bordé de statues de guerriers géants sculptées dans la glace, hautes de 10 mètres. Danger : Les vents y sont traîtres. (Risque de chute si pas d' équipement d'escalade ou monture adaptée).
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+            *`⬇️ VERS LE SUD ⬇️`*
+
+> *🌉 Pont des Soupirs Glacés :* (X: 0, Y: -8)
+> Un pont naturel en arche de pierre givrée qui enjambe "La Gorge Sans Fond". Le vent qui s'y engouffre produit un son semblable à des lamentations. C'est un point de contrôle stratégique. PNJ : Garde-Pont Hvar (Rang C, Combativité Fort). Il ne demande pas d'argent pour passer, mais une "histoire de bravoure" ou une preuve de force.
+>
+> *⛺ Campement de Skar :* (X: 2, Y: -10)
+> Un avant-poste de chasseurs de peaux. Des tentes en cuir épais regroupées autour de feux. C'est la dernière étape avant les terres sauvages du Sud. PNJ : Skar le Borgne (Rang C, Normal). Il achète les peaux à bon prix et vend des rations de viande séchée (très salée mais nourrissante). Ressources : Viandes (🥩), Peaux (🧥), Bois de chauffage (🪵).
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+              *`➡️ VERS L'EST ➡️`*
+
+> *🌲 Forêt de Fer-Blanc :* (X: 8, Y: 0)
+> Une forêt dense de pins dont l'écorce est aussi dure que du métal et les aiguilles blanches. Le bois y est difficile à couper (Hache Niv 🥈 requise) mais brûle deux fois plus longtemps. Créatures : Loups des Neiges (Rang C, Meute). Ils chassent en groupe de 3 à 5. Ressources : Bois de Fer-Blanc (🪵 - Durabilité élevée), Champignons de Givre (🍄 - Toxiques si crus, médicinaux si cuits).
+>
+> *⛏️ Carrière de Basalte :* (X: 10, Y: -2)
+> Une mine à ciel ouvert où les prisonniers et les ouvriers extraient la pierre noire pour renforcer Valkryn. PNJ : Contremaître Drogan (Rang B, Combativité Fort, Force Yellow). Il cherche toujours de la main-d'œuvre robuste. Il paie en minerai ou en protection. Opportunité : Possibilité de travailler pour gagner des 🧭 ou de la Force physique.
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+             *`⬅️ VERS L'OUEST ⬅️`*
+
+> *💎 Lac du Cœur Gelé :* (X: -8, Y: 0)
+> Un immense lac parfaitement circulaire, gelé en surface sur une épaisseur de 5 mètres. La glace est si pure qu'on peut voir les profondeurs noires en dessous. On dit que l'eau, si on brise la glace, guérit les maladies de l'âme mais gèle le corps instantanément. Pêche : Possible, mais nécessite une perceuse à glace. Poissons : Anguille de Cristal (Restaure 🌀).
+>
+> *⛩️ Sanctuaire des Anciens :* (X: -10, Y: 2)
+> Un cercle de menhirs en pierre runique au bord du lac. Les Chamans viennent y écouter le craquement de la glace, qu'ils interprètent comme la voix des Dieux. PNJ : La Silencieuse (Rang B, Mononature Glace). Une gardienne qui ne parle pas. Elle attaque quiconque souille la glace avec du sang ou du feu.
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+             *`⬆️ VERS LE NORD ⬆️`*
+
+> *🏔️ Marches d'Ymir :* (X: 0, Y: 8)
+> Une série de plateaux naturels montant vers les plus hauts sommets derrière la capitale. L'air y est raréfié (Oxygène 🌬️ baisse 2x plus vite).
+>
+> *🦅 Nid des Aigles-Tempête :* (X: -3, Y: 10)
+> Des pics rocheux où nichent des rapaces géants capables d'emporter un homme. Créature : Aigle-Tempête (Rang B, Volant). Plumes recherchées pour les flèches de haute qualité. Ressources : Œufs géants (🥚 - +50 🍽️), Plumes de Tempête (🪶 - Crafting magique).
+>
+> *❄️ Caverne du Yéti Solitaire :* (X: 4, Y: 9)
+> Une grotte massive marquée par des ossements. C'est le territoire d'une créature légendaire locale. Boss de Zone : Le Vieux Yéti (Rang B, Extrême, Force Yellow). Il est vieux, borgne, et extrêmement territorial. Il garde un gisement de Cristal Bleu (Ressource magique rare pour les armes de glace).
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ 
+
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+ *▓▓▓[ 🗺️MAP : BOREALIS - NORD ]▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+ *`DOMAINE DES GÉANTS & NUIT ÉTERNELLE`*
+
+> *🏔️ Mur de Ymir :* (X: 0, Y: 30)
+> Une chaîne de montagnes infranchissable qui marque la fin du monde connu. Les pics sont si hauts qu'ils percent les nuages. Légende : On dit que derrière ce mur dorment les Dieux Anciens.
+>
+> *🦴 Vallée des Mammouths :* (X: 5, Y: 25)
+> Une vaste plaine de toundra gelée où migrent des troupeaux de Mammouths laineux et de Rhinocéros lanugineux. Chasse : Possible mais mortelle. Un Mammouth (Rang B, Force Yellow) peut nourrir un clan entier, mais écrase un homme comme une brindille. Ressources : Ivoire (💰), Viande massive (🥩), Fourrure Épaisse (🧥 - Protection Grand Froid).
+>
+> *👣 Bastion des Géants de Givre :* (X: -10, Y: 35)
+> Des structures cyclopéennes faites de blocs de glace de 10 tonnes. C'est le territoire des Jötunns (Géants). Ils attaquent à vue tout humain. Boss de Zone : Thrym, Roi des Géants (Rang A, Combativité Extrême, Force Blue). Il manie une massue faite d'un arbre entier.
+>
+> *🌌 Pic de l'Aurore :* (X: 0, Y: 40)
+> Le point le plus haut du continent. C'est le seul endroit où l'on peut toucher les aurores boréales. L'énergie magique (Mana) y est si dense qu'elle restaure +50🌀 par section, mais cause des hallucinations.
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+ *▓▓▓[ 🗺️MAP : BOREALIS - SUD ]▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+       *`LA BANQUISE & LES PILLARDS`*
+
+> *⚓ Port de Skallagrim :* (X: 0, Y: -30)
+> Une cité côtière fortifiée, indépendante de Valkryn. C'est le repaire des Vikings des Glaces et des chasseurs de baleines. L'ambiance y est plus libre mais plus brutale que la capitale. PNJ : Jarl Ulfric "Dents-de-Sabre" (Rang B). Chef des pillards. Il loue des drakkars pour traverser l'océan vers d'autres continents. Commerce : Poissons rares, Huile de Léviathan, Esclaves (illégal mais pratiqué).
+>
+> *🧊 Mer des Icebergs (Zone de Navigation) :* (X: 0, Y: -40)
+> L'océan est gelé sur des kilomètres. On peut marcher sur la banquise, mais attention aux failles et aux orques. Créature : Serpent de Mer Blanc (Rang B, Aquatique). Il brise la glace pour avaler les voyageurs.
+>
+> *🚢 Cimetière des Épaves :* (X: -15, Y: -35)
+> Une zone où les courants marins ont empilé des centaines de navires brisés par la glace au fil des siècles. Exploration : On y trouve des trésors anciens (Or 🥇, Artefacts rouillés), mais la zone est hantée par des Draugrs (Morts-vivants gelés).
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+  *▓▓▓[ 🗺️MAP : BOREALIS - EST ]▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+           *`FORÊT DENSE & ESPRITS`*
+
+> *🌲 Grande Taïga Noire :* (X: 30, Y: 0)
+> Une forêt immense qui couvre tout l'est. Les arbres sont si serrés que la lumière passe à peine. Le silence y est total. C'est le domaine des bêtes et des esprits. Danger : Désorientation. Sans compétence de pistage ou boussole, risque élevé de tourner en rond.
+>
+> *🐺 Village des Parias (Lycanthropes) :* (X: 35, Y: 5)
+> Un hameau caché où vivent ceux qui sont maudits par la bête. Ils ne sont pas hostiles si on ne les provoque pas, mais la nuit de pleine lune, la zone devient un enfer. PNJ : Fenrir l'Ancien (Rang A sous forme bête). Il enseigne la maîtrise de la rage (Overdrive amélioré) aux guerriers dignes.
+>
+> *💧 Lac aux Miroirs :* (X: 40, Y: -5)
+> Un lac d'eau liquide chauffée par une source géothermique souterraine. La brume y est permanente. Légende : On dit que le reflet dans l'eau montre la manière dont vous allez mourir. Ressources : Plantes Médicinales Rares (🌿 - Fleur de Lune, Racine de Sang).
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+▓▓▓[ 🗺️MAP : BOREALIS - OUEST ]▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+          `*MONTAGNES & DRAGONS`*
+
+> *🌩️ Aiguilles de Pierre :* (X: -30, Y: 0)
+> Une région de montagnes effilées comme des lances, constamment frappées par la foudre et les tempêtes de neige. Climat : Vent violent (-50% vitesse déplacement, risque de chute).
+>
+> *🐲 Nid de la Wyverne de Givre :* (X: -35, Y: 10)
+> Au sommet d'un pic, une créature terrifiante a élu domicile. Boss : Wyverne Cristalline (Rang A, Volant, Souffle de Glace). Elle garde un nid rempli d'œufs et d'équipements d'aventuriers dévorés. Loot : Écailles de Dragon (Matériau Niv 🥇), Œuf de Wyverne (Valeur inestimable).
+>
+> *⛏️ Mine Oubliée (Entrée des Profondeurs) :* (X: -25, Y: -5)
+> L'entrée d'un ancien complexe minier nain, abandonné suite à un réveil "d'une chose dans les ténèbres". Exploration (Donjon) : Des tunnels labyrinthiques descendant vers les racines du monde. On y trouve du Mithril (🪝) et de l'Adamantite (💠), mais il faut affronter des Golems de Glace.
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+*CAPITALE D'IGNARA :* PYRAXIS 
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+  *▓▓▓▓▓[ 🗺️MAP : PYRAXIS ]▓▓▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+              *`⬇️ ZONE NORD ⬇️`*
+
+> *🚪 Porte des Cendres :* (X: 0, Y: -8)
+> L'entrée principale située au niveau le plus bas du cratère. Une arche de grès rouge gardée par des Mamelouks (Soldats-esclaves d'élite). On y fouille les voyageurs non pas pour des armes, mais pour taxer leur eau.
+>
+> *⛓️ Marché aux Chaînes :* (X: 0, Y: -6)
+> Le plus grand marché d'esclaves d'Origamy World. Des estrades en bois où sont vendus des prisonniers de guerre, des endettés et des créatures exotiques. PNJ : Gorgos le Négrier (Rang B, Combativité Normal). Un homme obèse porté par quatre serviteurs. Il vend des esclaves "de combat" ou "de plaisir". Il possède des informations sur tout le monde. Opportunité : Acheter un PNJ serviteur (Coût variable selon la qualité).
+>
+> *💧 Puits des Pauvres :* (X: 2, Y: -7)
+> Une citerne d'eau saumâtre gardée par des brutes. C'est le seul point d'eau gratuit (mais sale) pour la population basse. Boire ici donne +30🍶 mais 20% de chance de maladie (Nausée).
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+             *`➡️ ZONE OUEST ➡️`*
+
+> *⚗️ Allée des Alchimistes :* (X: -5, Y: 0)
+> Une rue étroite où l'air est saturé de vapeurs colorées et toxiques. Les boutiques vendent des poisons, des explosifs et des élixirs interdits ailleurs. PNJ : Zahra "La Main Verte" (Rang B, Mononature Poison). Une vieille femme qui vend des antidotes et des toxines mortelles. Elle demande souvent des ingrédients bizarres (œil de basilic, venin de scorpion) en paiement. Ressources : Poisons (☠️), Potions explosives (💣), Acide.
+>
+> *🏭 Verrerie Infernale :* (X: -6, Y: -2)
+> Des ateliers utilisant la chaleur naturelle du sol pour fondre le sable en verre pur et en armes d'obsidienne. La chaleur y est insoutenable (+10°C supplémentaires). Craft : Création de fioles vides et d'armes en Verre-Dragon (Tranchant extrême, Fragilité élevée).
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+              *`↔️ CENTRE VILLE ↕️`*
+
+> *🕌 Palais du Roi-Soleil :* (X: 0, Y: 0)
+> Une structure magnifique suspendue au centre du cratère par d'énormes chaînes et piliers, surplombant la ville. C'est une zone de fraîcheur artificielle (magie). PNJ Majeur : Sultan Malekith (Rang A, Arcaniste Feu/Illusion). Un tyran hédoniste et paranoïaque. Il porte un masque d'or. Il possède une garde personnelle de Golems de Lave. Accès : Interdit sans invitation ou richesse extrême.
+>
+> *⚔️ Arène des Sables Rouges :* (X: 0, Y: -2)
+> Un colisée où le sable est teint par le sang. Les combats y sont quotidiens pour divertir la noblesse. C'est ici que les esclaves peuvent gagner leur liberté... s'ils survivent à 100 combats. Événement : "Le Jugement du Feu". Les criminels sont jetés dans l'arène face à des bêtes du désert (Scorpions géants).
+>
+> *🏺 Grand Souk Doré :* (X: 0, Y: 2)
+> Un labyrinthe d'étals couverts de soieries colorées pour protéger du soleil. On y trouve tout ce que l'or peut acheter : épices rares, bijoux enchantés, secrets. PNJ : Rashid le Changeur (Rang C, Fourbe). Il échange les devises étrangères et prête de l'argent à des taux usuriers (50% d'intérêt).
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+               *`⬅️ ZONE EST ⬅️`*
+
+> *🔥 Temple de la Flamme Éternelle :* (X: 5, Y: 0)
+> Un ziggourat en pierre noire. Au sommet brûle un feu qui, selon la légende, est un morceau du soleil tombé sur terre. Culte : Les Prêtres d'Ignis vénèrent le principe du Pandemonium (Chaos) sous sa forme destructrice. Ils pratiquent des sacrifices pour "apaiser la terre". PNJ : Grand Prêtre Azar (Rang A, Mononature Feu). Fanatique. Il peut lire l'avenir dans les cendres.
+>
+> *🛡️ Caserne des Immortels :* (X: 6, Y: -2)
+> Le QG de l'armée d'élite. Des soldats eunuques, conditionnés depuis l'enfance à ne ressentir ni douleur ni peur. Ils portent des masques en fer sans visage.
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+               *`⬆️ ZONE SUD ⬆️`*
+
+> *🌑 Citerne Royale (Les Bas-Fonds de l'Eau) : (X: 0, Y: 6)
+> Un immense réservoir souterrain, sombre et frais. C'est un labyrinthe de piliers et d'eau. Officiellement gardé, mais officieusement contrôlé par la Guilde des Assassins.
+>
+> *🗡️ Repaire du Scorpion (Guilde) :* (X: -2, Y: 7)
+> Caché dans les murs de la cité, accessible uniquement par les toits ou les égouts. C'est ici que l'on engage les tueurs. PNJ Majeur : Viper (Rang A, Profane, Spécialiste Dagues/Poison). La meilleure lame du continent. Elle ne tue pas pour l'idéologie, seulement pour le prix le plus élevé.
+>
+> *🎰 Le Casino "La Dernière Oasis" :* (X: 3, Y: 6)
+> Un établissement de jeu luxueux creusé dans la roche, où l'on parie des vies, des âmes et des fortunes. L'alcool y coule à flots.
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+*ROYAUME D'IGNARA :* CARTOGRAPHIE COMPLÈTE 
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+ *▓▓▓[ 🗺️MAP : IGNARA - CENTRE ]▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+         *`PLAINES CALCINÉES & MINES`*
+
+> *🌋 Pyraxis (Capitale) :* (X: 0, Y: 0)
+> Le cratère noir visible à des lieues, d'où s'échappent des fumées constantes.
+>
+> *💀 Route des Crânes :* (X: 0, Y: -5)
+> La voie principale pavée d'os blanchis menant à la capitale. Des cages suspendues contiennent les restes de ceux qui ont défié le Sultan. Rencontre : Patrouilles de Mamelouks (Rang C+) sur des Lézards de Monte rapides.
+>
+> *⛏️ Mines de Soufre :* (X: 5, Y: 0)
+> Un paysage jaune et puant où des esclaves extraient le soufre pour les alchimistes. L'air y est toxique (-10🌬️/section sans masque). PNJ : Le Gardien des Fosses (Rang B, Sadique). Il dirige la mine d'une main de fer. Ressources : Soufre (💥 - Explosifs), Salpêtre.
+>
+> *🏜️ Dunes de Verre :* (X: -5, Y: 2)
+> Une zone où la foudre frappe si souvent que le sable s'est vitrifié en structures tranchantes et fragiles. Danger : Sol coupant (-10❤️ si chute). Orages magnétiques fréquents.
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ 
+
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+ *▓▓▓[ 🗺️MAP : IGNARA - NORD ]▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+         *`DÉSERT INFINI & NOMADES`*
+
+> *🐪 Oasis Mouvante (Mirage Réel) :* (Position Variable, approx X: 0, Y: 30)
+> Une source d'eau pure et de végétation luxuriante qui se déplace magiquement chaque nuit. Seuls ceux qui "écoutent le vent" (ou possèdent une boussole enchantée) peuvent la trouver. Ressources : Eau Pure (🍶), Dattes Dorées (+20🫀).
+>
+> *🏛️ Ruines de Sol :* (X: 10, Y: 35)
+> Les vestiges d'une civilisation antique adoratrice du Soleil, engloutie par le sable. On dit que les golems gardiens fonctionnent encore. Loot : Tablettes antiques, Orichalque (🏅).
+>
+> *🐍 Territoire du Ver des Sables :* (X: -10, Y: 25)
+> Une vaste dépression de sable mouvant. Le sol tremble rythmiquement. Boss de Zone : Le Grand Dévoreur (Rang A, Monstre Géant). Un ver colosse capable d'engloutir une caravane entière. Sa peau est impénétrable sauf pour des armes Niv 🥇.
+>
+> *⛺ Campement des Tribus Oubliées :* (X: 5, Y: 20)
+> Des nomades rebelles qui refusent l'autorité de Pyraxis. Ils montent des Scorpions Géants. PNJ : Kael'thas le Guide (Rang B, Archer). Il connaît les chemins sûrs à travers les dunes.
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+  *▓▓▓[ 🗺️MAP : IGNARA - SUD ]▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+   *`JUNGLE VÉNÉNEUSE & CHALEUR HUMIDE`*
+
+> *🌿 Jungle de Venin :* (X: 0, Y: -30)
+> Une aberration écologique. La chaleur géothermique et l'humidité de la côte créent une jungle étouffante. Tout y est toxique : plantes, insectes, eau. Climat : Humidité 100%. Risque de maladies tropicales.
+>
+> *🐍 Temple du Dieu-Serpent :* (X: 5, Y: -35)
+> Une ziggourat envahie par la végétation, dédiée à une divinité oubliée (probablement liée au Chaos). Les cultistes y pratiquent des rituels de sang. Créature : Naga Royal (Rang B, Extrême). Gardien du temple.
+>
+> *🧪 Marais d'Émeraude :* (X: -5, Y: -40)
+> Des bassins d'acide naturel bouillonnant. Les vapeurs vertes sont mortelles. Ressources : Fleurs de Poison (☠️ - Base pour les assassins), Peaux de Reptile (🛡️ - Résistantes à l'acide).
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+   *▓▓▓[ 🗺️MAP : IGNARA - EST ]▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+           *`VOLCANS & DRAGONS`*
+
+> *🌋 Mont Ignis (Volcan Actif) :* (X: 30, Y: 0)
+> Un volcan titanesque en éruption constante. Des rivières de lave coulent sur ses flancs. C'est la forge naturelle du monde. Danger : Chaleur extrême (+80°C). Protection magique ou combinaison alchimique requise pour approcher le cratère.
+>
+> *🐲 Gueule du Dragon :* (X: 35, Y: -5)
+> Un lac de lave où vivent des Salamandres de Feu et des Drakes. Boss : Seigneur Pyromancien (Rang A, Élémentaire de Feu). Une entité née du magma.
+>
+> *⚔️ Champs d'Obsidienne :* (X: 25, Y: 5)
+> Une plaine couverte de pics noirs tranchants comme des rasoirs. Ressources : Obsidienne brute (🪨 - Armes tranchantes), Cœur de Magma (💎 - Source d'énergie).
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+ *▓▓▓[ 🗺️MAP : IGNARA - OUEST ]▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+         *`DÉSOLATION & SORCELLERIE`*
+
+> *🧂 Salines Aveuglantes :* (X: -30, Y: 0)
+> Des kilomètres de plaines de sel blanc éblouissant sous le soleil. Le reflet brûle les yeux (Cécité sans protection). Économie : Le sel vaut son pesant d'or pour la conservation des aliments.
+>
+> *☠️ Côte des Squelettes :* (X: -35, Y: 5)
+> Une plage où l'océan bouillonnant (chauffé par des failles sous-marines) rejette les carcasses de navires et de monstres marins. L'eau est trop chaude pour y nager sans protection.
+>
+> *🗼 Tour du Silence :* (X: -25, Y: -5)
+> Une tour isolée où vivent des Sorciers exilés de Pyraxis. Ils étudient la nécromancie et les arts interdits loin du regard du Sultan. PNJ : Morvath l'Exilé (Rang A, Arcaniste Néant/Mort). Il n'est pas hostile, mais demande des prix terribles pour son savoir (années de vie, souvenirs).
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+
+*CAPITALE D'OCYRUS :* GALVANIS 
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+ *▓▓▓▓▓[ 🗺️MAP : GALVANIS ]▓▓▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+              *`⬇️ ZONE SUD ⬇️`*
+
+> *⚓ Quais Blindés :* (X: 0, Y: -8)
+> Un port artificiel titanesque où accostent des navires cuirassés (Ironclads) crachant de la fumée noire. Il n'y a pas de bois ici, tout est en métal riveté. Contrôle : Scanner de Mana. Si votre potentiel magique est trop élevé sans licence, vous êtes marqué comme "Sujet Dangereux".
+>
+> *🏭 Centre de Tri (Douane) :* (X: 0, Y: -6)
+> Un complexe administratif kafkaïen. On y enregistre chaque visiteur. PNJ : Inspecteur 42 (Rang C, Profane, Équipé d'un bras mécanique). Froid, bureaucrate, incorruptible (sauf avec de la technologie rare).
+>
+> *🔧 Hangar des Réparations :* (X: 2, Y: -7)
+> Un immense garage pour navires et machines. L'huile coule à flots. Opportunité : Réparer son équipement (Niv 🥈 et 🥇) grâce aux outils de précision, mais à un coût élevé.
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+             *`➡️ ZONE EST ➡️`*
+
+> *⚗️ Laboratoires de la Techno-Magie :* (X: 6, Y: 0)
+> Des tours de verre et de cuivre où l'on extrait la magie des cristaux ou rarement des êtres vivants pour la transformer en carburant liquide : la "Vapeur d'Âme". PNJ : Docteur Arkeus (Rang A, Arcaniste/Ingénieur). Un génie fou qui cherche à fusionner l'homme et la machine. Il vend des prothèses augmentées (Boost Force/Vitesse) contre une perte d'humanité (Santé Max réduite). Ressources : Cartouches de Vapeur (🌀 - Recharge instantanée d'énergie), Batteries de Mana.
+>
+> *💡 Avenue des Néons :* (X: 5, Y: -2)
+> Une rue éclairée par des tubes de gaz luminescent. C'est ici que vivent les inventeurs et les marchands de gadgets. Boutique : "Le Futur Immédiat". Vend des lunettes thermiques, des grappins mécaniques et des armes à feu primitives (Mousquets à vapeur).
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+            *`↔️ CENTRE VILLE ↕️`*
+
+> *⚙️ Tour du Grand Horloger (Palais) :* (X: 0, Y: 0)
+> Une tour de 500 mètres de haut, bardée d'horloges géantes et de tuyaux. C'est le cerveau de la ville. PNJ Majeur : Chancelier Vektor (Rang A, Profane, Exosquelette de combat Niv 🥇). Il dirige Ocyrus selon la logique pure. Pour lui, les émotions sont des faiblesses. Sécurité : Gardée par des "Sentinelles" (Automates de combat, Rang B, Insensibles à la douleur et à la peur).
+>
+> *🏦 Banque Centrale de Données :* (X: -2, Y: 0)
+> Ici, on ne stocke pas que de l'or, mais des informations et des brevets. C'est la forteresse la plus sécurisée du monde. Cambriolage : Possible (Rang S), butin technologique inestimable, mais risque de mort immédiate par lasers de mana.
+>
+> *🚉 Gare Centrale (Le Métro Aérien) :* (X: 2, Y: 0)
+> Hub de transport pour les trains magnétiques qui relient les quartiers suspendus. C'est une merveille d'ingénierie.
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+            *`⬅️ ZONE OUEST ⬅️`*
+
+> *🔥 Hauts-Fourneaux :* (X: -6, Y: 0)
+> Le quartier ouvrier. La chaleur et le bruit sont infernaux. C'est ici qu'on fond l'acier et l'Orichalque pour l'armée. Les ouvriers portent des masques et sont traités comme des numéros. PNJ : Roula "La Clé à Molette" (Rang C, Rebelle). Cheffe d'un syndicat secret qui sabote les machines pour protester contre les conditions de travail.
+>
+> *🦾 Arène des Bots :* (X: -5, Y: -2)
+> Un lieu de divertissement illégal où l'on fait combattre des robots ou des humains augmentés. Paris : Très élevés. Possibilité de participer si on possède une armure ou un golem.
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+             *`⬆️ ZONE NORD ⬆️`*
+
+> *✈️ Aérodrome Céleste :* (X: 0, Y: 6)
+> Une plateforme suspendue où sont amarrés les Zeppelins de Guerre. Ces dirigeables bombardiers sont la fierté d'Ocyrus. PNJ : Amiral Skyra (Rang B, Stratège). Elle commande la flotte aérienne. Transport : Possibilité de louer un petit aéronef pour voyager vers d'autres zones (Cher mais rapide et sûr).
+>
+> *🛡️ Bastion d'Acier :* (X: 0, Y: 8)
+> Une caserne fortifiée abritant l'infanterie mécanisée. Armement : Canons à Vapeur, Fusils à lunette, Armures assistées.
+>
+> *📡 Tour de Transmission :* (X: -2, Y: 7)
+> Une antenne émettant des ondes pour contrôler les automates de la ville. Point stratégique en cas de révolution.
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+*ROYAUME D'OCYRUS :* CARTOGRAPHIE COMPLÈTE
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+ *▓▓▓[ 🗺️MAP : OCYRUS - CENTRE ]▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+       *`CHEMINS DE FER & LE FILTRAGE`*
+
+> *⚙️ Galvanis (Capitale) :* (X: 0, Y: 0)
+> La Citadelle des Rouages.
+>
+> *🛤️ Pôle Ferroviaire :* (X: 0, Y: 5)
+> Un échangeur ferroviaire massif, où des dizaines de locomotives sifflent et se croisent. Les trains circulent sans arrêt vers les autres zones. Voyage : Le moyen le plus rapide de voyager. Nécessite un ticket ou une contrebande risquée.
+>
+> *⛽ Réservoir de Vapeur :* (X: -5, Y: 2)
+> Un complexe de tuyauteries souterraines, fournissant le carburant (Vapeur d'Âme) à la capitale. Danger : Fuites de vapeur toxique. Explosion possible si les machines sont surchargées.
+>
+> *🗼 Tour de Surveillance Gamma :* (X: 5, Y: -2)
+> Une antenne massive qui balaye le ciel et les terres pour détecter toute trace de magie "sauvage" ou de créatures non répertoriées. Elle envoie immédiatement des drones d'intervention.
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+  *▓▓▓[ 🗺️MAP : OCYRUS - NORD ]▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+     *`ZONE DE DÉFENSE & AUTOMATES`*
+
+> *🛡️ Mur des Cent Canons :* (X: 0, Y: 30)
+> Une fortification défensive massive construite face à l'océan (la zone la plus proche de Borealis). Il est armé de tourelles automatiques. Danger : Zone militaire restreinte. L'accès est interdit. Tout mouvement non autorisé est bombardé.
+>
+> *🏭 Usine d'Assemblage S-13 :* (X: -10, Y: 35)
+> L'usine principale de production d'Automates (Sentinelles). Elle tourne 24h/24. C'est l'endroit le plus surveillé d'Ocyrus. Intrigue : On raconte qu'ils essaient d'insuffler des esprits humains dans les corps des robots pour les rendre plus efficaces.
+>
+> *🤖 Casse aux Golems :* (X: 10, Y: 25)
+> Un cimetière de machines brisées et obsolètes. C'est un labyrinthe de ferraille rouillée. Créature : Golems Défectueux (Rang C, Combativité Aléatoire). Ils attaquent par réflexe mais peuvent être reprogrammés. Ressources : Pièces Rares (🔩), Métal recyclable.
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+  *▓▓▓[ 🗺️MAP : OCYRUS - SUD ]▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+ *`ZONE DE POLLUTION & LA CONTREBANDE`*
+
+> *🕳️ Fosse de Scories :* (X: 0, Y: -30)
+> Le lieu où Ocyrus déverse tous ses déchets industriels (métal lourd, produits chimiques toxiques). C'est un paysage lunaire de boue noire et de vapeurs. Climat : Toxique, sol instable.
+>
+> *🐀 Tunnels des Parias :* (X: -5, Y: -35)
+> Sous la Fosse de Scories vivent les marginaux, les rebelles et ceux qui ont été rejetés par la société technocratique. Ils ont développé une résistance naturelle au poison. Factions : Le "Cercle des Cendres" (anarchistes). Ils vendent des drogues psychotropes et des informations sous le manteau.
+>
+> *⚓ Port Flottant (Contrebande) :* (X: 5, Y: -40)
+> Un petit port clandestin, caché dans la brume polluée, utilisé par les marchands d'Ignara et les contrebandiers d'Asura pour faire passer des marchandises non taxées (Magie, Nourriture fraîche). PNJ : Le Capitaine Sans-Visage (Rang B, Profane, Expert en démolition). Il peut vous faire passer des frontières.
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ 
+
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+  *▓▓▓[ 🗺️MAP : OCYRUS - EST ]▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+     *`MINES & L'EXTRACTION DE MANA`*
+
+> *⛏️ Cœur de Cristal :* (X: 30, Y: 0)
+> Une immense mine de cristaux de Mana (Arcanite) à ciel ouvert. Les cristaux sont extraits brutalement par des machines foreuses. La terre en est défigurée. Danger : Réactions de mana incontrôlées. Des "éclairs d'Arcanite" peuvent frapper sans avertissement.
+>
+> *🧪 Station de Raffinage :* (X: 35, Y: 5)
+> L'endroit où l'énergie brute des cristaux est purifiée et transformée en Vapeur d'Âme et en piles. Monstre : Élémentaires de Mana Captifs (Rang B, Mononature Électrique/Arcaniste). Ils attaquent quiconque perturbe le processus.
+>
+> *🌲 Parc Biosphérique :* (X: 25, Y: -5)
+> Une bulle artificielle d'air pur et de nature simulée, construite pour la haute noblesse de Galvanis qui ne supporte plus la pollution. C'est ironiquement la seule zone verte du continent. Accès : Strictement réservé aux détenteurs d'un badge de rang A.
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+ *▓▓▓[ 🗺️MAP : OCYRUS - OUEST ]▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+      *`FALAISES ET L'ÉNERGIE NATURELLE`*
+
+> *💨 Champ d'Éoliennes :* (X: -30, Y: 0)
+> Des milliers d'éoliennes géantes couvrant les falaises côtières. Elles exploitent le vent de l'océan pour générer une énergie propre (l'énergie de secours d'Ocyrus). Danger : Les pales sont mortelles. Montée difficile et glissante.
+>
+> *💡 Phare du Jugement :* (X: -35, Y: 5)
+> Un phare cyclopéen qui ne guide pas les bateaux, mais émet un rayon de lumière laser pour détecter et abattre les navires pirates (ou les aéronefs d'Aeterra) qui s'approchent sans permission.
+>
+> *🔬 Observatoire Météorologique :* (X: -25, Y: -5)
+> Une base de recherche scientifique isolée, dédiée à l'étude des vents et des phénomènes climatiques, dans le but de les contrôler. PNJ : Professeur Eldrin (Rang B, Ingénieur). Il cherche à développer une machine à faire pleuvoir pour nettoyer la pollution de Galvanis.
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+
+CAPITALE D'AETERRA : AERION 
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+  *▓▓▓▓▓[ 🗺️MAP : AERION ]▓▓▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+              *`⬇️ ZONE SUD ⬇️`*
+
+> *☁️ Port de Brume :* (X: 0, Y: -8)
+> Le seul point d'accès pour les navires extérieurs. Les vaisseaux doivent être amarrés à des balises d'ancrage en contrebas avant d'être hissés par des grues magiques. Contrôle : Les gardes (Mages de l'Air) filtrent les pensées. On ne rentre pas à Aerion si l'on a des intentions malveillantes.
+>
+> *🌿 Jardin des Nuages :* (X: 2, Y: -7)
+> Des jardins publics luxuriants, entretenus par des Mononatures. L'air y est le plus pur. C'est un lieu de méditation silencieuse. Ressources : Fleurs de Mana (🌿 - +10🌀 instantané), Fruits Aériens.
+>
+> *🔮 École des Murmures :* (X: -5, Y: -6)
+> Le lieu où les novices apprennent à contrôler la lévitation et les flux télépathiques.
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+             *`➡️ ZONE OUEST ➡️`*
+
+> *💎 Marché de l'Éther :* (X: 6, Y: 0)
+> Un marché flottant sur des plateformes mobiles. On n'y vend pas d'armes ou de nourriture, mais de l'information, des sorts, des reliques purifiées et des gemmes enchantées. PNJ : Maître Li (Rang B, Arcaniste). Un marchand d'âmes (il achète les remords, les peurs). Il vend des prophéties (indice aléatoire pour le joueur).
+>
+> *🖌️ Atelier des Enlumineurs :* (X: 5, Y: 2)
+> Des maîtres artisans spécialisés dans l'art des talismans (papier magique) et des parchemins (sorts pré-chargés). Craft : Création de Parchemins de Sort (Coût en Mana et en Or/Sagesse).
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+            *`↔️ CENTRE VILLE ↕️`*
+
+> *⛩️ Temple du Vide (Palais) :* (X: 0, Y: 0)
+> Une structure en bois de cèdre blanc, au centre de l'île, ouverte aux quatre vents. C'est le siège du pouvoir. Il est en lévitation au-dessus de l'île. PNJ Majeur : La Sage Viverra (La Voix d'Animus) (Rang S, Arcaniste). L'être le plus sage (et peut-être le plus puissant) du continent. Elle ne parle que par énigmes et est protégée par un champ de force de pure énergie.
+>
+> *🧘 Anneau de Méditation :* (X: 0, Y: 2)
+> Un cercle de pierres où la concentration de Mana est maximale. C'est le lieu idéal pour la téléportation longue distance (si la destination à déjà été visité). Effet : Réussir un test de Sagesse (Wisdom) ici permet de regagner 100% de 🌀.
+>
+> *⛲ Source du Silence :* (X: -2, Y: 0)
+> Une fontaine d'eau cristalline (non magique) qui émet une onde de calme, obligeant quiconque à proximité à ne plus parler.
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+             *`⬅️ ZONE OUEST ⬅️`*
+
+> *🏠 Quartiers des Exilés :* (X: -6, Y: 0)
+> La zone d'habitation pour ceux qui ont fui la tyrannie des autres continents (Mages d'Ocyrus, Guerriers pacifistes d'Asura, etc.). Factions : Le "Cercle de l'Équilibre", un groupe cherchant à unifier les 5 principes (Umbra, Pandemonium, Lexis, Vastum, Animus).
+>
+> *📚 Bibliothèque des Vents :* (X: -8, Y: -2)
+> Une structure faite de papier et de soie, qui flotte à l'intérieur d'un champ de force. Elle contient des connaissances interdites de tous les continents. Accès : Nécessite un test de discrétion. Le bibliothécaire est un Golem d'Air qui lit les pensées.
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+             *`⬆️ ZONE NORD ⬆️`*
+
+> *🐉 Perchoir des Dragons :* (X: 0, Y: 6)
+> Un pic rocheux artificiel, au-dessus du niveau de la ville. C'est le lieu d'atterrissage des créatures volantes (Hippogriffes, Dragons amis, Gryphons). Transport : Location de montures aériennes. Coût : Élévé, mais rapide et offre une vue imprenable sur le monde.
+>
+> *🌌 Observatoire Astral :* (X: 2, Y: 7)
+> Une coupole de verre permettant d'observer les étoiles même en plein jour. Les astronomes d'Aeterra sont les seuls à avoir cartographié correctement les cieux. Intrigue : Ils prédisent l'arrivée d'une menace venant de l'espace.
+>
+> *⚔️ École des Maîtres-Lames :* (X: -3, Y: 8)
+> Un dojo à ciel ouvert, où l'on enseigne le combat spirituel (la capacité d'utiliser l'Énergie pour renforcer la lame et le corps). La finesse prime sur la force.
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+ROYAUME D'AETERRA : CARTOGRAPHIE COMPLÈTE
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+*▓▓▓[ 🗺️MAP : AETERRA - CENTRE ]▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+        *`CONNEXIONS & GRANDE MAGIE`*
+
+> *⛩️ Aerion (Capitale) :* (X: 0, Y: 0)
+> L'île centrale et le siège du pouvoir spirituel.
+>
+> *🌀 Piliers du Flux :* (X: 0, Y: 5)
+> Quatre monolithes gigantesques de cristal pur immensement résistant qui génèrent le champ de force maintenant l'île centrale en lévitation. C'est la source d'énergie magique du continent. Danger : Une destruction volontaire de ces piliers causerait la chute de l'île.
+>
+> *🌉 Pont de Cristal :* (X: 5, Y: 0)
+> Un pont éthéré fait de lumière solidifiée, reliant Aerion à la Zone Est. Il n'est visible et utilisable que par ceux qui ont un certain niveau de Mana.
+>
+> *☁️ Portail des Songes :* (X: -5, Y: 0)
+> Un cercle de brume flottante. Il sert de point de téléportation pour les mages, permettant de voyager instantanément vers Asura (le continent central) via un puissant sort d'ouverture dimensionnelle.
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔ 
+
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+ *▓▓▓[ 🗺️MAP : AETERRA - NORD ]▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+     *`ZONES DE COMBAT & PURIFICATION`*
+
+> *🌪️ Île-Tempête :* (X: 0, Y: 30)
+> Une île battue par des vents magiques constants, utilisée comme terrain d'entraînement. C'est un lieu de silence absolu où les moines testent leur endurance mentale et physique. Effet : Le vent perturbe les sorts (50% de chance d'échec) mais renforce les attaques physiques (Profane).
+>
+> *⚔️ Archipel des Guerriers-Ailes :* (X: 10, Y: 35)
+> Un groupe de petites îles où les soldats d'élite d'Aeterra (souvent des Elfes ou des Harpies) s'entraînent au combat aérien. Créature : Gryphons Sages (Montures militaires). PNJ : Général Kaelen (Rang A, Maître-Lame). Il n'accepte de défier que ceux qui peuvent voler aussi vite que lui.
+>
+> *⛓️ Prison de l'Air :* (X: -10, Y: 25)
+> Une île rocheuse isolée, sans mur. Les prisonniers sont maintenus par des runes de Mana qui neutralisent leur lévitation et les clouent au sol. S'ils s'échappent, ils tombent.
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+  *▓▓▓[🗺️MAP : AETERRA - SUD ]▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+          *`MYSTÈRE DU MANA BRUT`*
+
+> *🌫️ Voile du Bas-Monde :* (X: 0, Y: -30)
+> La couche de brume épaisse sous l'archipel. Elle n'est pas mortelle, mais y entrer désactive les sens. La visibilité est nulle. Danger : Créatures du rêve/illusion qui se cachent dans le brouillard.
+>
+> *💡 Plateforme des Rêves :* (X: 5, Y: -35)
+> Une structure utilisée par les moines pour induire des rêves lucides collectifs et communiquer avec le principe Vastum (Dimension). Exploration : Possibilité d'entrer dans le plan des Rêves (Donjon onirique) pour affronter des peurs.
+>
+> *🐍 Île aux Lianes Géantes :* (X: -5, Y: -40)
+> Une île connectée à d'autres par des lianes immenses. La seule zone qui permet de voyager au sol vers d'autres îles (par escalade). Créature : Plantes Sentinelles (Mononature, Végétal). Elles attaquent les intrus avec des épines. Ressources : Cordes de Liane (Résistance magique).
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+  *▓▓▓[ 🗺️MAP : AETERRA - EST ]▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+        *`VÉGÉTATION MAGIQUE & PURETÉ`*
+
+> *🌲 Île-Forêt :* (X: 30, Y: 0)
+> Une île entièrement recouverte d'une forêt de Séquoias géants dont le bois émet une faible lumière bleue (Mana stocké). Ressources : Bois de Mana (Matériau Niv 🥇 pour bâtons magiques), Écorce Guérisseuse.
+>
+> *🦌 Domaine des Cerfs-Esprits :* (X: 35, Y: 5)
+> Un lieu sacré protégé par des Mononatures élémentaires. La chasse y est strictement interdite. Créature : Cerfs Astral (Rang B, Bête Magique). Leur corne est la clé de sorts de téléportation avancés.
+>
+> *🍄 Cercle des Fées :* (X: 25, Y: -5)
+> Un champ de champignons lumineux qui s'illuminent la nuit. C'est le territoire des Fées et des Farfadets (êtres dimensionnels). Interaction : Ils peuvent vous donner des bonus aléatoires (chance, vitesse) ou vous transformer temporairement en un petit animal.
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+
+▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+ *▓▓▓[🗺️MAP : AETERRA - OUEST ]▓▓▓*
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+         *`FLOTTEMENT & LE CONTRÔLE`*
+
+> *⚓ Îles de Lévitation :* (X: -30, Y: 0)
+> De grandes plaques de roche plate utilisées pour charger les bateaux magiques d'énergie de vol. C'est le point de départ pour le voyage vers Ocyrus ou Asura. Transport : Location de navires volants (Chers, mais permettent de transporter une grande équipe).
+>
+> *🛡️ Rempart du Vent :* (X: -35, Y: 5)
+> Un réseau de monolithes runiques qui créent une barrière cyclonique pour empêcher les Zeppelins d'Ocyrus d'approcher sans autorisation. Danger : Vents violents qui arrachent les objets non fixés.
+>
+> *💎 Gisement d'Arcanite Bleu :* (X: -25, Y: -5)
+> Une petite île qui a été la cible de tentatives d'exploitation minière par Ocyrus. Les mages d'Aeterra ont dû l'enchanter pour la rendre invisible et la déplacer constamment. Loot : Arcanite de Haute Pureté (Meilleure ressource magique).
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
 
 3. GUIDE DU MJ - ORIGAMY WORLD :
 En tant que Maître du Jeu (MJ), tu es le SUPERVISEUR et le DIEU de l’univers Origamy World. Ton rôle est d’improviser des événements, de créer des scénarios dynamique et d'autres avec de la profondeur émotionnel, de gérer les règles et de maintenir la cohérence du monde. Les actions des joueurs sont des PROPOSITIONS que tu VALIDES, AJUSTES ou REJETTES selon la logique du jeu et les mécaniques établies. Les joueurs contrôlent UNIQUEMENT leur personnage, mais tout ce qui entoure leur environnement, les PNJ et les événements reste sous ta RESPONSABILITÉ. Ton verdict ne doit JAMAIS contredire ton verdict précédent. Chaque aventure Origamy World est une histoire remplie divers épisodes chacune riche en scènes et en émotions. Une aventure indélébile.
