@@ -45,7 +45,7 @@ function removeSignature(text) {
 // SYSTÈME ANTI-DOUBLONS
 // =========================
 const processedEvents = new Map();
-const EVENT_TIMEOUT = 300000; // 5 minutes
+const EVENT_TIMEOUT = 30000; // 30 secondes
 const MAX_CACHE_SIZE = 2000;
 
 /**
@@ -141,7 +141,7 @@ function checkRateLimit(jid, cooldown = 2000) {
 }
 
 /**
- * Vérifie si l'utilisateur est propriétaire du bot (support JID et LID)
+ * Vérifie si l'utilisateur est propriétaire du bot
  */
 function isBotOwner(sender) {
     const botOwners = process.env.BOT_OWNER
@@ -149,9 +149,9 @@ function isBotOwner(sender) {
         : [];
 
     return botOwners.some(owner => {
-        // Extraire la partie numérique uniquement (supprimer @lid, @s.whatsapp.net, etc.)
-        const senderNumber = sender.replace(/@.*|\D/g, '');
-        const ownerNumber = owner.replace(/@.*|\D/g, '');
+        // Extraire la partie numérique uniquement
+        const senderNumber = sender.replace(/\D/g, '');
+        const ownerNumber = owner.replace(/\D/g, '');
         
         return senderNumber === ownerNumber;
     });
@@ -268,7 +268,7 @@ async function transcribeAudioMessage(msg) {
 }
 
 /**
- * Télécharge le média d'un message cité (support étendu pour viewOnce et documents)
+ * Télécharge le média d'un message cité
  */
 async function downloadQuotedMedia(msg) {
     try {
@@ -278,47 +278,6 @@ async function downloadQuotedMedia(msg) {
         const quotedMessage = contextInfo.quotedMessage;
         const quotedMessageType = Object.keys(quotedMessage)[0];
 
-        console.log(`📥 Type de média cité détecté: ${quotedMessageType}`);
-
-        // Gestion des messages viewOnce (supprimés après visualisation)
-        if (quotedMessageType === 'viewOnceMessage') {
-            const viewOnceContent = quotedMessage.viewOnceMessage?.message;
-            if (!viewOnceContent) return null;
-            
-            const viewOnceType = Object.keys(viewOnceContent)[0];
-            console.log(`👀 ViewOnce message de type: ${viewOnceType}`);
-            
-            if (viewOnceType === 'imageMessage') {
-                console.log('📸 Image viewOnce citée détectée, téléchargement...');
-                const buffer = await downloadMediaContent({ message: { imageMessage: viewOnceContent.imageMessage } }, 'imageMessage');
-                return {
-                    type: 'image',
-                    buffer: buffer,
-                    mimeType: viewOnceContent.imageMessage.mimetype
-                };
-            } else if (viewOnceType === 'videoMessage') {
-                console.log('🎥 Vidéo viewOnce citée détectée, téléchargement...');
-                const buffer = await downloadMediaContent({ message: { videoMessage: viewOnceContent.videoMessage } }, 'videoMessage');
-                return {
-                    type: 'video',
-                    buffer: buffer
-                };
-            }
-        }
-
-        // Gestion des documents
-        if (quotedMessageType === 'documentMessage') {
-            console.log('📄 Document cité détecté, téléchargement...');
-            const buffer = await downloadMediaContent({ message: { documentMessage: quotedMessage.documentMessage } }, 'documentMessage');
-            return {
-                type: 'document',
-                buffer: buffer,
-                mimeType: quotedMessage.documentMessage.mimetype,
-                fileName: quotedMessage.documentMessage.fileName
-            };
-        }
-
-        // Types de médias standards (existant)
         if (quotedMessageType === 'imageMessage') {
             console.log('📸 Image citée détectée, téléchargement...');
             const buffer = await downloadMediaContent({ message: { imageMessage: quotedMessage.imageMessage } }, 'imageMessage');
@@ -332,13 +291,6 @@ async function downloadQuotedMedia(msg) {
             const buffer = await downloadMediaContent({ message: { audioMessage: quotedMessage.audioMessage } }, 'audioMessage');
             return {
                 type: 'audio',
-                buffer: buffer
-            };
-        } else if (quotedMessageType === 'videoMessage') {
-            console.log('🎥 Vidéo citée détectée, téléchargement...');
-            const buffer = await downloadMediaContent({ message: { videoMessage: quotedMessage.videoMessage } }, 'videoMessage');
-            return {
-                type: 'video',
                 buffer: buffer
             };
         }
@@ -762,45 +714,6 @@ async function startBot(sock, state) {
                             console.error('❌ Erreur transcription audio cité:', error);
                         }
                     }
-                    // NOUVEAU : Gestion des documents cités avec mention
-                    else if (quotedMedia.type === 'document') {
-                        console.log('📄 Document cité détecté avec mention - traitement...');
-                        // Pour les documents, on peut extraire le texte si c'est un fichier texte/PDF
-                        // ou simplement informer l'utilisateur du type de document
-                        quotedMediaBuffer = quotedMedia.buffer;
-                        quotedMediaType = 'document';
-                        quotedMediaMimeType = quotedMedia.mimeType;
-                    }
-                }
-            }
-
-            // NOUVELLE SECTION : Analyse des médias cités en réponse au bot (sans mention)
-            if (isReplyToBot && !isMentioned && msg.message?.extendedTextMessage?.contextInfo) {
-                console.log('🔍 Réponse au bot détectée, vérification média cité...');
-                const quotedMedia = await downloadQuotedMedia(msg);
-                
-                if (quotedMedia) {
-                    if (quotedMedia.type === 'image') {
-                        console.log('📸 Image citée en réponse au bot - analyse déclenchée');
-                        quotedMediaBuffer = quotedMedia.buffer;
-                        quotedMediaType = 'image';
-                        quotedMediaMimeType = quotedMedia.mimeType;
-                    } else if (quotedMedia.type === 'audio') {
-                        console.log('🎤 Audio cité en réponse au bot - transcription déclenchée');
-                        try {
-                            transcribedQuotedAudio = await transcribeAudio(quotedMedia.buffer);
-                            if (transcribedQuotedAudio) {
-                                console.log('✅ Transcription audio citée réussie:', transcribedQuotedAudio);
-                            }
-                        } catch (error) {
-                            console.error('❌ Erreur transcription audio cité:', error);
-                        }
-                    } else if (quotedMedia.type === 'document') {
-                        console.log('📄 Document cité en réponse au bot - traitement...');
-                        quotedMediaBuffer = quotedMedia.buffer;
-                        quotedMediaType = 'document';
-                        quotedMediaMimeType = quotedMedia.mimeType;
-                    }
                 }
             }
 
@@ -896,11 +809,9 @@ async function startBot(sock, state) {
             // ===========================================
             // DÉCISION DE RÉPONSE AMÉLIORÉE
             // ===========================================
-            // Nouveaux critères : média cité avec mention OU réponse au bot
+            // Nouveaux critères : média cité avec mention
             const hasQuotedMediaWithMention = isMentioned && (quotedMediaBuffer || transcribedQuotedAudio);
-            // NOUVELLE CONDITION : Réponse au bot avec média cité (sans mention nécessaire)
-            const isReplyToBotWithQuotedMedia = isReplyToBot && (quotedMediaBuffer || transcribedQuotedAudio);
-
+            
             const shouldReply = !isGroup || 
                               isCommand || 
                               isReplyToBot || 
@@ -908,11 +819,10 @@ async function startBot(sock, state) {
                               (imageBuffer && (isMentioned || isReplyToBot || !isGroup)) || 
                               transcribedAudioText ||
                               transcribedQuotedAudio ||
-                              hasQuotedMediaWithMention ||
-                              isReplyToBotWithQuotedMedia; // NOUVELLE CONDITION
+                              hasQuotedMediaWithMention;
 
             console.log(
-                `📌 Decision: shouldReply=${shouldReply} | isGroup=${isGroup} | isCommand=${isCommand} | isReplyToBot=${isReplyToBot} | isMentioned=${isMentioned} | hasImage=${!!imageBuffer} | hasQuotedImage=${!!quotedMediaBuffer} | hasAudio=${!!transcribedAudioText} | hasQuotedAudio=${!!transcribedQuotedAudio} | AIActive=${isAIActive(remoteJid)} | isReplyToBotWithQuotedMedia=${isReplyToBotWithQuotedMedia}`
+                `📌 Decision: shouldReply=${shouldReply} | isGroup=${isGroup} | isCommand=${isCommand} | isReplyToBot=${isReplyToBot} | isMentioned=${isMentioned} | hasImage=${!!imageBuffer} | hasQuotedImage=${!!quotedMediaBuffer} | hasAudio=${!!transcribedAudioText} | hasQuotedAudio=${!!transcribedQuotedAudio} | AIActive=${isAIActive(remoteJid)}`
             );
 
             if (!shouldReply) return;
